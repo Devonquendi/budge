@@ -17,7 +17,7 @@ dependencies = [
 thrifty = "thrifty:main"
 
 [tool.fastapi]
-# Lets a bare `uv run fastapi dev` find the ASGI app in the src layout.
+# Enables `uv run fastapi dev`
 entrypoint = "thrifty.server:app"
 
 [build-system]

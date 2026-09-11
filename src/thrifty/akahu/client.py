@@ -4,6 +4,9 @@ import os
 
 import httpx2
 
+from thrifty.akahu import transform
+from thrifty.akahu.models import Account
+
 BASE_URL = "https://api.akahu.io/v1"
 
 
@@ -24,11 +27,11 @@ class AkahuClient:
             user_token=os.environ["AKAHU_USER_TOKEN"],
         )
 
-    async def get_accounts(self) -> list[dict]:
+    async def get_accounts(self) -> list[Account]:
         """Every connected account, balances included."""
         async with httpx2.AsyncClient(
             base_url=BASE_URL, headers=self._headers
         ) as client:
             response = await client.get("/accounts")
             response.raise_for_status()
-            return response.json()["items"]
+            return [transform.to_account(item) for item in response.json()["items"]]

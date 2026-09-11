@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thrifty</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+  />
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <hgroup>
+        <h1>Thrifty</h1>
+        <p>Your accounts, at a glance</p>
+      </hgroup>
+      <button id="theme-toggle" class="secondary outline" type="button">
+        Toggle theme
+      </button>
+    </header>
+
+    <section id="summary">
+      <p class="label">Total balance</p>
+      <p id="total-balance" class="total" aria-busy="true">Loading&hellip;</p>
+    </section>
+
+    <section>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Account</th>
+            <th scope="col">Connection</th>
+            <th scope="col">Type</th>
+            <th scope="col" class="balance">Balance</th>
+          </tr>
+        </thead>
+        <tbody id="accounts-body">
+          <tr>
+            <td colspan="4" aria-busy="true">Loading accounts&hellip;</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
