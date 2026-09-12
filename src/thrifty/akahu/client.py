@@ -1,7 +1,5 @@
 """Client for Akahu's personal-app REST API."""
 
-import os
-
 import httpx2
 
 from thrifty.akahu import transform
@@ -18,14 +16,6 @@ class AkahuClient:
             "X-Akahu-Id": app_token,
             "Authorization": f"Bearer {user_token}",
         }
-
-    @classmethod
-    def from_env(cls) -> AkahuClient:
-        """Build a client from AKAHU_APP_TOKEN / AKAHU_USER_TOKEN."""
-        return cls(
-            app_token=os.environ["AKAHU_APP_TOKEN"],
-            user_token=os.environ["AKAHU_USER_TOKEN"],
-        )
 
     async def get_accounts(self) -> list[Account]:
         """Every connected account, balances included."""

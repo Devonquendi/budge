@@ -24,9 +24,17 @@
         <h1>Thrifty</h1>
         <p>Your accounts, at a glance</p>
       </hgroup>
-      <button id="theme-toggle" class="secondary outline" type="button">
-        Toggle theme
-      </button>
+      <nav>
+        <button id="theme-toggle" class="secondary outline" type="button">
+          Toggle theme
+        </button>
+        <a href="/onboarding/accounts" role="button" class="secondary outline">
+          Accounts
+        </a>
+        <form method="post" action="/logout">
+          <button class="secondary outline" type="submit">Log out</button>
+        </form>
+      </nav>
     </header>
 
     <section id="summary">

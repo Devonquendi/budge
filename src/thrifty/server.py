@@ -10,6 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from thrifty.auth import require_auth
 from thrifty.auth import router as auth_router
+from thrifty.onboarding import router as onboarding_router
 from thrifty.routes import router as accounts_router
 
 load_dotenv()
@@ -28,5 +29,6 @@ app.add_middleware(
     https_only=bool(os.environ.get("VERCEL")),
 )
 app.include_router(auth_router)
+app.include_router(onboarding_router)
 app.include_router(accounts_router, prefix="/api")
 app.frontend("/", directory=WEB_DIR)

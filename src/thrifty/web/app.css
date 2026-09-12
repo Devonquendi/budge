@@ -58,6 +58,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-header nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-header nav form,
+.page-header nav button,
+.page-header nav [role="button"] {
+  margin-bottom: 0;
+  white-space: nowrap;
 }
 
 #summary {

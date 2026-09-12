@@ -9,40 +9,19 @@ from pwdlib import PasswordHash
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from thrifty.db.models import User
+from thrifty.db.models import AkahuCredential, User
 from thrifty.db.session import get_session
+from thrifty.pages import form_page
 
 LOGIN_PATH = "/login"
 SIGNUP_PATH = "/signup"
+ONBOARDING_PATH = "/onboarding"
+PUBLIC_PATHS = (LOGIN_PATH, SIGNUP_PATH)
+
 router = APIRouter()
 password_hash = PasswordHash.recommended()
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
-
-PAGE = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Thrifty &mdash; {title}</title>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-  />
-</head>
-<body>
-  <main class="container" style="max-width: 24rem">
-    <h1>Thrifty</h1>
-    <form method="post">
-      {fields}
-      {error}
-      <button type="submit">{submit}</button>
-    </form>
-    {footer}
-  </main>
-</body>
-</html>
-"""
 
 LOGIN_FIELDS = """
       <label>
@@ -65,18 +44,33 @@ SIGNUP_FIELDS = (
 """
 )
 
-
-def _error(message: str) -> str:
-    return f'<p style="color: var(--pico-del-color)">{message}</p>' if message else ""
-
-
 LOGIN_FOOTER = f'<p>No account? <a href="{SIGNUP_PATH}">Sign up</a></p>'
 SIGNUP_FOOTER = f'<p>Already have an account? <a href="{LOGIN_PATH}">Log in</a></p>'
 
 
+def _login_page(error: str = "") -> str:
+    return form_page(
+        title="log in",
+        fields=LOGIN_FIELDS,
+        submit="Log in",
+        error=error,
+        footer=LOGIN_FOOTER,
+    )
+
+
+def _signup_page(error: str = "") -> str:
+    return form_page(
+        title="sign up",
+        fields=SIGNUP_FIELDS,
+        submit="Sign up",
+        error=error,
+        footer=SIGNUP_FOOTER,
+    )
+
+
 async def require_auth(request: Request, call_next) -> Response:
     """Sends unauthenticated requests to the login page instead of onward."""
-    if request.url.path in (LOGIN_PATH, SIGNUP_PATH) or request.session.get("user_id"):
+    if request.url.path in PUBLIC_PATHS or request.session.get("user_id"):
         return await call_next(request)
     if request.url.path.startswith("/api"):
         return Response(status_code=401)
@@ -94,17 +88,26 @@ async def get_current_user(request: Request, session: SessionDep) -> User:
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+async def get_current_user_id(user: CurrentUser) -> int:
+    """Narrows the optional primary key — a row loaded from the DB always has one."""
+    if user.id is None:
+        raise HTTPException(status_code=401)
+    return user.id
+
+
+CurrentUserId = Annotated[int, Depends(get_current_user_id)]
+
+
+async def _landing_path(session: AsyncSession, user: User) -> str:
+    """Users without Akahu tokens yet need onboarding before the dashboard."""
+    statement = select(AkahuCredential).where(AkahuCredential.user_id == user.id)
+    onboarded = (await session.exec(statement)).first() is not None
+    return "/" if onboarded else ONBOARDING_PATH
+
+
 @router.get(LOGIN_PATH)
 async def login_form() -> HTMLResponse:
-    return HTMLResponse(
-        PAGE.format(
-            title="log in",
-            fields=LOGIN_FIELDS,
-            error="",
-            submit="Log in",
-            footer=LOGIN_FOOTER,
-        )
-    )
+    return HTMLResponse(_login_page())
 
 
 @router.post(LOGIN_PATH)
@@ -116,30 +119,15 @@ async def login(request: Request, session: SessionDep) -> Response:
 
     user = (await session.exec(select(User).where(User.email == email))).first()
     if user is None or not password_hash.verify(password, user.password_hash):
-        page = PAGE.format(
-            title="log in",
-            fields=LOGIN_FIELDS,
-            error=_error("Wrong email or password"),
-            submit="Log in",
-            footer=LOGIN_FOOTER,
-        )
-        return HTMLResponse(page, status_code=401)
+        return HTMLResponse(_login_page("Wrong email or password"), status_code=401)
 
     request.session["user_id"] = user.id
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse(await _landing_path(session, user), status_code=303)
 
 
 @router.get(SIGNUP_PATH)
 async def signup_form() -> HTMLResponse:
-    return HTMLResponse(
-        PAGE.format(
-            title="sign up",
-            fields=SIGNUP_FIELDS,
-            error="",
-            submit="Sign up",
-            footer=SIGNUP_FOOTER,
-        )
-    )
+    return HTMLResponse(_signup_page())
 
 
 @router.post(SIGNUP_PATH)
@@ -150,22 +138,13 @@ async def signup(request: Request, session: SessionDep) -> Response:
     password = str(form.get("password", ""))
     invite_code = str(form.get("invite_code", ""))
 
-    def fail(message: str) -> HTMLResponse:
-        page = PAGE.format(
-            title="sign up",
-            fields=SIGNUP_FIELDS,
-            error=_error(message),
-            submit="Sign up",
-            footer=SIGNUP_FOOTER,
-        )
-        return HTMLResponse(page, status_code=400)
-
     if invite_code != os.environ["SIGNUP_INVITE_CODE"]:
-        return fail("Invalid invite code")
+        return HTMLResponse(_signup_page("Invalid invite code"), status_code=400)
 
     existing = (await session.exec(select(User).where(User.email == email))).first()
     if existing is not None:
-        return fail("An account with that email already exists")
+        message = "An account with that email already exists"
+        return HTMLResponse(_signup_page(message), status_code=400)
 
     user = User(email=email, password_hash=password_hash.hash(password))
     session.add(user)
@@ -173,7 +152,7 @@ async def signup(request: Request, session: SessionDep) -> Response:
     await session.refresh(user)
 
     request.session["user_id"] = user.id
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse(ONBOARDING_PATH, status_code=303)
 
 
 @router.post("/logout")

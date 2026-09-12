@@ -27,6 +27,10 @@ function formatCurrency(amount, currency) {
 
 async function loadAccounts() {
   const response = await fetch("/api/accounts");
+  if (response.status === 409) {
+    location.href = "/onboarding";
+    return [];
+  }
   if (!response.ok) throw new Error(`Failed to load accounts: ${response.status}`);
   return response.json();
 }
