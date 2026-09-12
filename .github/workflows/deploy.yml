@@ -1,8 +1,8 @@
 name: Deploy
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -11,8 +11,8 @@ jobs:
 
     # Deploys go out through the Vercel CLI, which tells Vercel and nothing else
     # — only the Vercel GitHub App writes deployment records, and vercel.json
-    # switches it off for main. Naming an environment gets each release listed
-    # on the repo anyway, and is where an approval gate would hang if we want one.
+    # switches it off for main. Naming an environment gets each run listed on
+    # the repo anyway, and is where an approval gate would hang if we want one.
     environment:
       name: production
       url: https://thrifty.vercel.app
