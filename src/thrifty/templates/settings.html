@@ -1,0 +1,40 @@
+{% extends "app.html" %}
+
+{% block title %}settings{% endblock %}
+{% block tagline %}Your Akahu connection and dashboard accounts{% endblock %}
+
+{% block main %}
+{% if saved %}<p class="notice">Saved.</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<article>
+  <header>
+    <strong>Dashboard accounts</strong>
+  </header>
+  {% if connected %}
+    <form method="post" action="/settings/accounts">
+      {% include "_account_checkboxes.html" %}
+      <button type="submit">Save accounts</button>
+    </form>
+  {% else %}
+    <p class="muted">Connect Akahu below to choose accounts.</p>
+  {% endif %}
+</article>
+
+<article>
+  <header>
+    <strong>Akahu connection</strong>
+  </header>
+  <p class="muted">
+    {% if connected %}
+      Connected. Paste new tokens to replace the ones stored.
+    {% else %}
+      Not connected yet.
+    {% endif %}
+  </p>
+  <form method="post" action="/settings/akahu">
+    {% include "_token_fields.html" %}
+    <button type="submit">{{ "Replace tokens" if connected else "Connect" }}</button>
+  </form>
+</article>
+{% endblock %}

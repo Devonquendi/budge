@@ -1,0 +1,13 @@
+{% extends "form.html" %}
+
+{% block title %}choose accounts{% endblock %}
+{% block width %}34rem{% endblock %}
+{% block submit %}Save{% endblock %}
+
+{% block intro %}
+<p>Tick the accounts you spend from. Those are the ones the dashboard adds up.</p>
+{% endblock %}
+
+{% block fields %}
+{% include "_account_checkboxes.html" %}
+{% endblock %}

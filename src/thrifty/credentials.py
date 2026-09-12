@@ -1,5 +1,6 @@
 """A user's stored Akahu tokens and their dashboard account selection."""
 
+import httpx2
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -33,6 +34,19 @@ async def save(
 
     session.add(credential)
     await session.commit()
+
+
+async def verify_and_save(
+    session: AsyncSession, user_id: int, app_token: str, user_token: str
+) -> bool:
+    """Saves the tokens only if Akahu accepts them. False means it didn't."""
+    try:
+        await AkahuClient(app_token=app_token, user_token=user_token).get_accounts()
+    except httpx2.HTTPError:
+        return False
+
+    await save(session, user_id, app_token, user_token)
+    return True
 
 
 async def client_for(session: AsyncSession, user_id: int) -> AkahuClient | None:

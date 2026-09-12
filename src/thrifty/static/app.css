@@ -74,6 +74,23 @@
   white-space: nowrap;
 }
 
+.page-header nav a[aria-current="page"] {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.error {
+  color: var(--ctp-red);
+}
+
+.notice {
+  color: var(--ctp-green);
+}
+
+.muted {
+  color: var(--ctp-subtext0);
+}
+
 #summary {
   margin-block: 1.5rem;
 }

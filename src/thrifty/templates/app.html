@@ -1,0 +1,27 @@
+{# Shell for signed-in pages: adds the nav. Add a page by adding a link here. #}
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <hgroup>
+    <h1>Thrifty</h1>
+    <p>{% block tagline %}{% endblock %}</p>
+  </hgroup>
+  <nav>
+    {% for path, label in [("/", "Dashboard"), ("/settings", "Settings")] %}
+    <a
+      href="{{ path }}"
+      {% if request.url.path == path %}aria-current="page"{% endif %}
+    >{{ label }}</a>
+    {% endfor %}
+    <button id="theme-toggle" class="secondary outline" type="button">
+      Toggle theme
+    </button>
+    <form method="post" action="/logout">
+      <button class="secondary outline" type="submit">Log out</button>
+    </form>
+  </nav>
+</header>
+
+{% block main %}{% endblock %}
+{% endblock %}

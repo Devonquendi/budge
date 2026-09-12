@@ -1,22 +1,20 @@
 """ASGI entrypoint for the FastAPI app."""
 
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
+from thrifty.api import accounts
 from thrifty.auth import require_auth
-from thrifty.auth import router as auth_router
-from thrifty.onboarding import router as onboarding_router
-from thrifty.routes import router as accounts_router
+from thrifty.templating import STATIC_DIR
+from thrifty.views import auth, dashboard, onboarding, settings
 
 load_dotenv()
 
-# Inside the package, so it resolves the same from source or site-packages.
-WEB_DIR = Path(__file__).parent / "web"
 SESSION_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
 
 app = FastAPI(title="Thrifty")
@@ -28,7 +26,11 @@ app.add_middleware(
     # Vercel sets VERCEL=1 in production, where requests are HTTPS only.
     https_only=bool(os.environ.get("VERCEL")),
 )
-app.include_router(auth_router)
-app.include_router(onboarding_router)
-app.include_router(accounts_router, prefix="/api")
-app.frontend("/", directory=WEB_DIR)
+
+app.include_router(auth.router)
+app.include_router(dashboard.router)
+app.include_router(onboarding.router)
+app.include_router(settings.router)
+app.include_router(accounts.router, prefix="/api")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
