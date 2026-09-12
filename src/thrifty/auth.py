@@ -38,6 +38,7 @@ PAGE = """<!doctype html>
       {error}
       <button type="submit">{submit}</button>
     </form>
+    {footer}
   </main>
 </body>
 </html>
@@ -69,6 +70,10 @@ def _error(message: str) -> str:
     return f'<p style="color: var(--pico-del-color)">{message}</p>' if message else ""
 
 
+LOGIN_FOOTER = f'<p>No account? <a href="{SIGNUP_PATH}">Sign up</a></p>'
+SIGNUP_FOOTER = f'<p>Already have an account? <a href="{LOGIN_PATH}">Log in</a></p>'
+
+
 async def require_auth(request: Request, call_next) -> Response:
     """Sends unauthenticated requests to the login page instead of onward."""
     if request.url.path in (LOGIN_PATH, SIGNUP_PATH) or request.session.get("user_id"):
@@ -92,7 +97,13 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 @router.get(LOGIN_PATH)
 async def login_form() -> HTMLResponse:
     return HTMLResponse(
-        PAGE.format(title="log in", fields=LOGIN_FIELDS, error="", submit="Log in")
+        PAGE.format(
+            title="log in",
+            fields=LOGIN_FIELDS,
+            error="",
+            submit="Log in",
+            footer=LOGIN_FOOTER,
+        )
     )
 
 
@@ -110,6 +121,7 @@ async def login(request: Request, session: SessionDep) -> Response:
             fields=LOGIN_FIELDS,
             error=_error("Wrong email or password"),
             submit="Log in",
+            footer=LOGIN_FOOTER,
         )
         return HTMLResponse(page, status_code=401)
 
@@ -120,7 +132,13 @@ async def login(request: Request, session: SessionDep) -> Response:
 @router.get(SIGNUP_PATH)
 async def signup_form() -> HTMLResponse:
     return HTMLResponse(
-        PAGE.format(title="sign up", fields=SIGNUP_FIELDS, error="", submit="Sign up")
+        PAGE.format(
+            title="sign up",
+            fields=SIGNUP_FIELDS,
+            error="",
+            submit="Sign up",
+            footer=SIGNUP_FOOTER,
+        )
     )
 
 
@@ -138,6 +156,7 @@ async def signup(request: Request, session: SessionDep) -> Response:
             fields=SIGNUP_FIELDS,
             error=_error(message),
             submit="Sign up",
+            footer=SIGNUP_FOOTER,
         )
         return HTMLResponse(page, status_code=400)
 
