@@ -22,8 +22,6 @@ thrifty = "thrifty:main"
 entrypoint = "thrifty.server:app"
 
 [tool.vercel]
-# Vercel resolves this as a path from the repo root, so it names the shim
-# rather than the package. Deps come from this file too — no requirements.txt.
 entrypoint = "server:app"
 
 [build-system]
