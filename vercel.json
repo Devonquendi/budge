@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["syd1"],
   "functions": {
     "server.py": {
       "excludeFiles": "{.venv/**,.github/**,.ruff_cache/**,.agents/**,.claude/**}"
