@@ -8,10 +8,15 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "alembic>=1.20.0",
+    "cryptography>=50.0.1",
     "fastapi[standard]>=0.141.1",
     "httpx2>=2.12.0",
     "itsdangerous>=2.2.0",
+    "psycopg[binary]>=3.3.5",
+    "pwdlib[argon2]>=0.3.1",
     "python-dotenv>=1.2.3",
+    "sqlmodel>=0.0.42",
 ]
 
 [project.scripts]
@@ -20,6 +25,10 @@ thrifty = "thrifty:main"
 [tool.fastapi]
 # Enables `uv run fastapi dev`
 entrypoint = "thrifty.server:app"
+
+[tool.alembic]
+script_location = "%(here)s/alembic"
+prepend_sys_path = ["."]
 
 [tool.vercel]
 entrypoint = "server:app"
