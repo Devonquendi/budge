@@ -1,7 +1,9 @@
 [tools]
+node = "26.8.2"
 prek = "0.5.2"
 python = "3.14.7"
 uv = "0.12.13"
+vercel = { version = "59.15.1", allow_builds = ["esbuild"], trust_policy_excludes = ["undici"] }
 
 [deps.uv]
 auto = true

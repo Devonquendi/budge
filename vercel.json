@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": { "main": false }
+  },
+  "functions": {
+    "server.py": {
+      "excludeFiles": "{.venv/**,.github/**,.ruff_cache/**,.agents/**,.claude/**}"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+
+    # Deploys go out through the Vercel CLI, which tells Vercel and nothing else
+    # — only the Vercel GitHub App writes deployment records, and vercel.json
+    # switches it off for main. Naming an environment gets each release listed
+    # on the repo anyway, and is where an approval gate would hang if we want one.
+    environment:
+      name: production
+      url: https://thrifty.vercel.app
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: jdx/mise-action@v4
+
+      # vercel.json disables auto-deploys on main, so production ships from here.
+      # Vercel does the build, so the runner never has to produce Linux wheels.
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel deploy --prod --yes --token "${{ secrets.VERCEL_TOKEN }}"
