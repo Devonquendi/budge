@@ -1,10 +1,18 @@
 # thrifty
 
-A personal finance management tool that uses Akahu to track and manage your finances.
+A personal finance dashboard built on [Akahu](https://developers.akahu.nz/llms.txt).
 
-## References
+## Dev tools
 
-- [Akahu](https://developers.akahu.nz/llms.txt): Open banking API provider for NZ
-- [mise](mise.jdx.dev/llms.txt): Project dependency management
-- [prek](https://prek.j178.dev/llms.txt): Pre-commit hooks
-- [uv](https://docs.astral.sh/uv/llms.txt): Python package manager
+All dev tools used in this project are managed by [mise](mise.jdx.dev/llms.txt). Common
+mise CLI commands include:
+
+- `mise use <dep>@<version>`: Add a mise-managed dependency to the project
+- `mise install`: Install project dependencies
+- `mise up`: Update project dependencies
+
+Unless otherwise specified, all dev tools listed below are managed by mise:
+
+- [prek](https://prek.j178.dev/llms.txt)
+- [uv](https://docs.astral.sh/uv/llms.txt)
+- [Vercel](https://vercel.com/llms.txt)
