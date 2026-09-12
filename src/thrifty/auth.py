@@ -1,6 +1,7 @@
 """Per-user accounts: invite-gated signup, login, and session handling."""
 
 import os
+from html import escape
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -39,7 +40,7 @@ SIGNUP_FIELDS = (
     + """
       <label>
         Invite code
-        <input type="text" name="invite_code" required />
+        <input type="text" name="invite_code" value="{invite}" required />
       </label>
 """
 )
@@ -58,10 +59,10 @@ def _login_page(error: str = "") -> str:
     )
 
 
-def _signup_page(error: str = "") -> str:
+def _signup_page(error: str = "", invite: str = "") -> str:
     return form_page(
         title="sign up",
-        fields=SIGNUP_FIELDS,
+        fields=SIGNUP_FIELDS.format(invite=escape(invite)),
         submit="Sign up",
         error=error,
         footer=SIGNUP_FOOTER,
@@ -126,8 +127,9 @@ async def login(request: Request, session: SessionDep) -> Response:
 
 
 @router.get(SIGNUP_PATH)
-async def signup_form() -> HTMLResponse:
-    return HTMLResponse(_signup_page())
+async def signup_form(invite: str = "") -> HTMLResponse:
+    """?invite=<code> prefills the invite field so a shared link just works."""
+    return HTMLResponse(_signup_page(invite=invite))
 
 
 @router.post(SIGNUP_PATH)
@@ -139,12 +141,13 @@ async def signup(request: Request, session: SessionDep) -> Response:
     invite_code = str(form.get("invite_code", ""))
 
     if invite_code != os.environ["SIGNUP_INVITE_CODE"]:
-        return HTMLResponse(_signup_page("Invalid invite code"), status_code=400)
+        page = _signup_page("Invalid invite code", invite=invite_code)
+        return HTMLResponse(page, status_code=400)
 
     existing = (await session.exec(select(User).where(User.email == email))).first()
     if existing is not None:
         message = "An account with that email already exists"
-        return HTMLResponse(_signup_page(message), status_code=400)
+        return HTMLResponse(_signup_page(message, invite=invite_code), status_code=400)
 
     user = User(email=email, password_hash=password_hash.hash(password))
     session.add(user)
