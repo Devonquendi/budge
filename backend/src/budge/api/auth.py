@@ -1,6 +1,7 @@
 """Signing in, signing up, and who the caller is."""
 
 import os
+import secrets
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
@@ -56,7 +57,10 @@ async def login(body: Login, request: Request, session: SessionDep) -> Me:
 @router.post("/signup", status_code=201)
 async def signup(body: SignUp, request: Request, session: SessionDep) -> Me:
     """Creates an account behind an invite code and signs it straight in."""
-    if body.invite_code != os.environ["SIGNUP_INVITE_CODE"]:
+    # Constant-time: a plain != leaks the code's length and prefix through
+    # how long the comparison takes.
+    expected = os.environ["SIGNUP_INVITE_CODE"]
+    if not secrets.compare_digest(body.invite_code.encode(), expected.encode()):
         raise HTTPException(status_code=400, detail="Invalid invite code")
 
     if await _by_email(session, body.email) is not None:
