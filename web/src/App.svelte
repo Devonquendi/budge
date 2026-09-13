@@ -9,6 +9,7 @@
   import ConnectAkahu from './routes/ConnectAkahu.svelte'
   import Dashboard from './routes/Dashboard.svelte'
   import Login from './routes/Login.svelte'
+  import Profile from './routes/Profile.svelte'
   import Settings from './routes/Settings.svelte'
   import Signup from './routes/Signup.svelte'
   import Transactions from './routes/Transactions.svelte'
@@ -16,7 +17,7 @@
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
-  const SIGNED_IN = ['/', '/transactions', '/settings']
+  const SIGNED_IN = ['/', '/transactions', '/profile', '/settings']
 
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
@@ -122,8 +123,10 @@
   <AppShell email={me.email} onsignout={signedOut}>
     {#if path() === '/transactions'}
       <Transactions />
+    {:else if path() === '/profile'}
+      <Profile email={me.email} ondisconnect={disconnected} />
     {:else if path() === '/settings'}
-      <Settings ondisconnect={disconnected} />
+      <Settings />
     {:else}
       <Dashboard />
     {/if}

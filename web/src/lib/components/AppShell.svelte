@@ -5,6 +5,7 @@
   import { isDark, toggleTheme } from '../theme.svelte'
   import { getWorkspace } from '../workspace.svelte'
   import Link from './Link.svelte'
+  import ProfileMenu from './ProfileMenu.svelte'
   import Wordmark from './Wordmark.svelte'
 
   let {
@@ -33,9 +34,18 @@
 {#snippet actions()}
   <div class="actions">
     <label class="theme">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.5 14.2A8.7 8.7 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7Z" />
-      </svg>
+      {#if isDark()}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.5 14.2A8.7 8.7 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7Z" />
+        </svg>
+      {:else}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.25" />
+          <path
+            d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"
+          />
+        </svg>
+      {/if}
       <input
         type="checkbox"
         role="switch"
@@ -44,7 +54,8 @@
         aria-label="Dark theme"
       />
     </label>
-    <button type="button" class="secondary outline" onclick={onsignout}>Log out</button>
+
+    <ProfileMenu {email} {onsignout} />
   </div>
 {/snippet}
 
@@ -87,8 +98,6 @@
         </p>
       </div>
     {/if}
-
-    <p class="email" title={email}>{email}</p>
   </aside>
 
   <div class="column">
@@ -216,20 +225,14 @@
   .actions {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: 0.5rem;
   }
 
-  .actions button {
-    white-space: nowrap;
-  }
-
-  /* The moon says what the switch is for; the switch says which way it's set. */
   .theme {
     display: flex;
     align-items: center;
     gap: 0.375rem;
     margin: 0;
-    padding: 0 0.125rem;
     cursor: pointer;
   }
 
@@ -244,20 +247,23 @@
     stroke-linejoin: round;
   }
 
+  /*
+   * The switch shows the mode rather than whether a feature is on: a pale sky
+   * with a low sun, or a night sky with a pale moon. Safe to read the palette
+   * for it — the checked state and the dark palette are the same condition, so
+   * these two blocks never evaluate against the wrong theme.
+   */
   .theme input {
+    --pico-switch-background-color: var(--ctp-surface1);
+    --pico-border-color: var(--ctp-surface1);
+    --pico-switch-color: var(--ctp-yellow);
     cursor: pointer;
   }
 
-  .email {
-    display: none;
-    margin: 0;
-    padding: 0 0.1875rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    line-height: 1.3;
-    color: var(--ctp-overlay0);
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .theme input:checked {
+    --pico-switch-checked-background-color: var(--ctp-crust);
+    --pico-border-color: var(--ctp-surface1);
+    --pico-switch-color: var(--ctp-lavender);
   }
 
   .column {
@@ -316,10 +322,6 @@
       display: block;
     }
 
-    .email {
-      display: block;
-      margin-top: auto;
-    }
 
     .topbar {
       position: sticky;

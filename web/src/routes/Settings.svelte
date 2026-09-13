@@ -2,12 +2,9 @@
   import { errorMessage } from '../lib/api'
   import AccountPicker from '../lib/components/AccountPicker.svelte'
   import Panel from '../lib/components/Panel.svelte'
-  import TokenFields from '../lib/components/TokenFields.svelte'
   import { prefs, setPref } from '../lib/prefs.svelte'
   import { followSystem, followsSystem, isDark, setTheme } from '../lib/theme.svelte'
   import { getWorkspace } from '../lib/workspace.svelte'
-
-  let { ondisconnect }: { ondisconnect: () => void } = $props()
 
   const workspace = getWorkspace()
 
@@ -19,12 +16,7 @@
   let edits = $state.raw<string[] | null>(null)
   let notice = $state('')
   let error = $state('')
-
-  let appToken = $state('')
-  let userToken = $state('')
   let savingAccounts = $state(false)
-  let savingTokens = $state(false)
-  let disconnecting = $state(false)
 
   const saved = $derived(workspace.included)
   const included = $derived(edits ?? saved)
@@ -33,8 +25,6 @@
     edits !== null &&
       (edits.length !== saved.length || edits.some((id) => !saved.includes(id))),
   )
-
-  const asAt = new Intl.DateTimeFormat('en-NZ', { hour: 'numeric', minute: '2-digit' })
 
   async function saveAccounts(event: SubmitEvent) {
     event.preventDefault()
@@ -52,54 +42,13 @@
       savingAccounts = false
     }
   }
-
-  async function saveTokens(event: SubmitEvent) {
-    event.preventDefault()
-    savingTokens = true
-    notice = ''
-    error = ''
-    try {
-      await workspace.reconnect(appToken, userToken)
-      appToken = ''
-      userToken = ''
-      edits = null
-      notice = 'Akahu connection updated.'
-    } catch (failure) {
-      error = errorMessage(failure)
-    } finally {
-      savingTokens = false
-    }
-  }
-
-  async function disconnect() {
-    // Destructive and not obviously so from the button alone: this drops the
-    // tokens and the account picks, and puts you back at step one.
-    if (!confirm('Disconnect Akahu? Your tokens and account choices are deleted.')) {
-      return
-    }
-
-    disconnecting = true
-    notice = ''
-    error = ''
-    try {
-      await workspace.disconnect()
-      ondisconnect()
-    } catch (failure) {
-      error = errorMessage(failure)
-      disconnecting = false
-    }
-  }
 </script>
 
 <div class="page">
   <div class="titles">
     <h1>Settings</h1>
     <p class="muted sub">
-      <!-- The separator carries its own spaces: Svelte trims whitespace at
-           the block boundary, which would run "connected" into the dot. -->
-      Akahu connected{#if workspace.loadedAt}{' · '}last synced {asAt.format(
-          workspace.loadedAt,
-        )}{/if}
+      {included.length} of {workspace.accounts.length} accounts on your dashboard
     </p>
   </div>
 
@@ -134,68 +83,39 @@
       </Panel>
     </form>
 
-    <div class="column">
-      <form onsubmit={saveTokens}>
-        <Panel title="Akahu connection" padded>
-          {#snippet action()}
-            <span class="status">
-              <span class="dot" aria-hidden="true"></span>Connected
-            </span>
-          {/snippet}
-
-          <TokenFields bind:appToken bind:userToken inline />
-
-          <div class="buttons">
-            <button type="submit" disabled={savingTokens || disconnecting}>
-              {savingTokens ? 'Checking…' : 'Replace tokens'}
-            </button>
-            <button
-              type="button"
-              class="secondary outline"
-              onclick={disconnect}
-              disabled={savingTokens || disconnecting}
-            >
-              {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-            </button>
-          </div>
-        </Panel>
-      </form>
-
-      <Panel title="Preferences">
-        <div class="prefs">
-          <label>
-            <input
-              type="checkbox"
-              checked={followsSystem()}
-              onchange={(event) => {
-                // Unticking has to land somewhere, so it pins whatever is
-                // already on screen rather than flipping the lights.
-                if (event.currentTarget.checked) followSystem()
-                else setTheme(isDark() ? 'dark' : 'light')
-              }}
-            />
-            <span>Follow system theme</span>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={prefs().groupByDay}
-              onchange={(event) =>
-                setPref('groupByDay', event.currentTarget.checked)}
-            />
-            <span>Group transactions by day</span>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={prefs().hideCents}
-              onchange={(event) => setPref('hideCents', event.currentTarget.checked)}
-            />
-            <span>Hide cents on balances over $10k</span>
-          </label>
-        </div>
-      </Panel>
-    </div>
+    <Panel title="Preferences">
+      <div class="prefs">
+        <label>
+          <input
+            type="checkbox"
+            checked={followsSystem()}
+            onchange={(event) => {
+              // Unticking has to land somewhere, so it pins whatever is
+              // already on screen rather than flipping the lights.
+              if (event.currentTarget.checked) followSystem()
+              else setTheme(isDark() ? 'dark' : 'light')
+            }}
+          />
+          <span>Follow system theme</span>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={prefs().groupByDay}
+            onchange={(event) => setPref('groupByDay', event.currentTarget.checked)}
+          />
+          <span>Group transactions by day</span>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={prefs().hideCents}
+            onchange={(event) => setPref('hideCents', event.currentTarget.checked)}
+          />
+          <span>Hide cents on balances over $10k</span>
+        </label>
+      </div>
+    </Panel>
   </div>
 </div>
 
@@ -225,13 +145,6 @@
     align-items: start;
   }
 
-  .column {
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-    min-width: 0;
-  }
-
   /* The form is only a wrapper — the panel inside it is the visible box. It
      still needs a box of its own, though: display:contents on a form is a
      known way to confuse assistive tech. */
@@ -245,28 +158,6 @@
     font-family: var(--font-mono);
     font-size: var(--text-meta);
     color: var(--pico-muted-color);
-  }
-
-  .status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3125rem;
-    font-size: var(--text-meta);
-    font-weight: 500;
-    color: var(--ctp-green);
-  }
-
-  .dot {
-    width: 0.375rem;
-    height: 0.375rem;
-    border-radius: 999px;
-    background: currentColor;
-  }
-
-  .buttons {
-    display: flex;
-    gap: 0.4375rem;
-    flex-wrap: wrap;
   }
 
   .prefs {
