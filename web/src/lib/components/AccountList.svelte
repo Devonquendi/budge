@@ -32,7 +32,7 @@
       </span>
     </li>
   {:else}
-    <li class="empty muted">No accounts are switched on for the dashboard yet.</li>
+    <li class="empty muted">No accounts</li>
   {/each}
 </ul>
 

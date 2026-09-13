@@ -25,10 +25,6 @@ BATCH_SIZE = 1000
 MIN_CONFIDENCE = 0.6
 
 
-def is_configured() -> bool:
-    return bool(os.environ.get("GENIE_API_TOKEN"))
-
-
 class GenieClient:
     """Looks up merchants and categories for transaction descriptions."""
 

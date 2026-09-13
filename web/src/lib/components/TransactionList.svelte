@@ -72,7 +72,7 @@
     </ul>
   </section>
 {:else}
-  <p class="muted empty">No transactions in this period.</p>
+  <p class="muted empty">No transactions</p>
 {/each}
 
 <style>

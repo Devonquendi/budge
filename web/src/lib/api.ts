@@ -63,8 +63,6 @@ export type Transaction = {
 export type History = {
   transactions: Transaction[]
   days: number
-  /** False when no Genie key is set, which is why rows may be uncategorised. */
-  genie_configured: boolean
 }
 
 export type Selection = {

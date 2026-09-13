@@ -19,13 +19,10 @@ MAX_DAYS = 365
 
 
 class History(BaseModel):
-    """A window of transactions, and how they came to be classified."""
+    """A window of transactions, classified as far as we can manage."""
 
     transactions: list[Transaction]
     days: int
-    # Lets the page say why things are uncategorised instead of leaving the
-    # user to wonder whether it's broken.
-    genie_configured: bool
 
 
 async def _client(session: SessionDep, user_id: int) -> AkahuClient:
@@ -53,8 +50,4 @@ async def get_transactions(
     transactions = await client.get_transactions(
         accounts, start=end - timedelta(days=days), end=end
     )
-    return History(
-        transactions=await genie.classify(transactions),
-        days=days,
-        genie_configured=genie.is_configured(),
-    )
+    return History(transactions=await genie.classify(transactions), days=days)

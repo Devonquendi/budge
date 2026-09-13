@@ -28,10 +28,7 @@
 </script>
 
 <AuthCard>
-  <hgroup>
-    <h1>Create an account</h1>
-    <p class="muted">Budge is invite-only while it's still being built.</p>
-  </hgroup>
+  <h1>Create an account</h1>
 
   <form onsubmit={submit}>
     <label>
@@ -71,10 +68,6 @@
 </AuthCard>
 
 <style>
-  hgroup p {
-    margin-top: 0.375rem;
-  }
-
   form {
     display: flex;
     flex-direction: column;

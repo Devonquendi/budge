@@ -24,10 +24,7 @@
 </script>
 
 <AuthCard>
-  <hgroup>
-    <h1>Welcome back</h1>
-    <p class="muted">Sign in to see where your money is.</p>
-  </hgroup>
+  <h1>Welcome back</h1>
 
   <form onsubmit={submit}>
     <label>
@@ -59,10 +56,6 @@
 </AuthCard>
 
 <style>
-  hgroup p {
-    margin-top: 0.375rem;
-  }
-
   form {
     display: flex;
     flex-direction: column;

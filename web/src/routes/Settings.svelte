@@ -82,13 +82,12 @@
   <article>
     <header>
       <h2>Dashboard accounts</h2>
-      <p class="muted">Only ticked accounts count towards your net balance.</p>
     </header>
 
     {#if connected === null}
       <p aria-busy="true">Loading&hellip;</p>
     {:else if !connected}
-      <p class="muted">Connect Akahu below to choose accounts.</p>
+      <p class="muted">Not connected.</p>
     {:else if selection}
       <form onsubmit={saveAccounts}>
         <AccountPicker
@@ -101,7 +100,7 @@
         </button>
       </form>
     {:else}
-      <p aria-busy="true">Loading accounts&hellip;</p>
+      <p aria-busy="true">Loading&hellip;</p>
     {/if}
   </article>
 
@@ -111,11 +110,7 @@
       {#if connected === null}
         <p aria-busy="true">Loading&hellip;</p>
       {:else}
-        <p class="muted">
-          {connected
-            ? 'Connected. Paste new tokens to replace the ones stored.'
-            : 'Not connected yet.'}
-        </p>
+        <p class="muted">{connected ? 'Connected' : 'Not connected'}</p>
       {/if}
     </header>
 

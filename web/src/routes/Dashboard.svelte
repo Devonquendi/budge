@@ -34,6 +34,6 @@
     <p class="error">Couldn't load your accounts: {error}</p>
   {:else}
     <!-- aria-busy is Pico's spinner; no markup of our own needed. -->
-    <p aria-busy="true">Loading your accounts&hellip;</p>
+    <p aria-busy="true">Loading&hellip;</p>
   {/if}
 </AppShell>

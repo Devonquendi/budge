@@ -40,7 +40,7 @@
       </label>
     </li>
   {:else}
-    <li class="empty muted">Akahu returned no accounts for these tokens.</li>
+    <li class="empty muted">No accounts</li>
   {/each}
 </ul>
 

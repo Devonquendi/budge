@@ -19,16 +19,11 @@
   let error = $state('')
   let loading = $state(false)
 
-  // How much of the range Genie or Akahu actually put a name to. Without this
-  // the page looks classified as long as you don't scroll.
+  // How many of the range got a name put to them. Without this the page looks
+  // fully categorised as long as you don't scroll.
   const coverage = $derived.by(() => {
     const rows = history?.transactions ?? []
-    const tally = { total: rows.length, akahu: 0, genie: 0 }
-    for (const row of rows) {
-      if (row.category?.source === 'akahu') tally.akahu += 1
-      else if (row.category?.source === 'genie') tally.genie += 1
-    }
-    return { ...tally, unknown: tally.total - tally.akahu - tally.genie }
+    return { total: rows.length, named: rows.filter((row) => row.category).length }
   })
 
   async function load(range: number) {
@@ -52,10 +47,7 @@
 </script>
 
 <AppShell {onsignout}>
-  <hgroup>
-    <h1>Transactions</h1>
-    <p class="muted">What came in and went out, and what it was for.</p>
-  </hgroup>
+  <h1>Transactions</h1>
 
   <div class="controls" role="group" aria-label="Date range">
     {#each RANGES as range (range.days)}
@@ -71,17 +63,11 @@
   </div>
 
   {#if history}
-    <p class="coverage muted">
-      {#if coverage.total === 0}
-        Nothing to classify yet.
-      {:else}
-        {coverage.akahu + coverage.genie} of {coverage.total} classified{#if coverage.genie}, {coverage.genie}
-          by Genie{/if}.
-        {#if coverage.unknown && !history.genie_configured}
-          Set <code>GENIE_API_TOKEN</code> to have Genie name the rest.
-        {/if}
-      {/if}
-    </p>
+    {#if coverage.total}
+      <p class="coverage muted">
+        {coverage.named} / {coverage.total} categorised
+      </p>
+    {/if}
 
     <div class={{ stale: loading }}>
       <TransactionList transactions={history.transactions} />
@@ -89,7 +75,7 @@
   {:else if error}
     <p class="error">Couldn't load your transactions: {error}</p>
   {:else}
-    <p aria-busy="true">Loading your transactions&hellip;</p>
+    <p aria-busy="true">Loading&hellip;</p>
   {/if}
 </AppShell>
 
