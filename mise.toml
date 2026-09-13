@@ -25,3 +25,41 @@ _.file = [
     { path = ".env", redact = true },
     { path = ".env.local", redact = true },
 ]
+
+[hooks]
+# `mise install` only installs tools, so finish the job here: git hooks and
+# both services' dependencies, leaving a fresh clone ready to run.
+postinstall = "prek install && mise deps install"
+
+[tasks."dev:api"]
+description = "FastAPI with reload on :8000"
+alias = "api"
+dir = "backend"
+run = "uv run fastapi dev"
+
+[tasks."dev:web"]
+description = "Vite dev server on :5173"
+alias = "web"
+dir = "web"
+run = "pnpm dev"
+
+[tasks.dev]
+description = "Both dev servers"
+run = [{ tasks = ["dev:api", "dev:web"] }]
+
+[tasks."check:api"]
+dir = "backend"
+run = "uv check"
+
+[tasks."check:web"]
+dir = "web"
+run = "pnpm check"
+
+[tasks.check]
+description = "Type-check both services"
+run = [{ tasks = ["check:api", "check:web"] }]
+
+[tasks.build]
+description = "Production build of the web app"
+dir = "web"
+run = "pnpm build"
