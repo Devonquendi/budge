@@ -4,9 +4,9 @@ import httpx2
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from thrifty.akahu import AkahuClient
-from thrifty.db import crypto
-from thrifty.db.models import AkahuAccountSetting, AkahuCredential
+from budge.akahu import AkahuClient
+from budge.db import crypto
+from budge.db.models import AkahuAccountSetting, AkahuCredential
 
 
 async def get(session: AsyncSession, user_id: int) -> AkahuCredential | None:

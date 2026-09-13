@@ -2,8 +2,8 @@
 
 import httpx2
 
-from thrifty.akahu import transform
-from thrifty.akahu.models import Account
+from budge.akahu import transform
+from budge.akahu.models import Account
 
 BASE_URL = "https://api.akahu.io/v1"
 

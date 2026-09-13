@@ -1,4 +1,4 @@
-# thrifty
+# budge
 
 A personal finance dashboard built on [Akahu](https://developers.akahu.nz/llms.txt).
 

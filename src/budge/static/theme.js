@@ -1,4 +1,4 @@
-const THEME_KEY = "thrifty-theme";
+const THEME_KEY = "budge-theme";
 
 function applyStoredTheme() {
   try {

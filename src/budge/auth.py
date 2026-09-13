@@ -7,8 +7,8 @@ from fastapi.responses import RedirectResponse
 from pwdlib import PasswordHash
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from thrifty.db.models import User
-from thrifty.db.session import get_session
+from budge.db.models import User
+from budge.db.session import get_session
 
 LOGIN_PATH = "/login"
 SIGNUP_PATH = "/signup"

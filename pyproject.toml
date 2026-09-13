@@ -1,5 +1,5 @@
 [project]
-name = "thrifty"
+name = "budge"
 version = "0.1.0"
 description = "Manage personal finances via Akahu"
 readme = "README.md"
@@ -22,11 +22,11 @@ dependencies = [
 ]
 
 [project.scripts]
-thrifty = "thrifty:main"
+budge = "budge:main"
 
 [tool.fastapi]
 # Enables `uv run fastapi dev`
-entrypoint = "thrifty.server:app"
+entrypoint = "budge.server:app"
 
 [tool.alembic]
 script_location = "%(here)s/alembic"

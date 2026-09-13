@@ -1,6 +1,6 @@
-"""Turn Akahu's raw JSON into thrifty's domain models."""
+"""Turn Akahu's raw JSON into budge's domain models."""
 
-from thrifty.akahu.models import Account
+from budge.akahu.models import Account
 
 
 def to_account(data: dict) -> Account:

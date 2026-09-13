@@ -7,15 +7,15 @@ from fastapi.responses import RedirectResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from thrifty.auth import (
+from budge.auth import (
     LOGIN_PATH,
     ONBOARDING_PATH,
     SIGNUP_PATH,
     SessionDep,
     password_hash,
 )
-from thrifty.db.models import AkahuCredential, User
-from thrifty.templating import templates
+from budge.db.models import AkahuCredential, User
+from budge.templating import templates
 
 router = APIRouter(tags=["auth"])
 

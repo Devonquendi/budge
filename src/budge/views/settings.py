@@ -3,10 +3,10 @@
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
 
-from thrifty import credentials
-from thrifty.auth import CurrentUserId, SessionDep
-from thrifty.templating import templates
-from thrifty.views.onboarding import BAD_TOKENS
+from budge import credentials
+from budge.auth import CurrentUserId, SessionDep
+from budge.templating import templates
+from budge.views.onboarding import BAD_TOKENS
 
 SETTINGS_PATH = "/settings"
 router = APIRouter(prefix=SETTINGS_PATH, tags=["settings"])

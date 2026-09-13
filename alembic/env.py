@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 from alembic import context
 
 # Registers the tables on SQLModel.metadata below.
-from thrifty.db import models  # noqa: F401
+from budge.db import models  # noqa: F401
 
 load_dotenv()
 load_dotenv(".env.local")  # Vercel writes marketplace DB creds here

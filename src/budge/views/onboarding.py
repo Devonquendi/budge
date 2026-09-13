@@ -3,9 +3,9 @@
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
 
-from thrifty import credentials
-from thrifty.auth import ONBOARDING_PATH, CurrentUserId, SessionDep
-from thrifty.templating import templates
+from budge import credentials
+from budge.auth import ONBOARDING_PATH, CurrentUserId, SessionDep
+from budge.templating import templates
 
 ACCOUNTS_PATH = f"{ONBOARDING_PATH}/accounts"
 router = APIRouter(tags=["onboarding"])

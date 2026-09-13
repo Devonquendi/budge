@@ -2,9 +2,9 @@
 
 from fastapi import APIRouter, HTTPException
 
-from thrifty import credentials
-from thrifty.akahu.models import Account
-from thrifty.auth import CurrentUserId, SessionDep
+from budge import credentials
+from budge.akahu.models import Account
+from budge.auth import CurrentUserId, SessionDep
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
