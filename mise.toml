@@ -1,9 +1,27 @@
 [tools]
 node = "26.8.2"
+pnpm = "12.4.1"
 prek = "0.5.2"
 python = "3.14.7"
 uv = "0.12.13"
 vercel = { version = "59.15.1", allow_builds = ["esbuild"], trust_policy_excludes = ["undici"] }
 
 [deps.uv]
+dir = "backend"
 auto = true
+
+[deps.pnpm]
+auto = true
+dir = "web"
+
+[env]
+# uv keeps the virtualenv in backend/, so point mise at it rather than
+# letting it look for one at the repo root.
+_.python.venv = { path = "backend/.venv" }
+
+# Secrets stay at the repo root: .env is hand-written, .env.local is written by
+# `vercel env pull`. Loaded here so backend and web commands share one source.
+_.file = [
+    { path = ".env", redact = true },
+    { path = ".env.local", redact = true },
+]
