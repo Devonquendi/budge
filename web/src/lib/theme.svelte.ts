@@ -30,17 +30,34 @@ export function applyStoredTheme(): void {
   if (chosen.theme) document.documentElement.dataset.theme = chosen.theme
 }
 
+export function followsSystem(): boolean {
+  return chosen.theme === null
+}
+
+export function followSystem(): void {
+  chosen.theme = null
+  delete document.documentElement.dataset.theme
+  try {
+    localStorage.removeItem(THEME_KEY)
+  } catch {
+    // Nothing stored to remove, which is the state we wanted anyway.
+  }
+}
+
 export function isDark(): boolean {
   return chosen.theme ? chosen.theme === 'dark' : systemPrefersDark.current
 }
 
-export function toggleTheme(): void {
-  const next: Theme = isDark() ? 'light' : 'dark'
-  chosen.theme = next
-  document.documentElement.dataset.theme = next
+export function setTheme(theme: Theme): void {
+  chosen.theme = theme
+  document.documentElement.dataset.theme = theme
   try {
-    localStorage.setItem(THEME_KEY, next)
+    localStorage.setItem(THEME_KEY, theme)
   } catch {
     // Ignore — the theme just won't persist across reloads.
   }
+}
+
+export function toggleTheme(): void {
+  setTheme(isDark() ? 'light' : 'dark')
 }

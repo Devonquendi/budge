@@ -124,12 +124,10 @@ export const api = {
 
   logout: () => request<void>('/auth/logout', 'POST'),
 
-  connection: () => request<Connection>('/akahu'),
-
   connect: (app_token: string, user_token: string) =>
     request<Connection>('/akahu', 'PUT', { app_token, user_token }),
 
-  accounts: () => request<Account[]>('/accounts'),
+  disconnect: () => request<void>('/akahu', 'DELETE'),
 
   selection: () => request<Selection>('/accounts/selection'),
 

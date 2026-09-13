@@ -4,8 +4,8 @@
  * Pico styles the plain elements — buttons, inputs, tables, <article> cards —
  * so the job here is theming it rather than restyling it. Overriding Pico's own
  * selectors is what makes stylesheets miserable; setting its variables is the
- * supported way in. Components with no Pico equivalent (the account list, the
- * balance hero, the nav) carry their own scoped styles and read the --ctp-*
+ * supported way in. Components with no Pico equivalent (the sidebar, the
+ * account list, the ledger) carry their own scoped styles and read the --ctp-*
  * values directly.
  */
 
@@ -19,12 +19,19 @@
   --ctp-surface1: #bcc0cc;
   --ctp-text: #4c4f69;
   --ctp-subtext0: #6c6f85;
+  --ctp-overlay0: #9ca0b0;
   --ctp-blue: #1e66f5;
   --ctp-blue-hover: #0b57e3;
   --ctp-on-blue: #eff1f5;
   --ctp-green: #40a02b;
   --ctp-red: #d20f39;
   --ctp-mauve: #8839ef;
+  --ctp-peach: #fe640b;
+  --ctp-yellow: #df8e1d;
+  --ctp-sky: #04a5e5;
+  --ctp-pink: #ea76cb;
+  --ctp-lavender: #7287fd;
+  --ctp-teal: #179299;
 }
 
 /* With no explicit choice stored, follow the system. */
@@ -39,12 +46,19 @@
     --ctp-surface1: #45475a;
     --ctp-text: #cdd6f4;
     --ctp-subtext0: #a6adc8;
+    --ctp-overlay0: #6c7086;
     --ctp-blue: #89b4fa;
     --ctp-blue-hover: #a3c6fb;
     --ctp-on-blue: #1e1e2e;
     --ctp-green: #a6e3a1;
     --ctp-red: #f38ba8;
     --ctp-mauve: #cba6f7;
+    --ctp-peach: #fab387;
+    --ctp-yellow: #f9e2af;
+    --ctp-sky: #89dceb;
+    --ctp-pink: #f5c2e7;
+    --ctp-lavender: #b4befe;
+    --ctp-teal: #94e2d5;
   }
 }
 
@@ -59,12 +73,44 @@
   --ctp-surface1: #45475a;
   --ctp-text: #cdd6f4;
   --ctp-subtext0: #a6adc8;
+  --ctp-overlay0: #6c7086;
   --ctp-blue: #89b4fa;
   --ctp-blue-hover: #a3c6fb;
   --ctp-on-blue: #1e1e2e;
   --ctp-green: #a6e3a1;
   --ctp-red: #f38ba8;
   --ctp-mauve: #cba6f7;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-sky: #89dceb;
+  --ctp-pink: #f5c2e7;
+  --ctp-lavender: #b4befe;
+  --ctp-teal: #94e2d5;
+}
+
+/*
+ * Two greys the palette doesn't name, mixed rather than hardcoded so they
+ * follow the theme: the hairline between rows of one list, and the recessed
+ * strip a card's header and footer sit on.
+ */
+:root {
+  --ctp-divider: color-mix(in srgb, var(--ctp-surface0) 55%, var(--ctp-base));
+  --ctp-recessed: color-mix(in srgb, var(--ctp-mantle) 60%, var(--ctp-base));
+
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /*
+   * The type scale, in one place because the density is the whole point of the
+   * layout — panels only fit side by side at these sizes. Body is 13.5px on a
+   * 16px root; the rest steps down from there.
+   */
+  --text-body: 0.845rem;
+  --text-label: 0.78rem;
+  --text-meta: 0.6875rem;
+  --text-micro: 0.655rem;
+  --text-title: 1.0625rem;
+  --text-section: 0.78rem;
 }
 
 /*
@@ -74,12 +120,24 @@
  * loading after Pico settles the tie.
  */
 :root:root {
-  /* Shape and rhythm. Pico's defaults are tighter and squarer than we want. */
-  --pico-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --pico-border-radius: 0.625rem;
-  --pico-font-weight: 600;
-  --pico-form-element-spacing-vertical: 0.65rem;
-  --pico-form-element-spacing-horizontal: 0.9rem;
+  /*
+   * Pico ramps the root font size from 100% to 131.25% as the viewport widens,
+   * which is what made the old layout look zoomed in on a desktop monitor. A
+   * fixed value stops that: a wide screen should fit more, not magnify less.
+   */
+  --pico-font-size: 100%;
+
+  /* Shape and rhythm. Pico's defaults are looser and rounder than we want. */
+  --pico-font-family: var(--font-sans);
+  --pico-border-radius: 0.5rem;
+  --pico-font-weight: 500;
+  --pico-line-height: 1.45;
+  --pico-spacing: 0.7rem;
+  --pico-block-spacing-vertical: 0.7rem;
+  --pico-block-spacing-horizontal: 0.7rem;
+  --pico-typography-spacing-vertical: 0.7rem;
+  --pico-form-element-spacing-vertical: 0.35rem;
+  --pico-form-element-spacing-horizontal: 0.55rem;
 
   /* Page and text. Cards sit on base, the page on mantle, so cards read as raised. */
   --pico-background-color: var(--ctp-mantle);
@@ -100,7 +158,7 @@
   --pico-primary-focus: var(--ctp-surface1);
   --pico-primary-underline: var(--ctp-surface1);
 
-  /* Secondary is the outline buttons in the top bar. */
+  /* Secondary is every outline button: log out, Back, Disconnect. */
   --pico-secondary: var(--ctp-subtext0);
   --pico-secondary-background: var(--ctp-surface1);
   --pico-secondary-border: var(--ctp-surface1);
@@ -111,13 +169,13 @@
 
   --pico-card-background-color: var(--ctp-base);
   --pico-card-border-color: var(--ctp-surface0);
-  --pico-card-sectioning-background-color: var(--ctp-mantle);
+  --pico-card-sectioning-background-color: var(--ctp-recessed);
   --pico-card-box-shadow: none;
 
   --pico-form-element-background-color: var(--ctp-base);
-  --pico-form-element-border-color: var(--ctp-surface1);
+  --pico-form-element-border-color: var(--ctp-surface0);
   --pico-form-element-color: var(--ctp-text);
-  --pico-form-element-placeholder-color: var(--ctp-subtext0);
+  --pico-form-element-placeholder-color: var(--ctp-overlay0);
   --pico-form-element-active-background-color: var(--ctp-base);
   --pico-form-element-active-border-color: var(--ctp-blue);
   --pico-form-element-focus-color: var(--ctp-blue);
@@ -136,13 +194,78 @@
   --pico-range-thumb-color: var(--ctp-blue);
 }
 
+/*
+ * Pico's own type scale is built for an article, not a dense app. These are
+ * the sizes the layout is drawn at.
+ */
+
+body {
+  font-size: var(--text-body);
+  /* The layout paints its own ground, but overscroll rubber-banding exposes
+     the body behind it — white against a dark theme without this. */
+  background: var(--ctp-mantle);
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+:root:root h1 {
+  --pico-font-size: var(--text-title);
+  --pico-font-weight: 600;
+}
+
+:root:root h2 {
+  --pico-font-size: var(--text-section);
+  --pico-font-weight: 600;
+}
+
+:root:root h3 {
+  --pico-font-size: var(--text-label);
+  --pico-font-weight: 600;
+}
+
+/* Controls sit inline in toolbars and card footers far more often than they
+   stack, so the default bottom margin is more nuisance than help. */
+:root:root button,
+:root:root [type='submit'],
+:root:root [type='button'],
+:root:root input,
+:root:root select,
+:root:root textarea {
+  --pico-font-size: var(--text-label);
+  margin-bottom: 0;
+}
+
+:root:root button,
+:root:root [type='submit'],
+:root:root [type='button'] {
+  --pico-font-weight: 500;
+  width: auto;
+}
+
+/* Switches are excluded: Pico sizes those as a track and knob, and forcing a
+   square on them collapses the slider. */
+:root:root [type='checkbox']:not([role='switch']) {
+  --pico-border-radius: 0.25rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin: 0;
+}
+
+:root:root [type='checkbox'][role='switch'] {
+  margin: 0;
+}
+
 /* App-wide helpers, used by more than one component. */
 
 .error,
 .notice {
-  padding: 0.65rem 0.9rem;
-  margin-bottom: var(--pico-spacing);
-  font-size: 0.875rem;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0;
+  font-size: var(--text-label);
   border: var(--pico-border-width) solid;
   border-radius: var(--pico-border-radius);
 }
@@ -163,10 +286,13 @@
   color: var(--pico-muted-color);
 }
 
+/* The label above a number, and the ledger's column heads. */
 .eyebrow {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--pico-muted-color);
 }

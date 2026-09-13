@@ -29,20 +29,22 @@
 
 <AuthCard>
   <h1>Create an account</h1>
+  <p class="muted sub">Budge is invite-only for now.</p>
 
   <form onsubmit={submit}>
     <label>
-      Email
+      <span>Email</span>
       <input
         type="email"
         autocomplete="email"
+        placeholder="you@example.com"
         bind:value={email}
         required
         {@attach (node) => node.focus()}
       />
     </label>
     <label>
-      Password
+      <span>Password</span>
       <input
         type="password"
         autocomplete="new-password"
@@ -51,31 +53,55 @@
       />
     </label>
     <label>
-      Invite code
+      <span>Invite code</span>
       <input type="text" bind:value={inviteCode} required />
     </label>
 
     {#if error}<p class="error">{error}</p>{/if}
 
-    <button type="submit" disabled={busy}>
+    <button type="submit" class="go" disabled={busy}>
       {busy ? 'Creating account…' : 'Create account'}
     </button>
   </form>
 
-  <p class="muted footer">
+  {#snippet below()}
     Already have an account? <Link href="/login">Sign in</Link>
-  </p>
+  {/snippet}
 </AuthCard>
 
 <style>
+  h1 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .sub {
+    margin: 0.1875rem 0 0.875rem;
+    font-size: var(--text-label);
+    line-height: 1.4;
+  }
+
   form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5625rem;
   }
 
-  .footer {
-    font-size: 0.875rem;
-    text-align: center;
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    font-size: var(--text-meta);
+    font-weight: 500;
+    color: var(--pico-muted-color);
+  }
+
+  .go {
+    width: 100%;
+    margin-top: 0.1875rem;
+    font-size: var(--text-body);
+    font-weight: 600;
   }
 </style>

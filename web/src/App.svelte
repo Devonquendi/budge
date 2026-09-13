@@ -1,12 +1,15 @@
 <script lang="ts">
   import { api, errorMessage, type Me } from './lib/api'
+  import AppShell from './lib/components/AppShell.svelte'
   import AuthCard from './lib/components/AuthCard.svelte'
   import Link from './lib/components/Link.svelte'
   import { navigate, path } from './lib/router.svelte'
+  import { Workspace, setWorkspace } from './lib/workspace.svelte'
   import ChooseAccounts from './routes/ChooseAccounts.svelte'
   import ConnectAkahu from './routes/ConnectAkahu.svelte'
   import Dashboard from './routes/Dashboard.svelte'
   import Login from './routes/Login.svelte'
+  import Profile from './routes/Profile.svelte'
   import Settings from './routes/Settings.svelte'
   import Signup from './routes/Signup.svelte'
   import Transactions from './routes/Transactions.svelte'
@@ -14,10 +17,23 @@
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
+  const SIGNED_IN = ['/', '/transactions', '/profile', '/settings']
 
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
   let unreachable = $state('')
+
+  /**
+   * One store for the whole signed-in app: the sidebar shows a net balance and
+   * a transaction count beside the nav, so this data outlives any one page.
+   * A 409 from anywhere in it means the tokens went away underneath us.
+   */
+  const workspace = new Workspace(() => {
+    me = me && { ...me, onboarded: false }
+    navigate(ONBOARDING, { replace: true })
+  })
+
+  setWorkspace(workspace)
 
   /**
    * Sends the browser to a page the session can actually use. Only runs when
@@ -40,6 +56,7 @@
     try {
       me = await api.me()
       land()
+      if (me?.onboarded) workspace.load()
     } catch (failure) {
       // Signed out is a normal answer api.me() folds into null, so anything
       // thrown here means the backend is unreachable. Say so — without this
@@ -52,6 +69,7 @@
   function signedIn(user: Me) {
     me = user
     land()
+    if (user.onboarded) workspace.load()
   }
 
   async function signedOut() {
@@ -62,7 +80,15 @@
 
   function connected() {
     me = me && { ...me, onboarded: true }
+    // Accounts only: nothing is ticked yet, so a transaction fetch here covers
+    // every account and is thrown away by the save at the end of step two.
+    workspace.loadAccounts()
     navigate(CHOOSE_ACCOUNTS)
+  }
+
+  function disconnected() {
+    me = me && { ...me, onboarded: false }
+    navigate(ONBOARDING, { replace: true })
   }
 
   bootstrap()
@@ -72,10 +98,8 @@
   <!-- One frame of nothing beats a spinner that flashes: /auth/me is local. -->
 {:else if unreachable}
   <AuthCard>
-    <hgroup>
-      <h1>Can't reach budge</h1>
-      <p class="muted">The app loaded but the server didn't answer.</p>
-    </hgroup>
+    <h1>Can't reach budge</h1>
+    <p class="muted">The app loaded but the server didn't answer.</p>
     <p class="error">{unreachable}</p>
     <button type="button" onclick={() => location.reload()}>Try again</button>
   </AuthCard>
@@ -89,12 +113,24 @@
   <ConnectAkahu onconnected={connected} />
 {:else if path() === CHOOSE_ACCOUNTS}
   <ChooseAccounts ondone={() => navigate('/', { replace: true })} />
-{:else if path() === '/transactions'}
-  <Transactions onsignout={signedOut} />
-{:else if path() === '/settings'}
-  <Settings onsignout={signedOut} />
-{:else if path() === '/'}
-  <Dashboard onsignout={signedOut} />
+{:else if SIGNED_IN.includes(path())}
+  <!--
+    The one place the shell is applied. Routes render their own content and
+    nothing else, so adding a page is a branch here plus a link in the sidebar
+    — not another copy of the wrapper. It also keeps one AppShell alive across
+    navigation instead of tearing the sidebar down and rebuilding it per page.
+  -->
+  <AppShell email={me.email} onsignout={signedOut}>
+    {#if path() === '/transactions'}
+      <Transactions />
+    {:else if path() === '/profile'}
+      <Profile email={me.email} ondisconnect={disconnected} />
+    {:else if path() === '/settings'}
+      <Settings />
+    {:else}
+      <Dashboard />
+    {/if}
+  </AppShell>
 {:else}
   <AuthCard>
     <h1>Not found</h1>
