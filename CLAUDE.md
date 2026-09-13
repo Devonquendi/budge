@@ -1,10 +1,13 @@
 # budge
 
-A personal finance dashboard built on [Akahu](https://developers.akahu.nz/llms.txt).
+A personal finance app built on [Akahu](https://developers.akahu.nz/llms.txt).
 
 ## Orientation
 
-All source code is in `src/`
+Two services, one Vercel project:
+
+- `backend/` — FastAPI app
+- `web/` — Svelte + Vite app
 
 ## Dev tools
 
@@ -19,9 +22,18 @@ Unless otherwise specified, all dev tools listed below are managed by mise:
 
 - [prek](https://prek.j178.dev/llms.txt)
 - [uv](https://docs.astral.sh/uv/llms.txt)
+- [pnpm](https://pnpm.io/motivation)
 - [Vercel CLI](https://vercel.com/get-started.md)
+
+## Conventions
+
+- Dependencies go through `uv add` and `pnpm add`, never hand-edited manifests.
+- Tools are pinned in `mise.toml`; add them with `mise use --pin <tool>@latest`.
+- `prek` runs on commit. `prek run --all-files` to run it by hand.
 
 ## Tech stack
 
 - [Vercel](https://vercel.com/llms.txt)
 - [Neon](https://neon.com/docs/llms.txt)
+- [Svelte](https://svelte.dev/llms.txt)
+- [Vite](https://vite.dev/llms.txt)

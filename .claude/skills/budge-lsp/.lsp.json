@@ -1,0 +1,10 @@
+{
+  "ty": {
+    "command": "uv",
+    "args": ["--directory", "backend", "run", "--with", "ty", "ty", "server"],
+    "extensionToLanguage": {
+      ".py": "python",
+      ".pyi": "python"
+    }
+  }
+}

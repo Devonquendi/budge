@@ -1,0 +1,5 @@
+{
+  "name": "budge-lsp",
+  "description": "Language servers for this repo, so Claude sees the same errors CI does.",
+  "version": "0.1.0"
+}

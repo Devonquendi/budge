@@ -1,0 +1,174 @@
+/*
+ * Catppuccin Latte and Mocha, remapped onto Pico's tokens.
+ *
+ * Pico styles the plain elements — buttons, inputs, tables, <article> cards —
+ * so the job here is theming it rather than restyling it. Overriding Pico's own
+ * selectors is what makes stylesheets miserable; setting its variables is the
+ * supported way in. Components with no Pico equivalent (the account list, the
+ * balance hero, the nav) carry their own scoped styles and read the --ctp-*
+ * values directly.
+ */
+
+:root {
+  color-scheme: light;
+
+  --ctp-base: #eff1f5;
+  --ctp-mantle: #e6e9ef;
+  --ctp-crust: #dce0e8;
+  --ctp-surface0: #ccd0da;
+  --ctp-surface1: #bcc0cc;
+  --ctp-text: #4c4f69;
+  --ctp-subtext0: #6c6f85;
+  --ctp-blue: #1e66f5;
+  --ctp-blue-hover: #0b57e3;
+  --ctp-on-blue: #eff1f5;
+  --ctp-green: #40a02b;
+  --ctp-red: #d20f39;
+}
+
+/* With no explicit choice stored, follow the system. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --ctp-base: #1e1e2e;
+    --ctp-mantle: #181825;
+    --ctp-crust: #11111b;
+    --ctp-surface0: #313244;
+    --ctp-surface1: #45475a;
+    --ctp-text: #cdd6f4;
+    --ctp-subtext0: #a6adc8;
+    --ctp-blue: #89b4fa;
+    --ctp-blue-hover: #a3c6fb;
+    --ctp-on-blue: #1e1e2e;
+    --ctp-green: #a6e3a1;
+    --ctp-red: #f38ba8;
+  }
+}
+
+/* An explicit choice wins over the system in both directions. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ctp-base: #1e1e2e;
+  --ctp-mantle: #181825;
+  --ctp-crust: #11111b;
+  --ctp-surface0: #313244;
+  --ctp-surface1: #45475a;
+  --ctp-text: #cdd6f4;
+  --ctp-subtext0: #a6adc8;
+  --ctp-blue: #89b4fa;
+  --ctp-blue-hover: #a3c6fb;
+  --ctp-on-blue: #1e1e2e;
+  --ctp-green: #a6e3a1;
+  --ctp-red: #f38ba8;
+}
+
+/*
+ * :root:root, not :root — Pico's light theme is scoped to
+ * `:root:not([data-theme=dark])`, which outranks a bare `:root` and would win
+ * every one of these. Doubling the pseudo-class matches its specificity, and
+ * loading after Pico settles the tie.
+ */
+:root:root {
+  /* Shape and rhythm. Pico's defaults are tighter and squarer than we want. */
+  --pico-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --pico-border-radius: 0.625rem;
+  --pico-font-weight: 600;
+  --pico-form-element-spacing-vertical: 0.65rem;
+  --pico-form-element-spacing-horizontal: 0.9rem;
+
+  /* Page and text. Cards sit on base, the page on mantle, so cards read as raised. */
+  --pico-background-color: var(--ctp-mantle);
+  --pico-color: var(--ctp-text);
+  --pico-h1-color: var(--ctp-text);
+  --pico-h2-color: var(--ctp-text);
+  --pico-h3-color: var(--ctp-text);
+  --pico-muted-color: var(--ctp-subtext0);
+  --pico-muted-border-color: var(--ctp-surface0);
+
+  --pico-primary: var(--ctp-blue);
+  --pico-primary-background: var(--ctp-blue);
+  --pico-primary-border: var(--ctp-blue);
+  --pico-primary-inverse: var(--ctp-on-blue);
+  --pico-primary-hover: var(--ctp-blue-hover);
+  --pico-primary-hover-background: var(--ctp-blue-hover);
+  --pico-primary-hover-border: var(--ctp-blue-hover);
+  --pico-primary-focus: var(--ctp-surface1);
+  --pico-primary-underline: var(--ctp-surface1);
+
+  /* Secondary is the outline buttons in the top bar. */
+  --pico-secondary: var(--ctp-subtext0);
+  --pico-secondary-background: var(--ctp-surface1);
+  --pico-secondary-border: var(--ctp-surface1);
+  --pico-secondary-inverse: var(--ctp-base);
+  --pico-secondary-hover: var(--ctp-text);
+  --pico-secondary-hover-background: var(--ctp-surface0);
+  --pico-secondary-hover-border: var(--ctp-surface0);
+
+  --pico-card-background-color: var(--ctp-base);
+  --pico-card-border-color: var(--ctp-surface0);
+  --pico-card-sectioning-background-color: var(--ctp-mantle);
+  --pico-card-box-shadow: none;
+
+  --pico-form-element-background-color: var(--ctp-base);
+  --pico-form-element-border-color: var(--ctp-surface1);
+  --pico-form-element-color: var(--ctp-text);
+  --pico-form-element-placeholder-color: var(--ctp-subtext0);
+  --pico-form-element-active-background-color: var(--ctp-base);
+  --pico-form-element-active-border-color: var(--ctp-blue);
+  --pico-form-element-focus-color: var(--ctp-blue);
+
+  --pico-table-border-color: var(--ctp-surface0);
+  --pico-blockquote-border-color: var(--ctp-surface0);
+  --pico-accordion-border-color: var(--ctp-surface0);
+  --pico-del-color: var(--ctp-red);
+  --pico-ins-color: var(--ctp-green);
+  --pico-mark-background-color: var(--ctp-surface0);
+  --pico-mark-color: var(--ctp-text);
+  --pico-code-background-color: var(--ctp-mantle);
+  --pico-code-color: var(--ctp-subtext0);
+  --pico-switch-background-color: var(--ctp-surface1);
+  --pico-switch-checked-background-color: var(--ctp-blue);
+  --pico-range-thumb-color: var(--ctp-blue);
+}
+
+/* App-wide helpers, used by more than one component. */
+
+.error,
+.notice {
+  padding: 0.65rem 0.9rem;
+  margin-bottom: var(--pico-spacing);
+  font-size: 0.875rem;
+  border: var(--pico-border-width) solid;
+  border-radius: var(--pico-border-radius);
+}
+
+.error {
+  color: var(--ctp-red);
+  border-color: color-mix(in srgb, var(--ctp-red) 35%, transparent);
+  background: color-mix(in srgb, var(--ctp-red) 8%, transparent);
+}
+
+.notice {
+  color: var(--ctp-green);
+  border-color: color-mix(in srgb, var(--ctp-green) 35%, transparent);
+  background: color-mix(in srgb, var(--ctp-green) 8%, transparent);
+}
+
+.muted {
+  color: var(--pico-muted-color);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pico-muted-color);
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}

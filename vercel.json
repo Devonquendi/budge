@@ -1,9 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["syd1"],
-  "functions": {
-    "server.py": {
-      "excludeFiles": "{.venv/**,.github/**,.ruff_cache/**,.agents/**,.claude/**}"
+  "services": {
+    "web": {
+      "root": "web/",
+      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+    },
+    "api": {
+      "root": "backend/",
+      "entrypoint": "server:app",
+      "functions": {
+        "server.py": { "excludeFiles": ".venv/**" }
+      }
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
 }
