@@ -1,3 +1,8 @@
+[settings]
+# [deps.*] is still experimental. This lives here rather than in a personal
+# config so a fresh clone — CI, or a new machine — can run `mise install`.
+experimental = true
+
 [tools]
 node = "26.8.2"
 pnpm = "12.4.1"
