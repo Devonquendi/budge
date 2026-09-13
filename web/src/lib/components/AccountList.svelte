@@ -2,6 +2,7 @@
   import { badge, hue, typeLabel } from '../accounts'
   import type { Account } from '../api'
   import { format, toCents } from '../money'
+  import { prefs } from '../prefs.svelte'
 
   let { accounts }: { accounts: Account[] } = $props()
 </script>
@@ -28,7 +29,7 @@
           { negative: toCents(account.balance_current) < 0 },
         ]}
       >
-        {format(account.balance_current, account.currency)}
+        {format(account.balance_current, account.currency, prefs().hideCents)}
       </span>
     </li>
   {:else}
@@ -41,35 +42,35 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    background: var(--pico-card-background-color);
-    border: var(--pico-border-width) solid var(--pico-card-border-color);
-    border-radius: var(--pico-border-radius);
   }
 
   li {
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-    padding: 0.875rem 1.125rem;
+    gap: 0.5625rem;
+    padding: 0.375rem 0.6875rem;
   }
 
   li + li {
-    border-top: var(--pico-border-width) solid var(--pico-card-border-color);
+    border-top: var(--pico-border-width) solid var(--ctp-divider);
   }
 
   .badge {
     display: grid;
     place-items: center;
     flex: none;
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    border-radius: 0.5rem;
+    width: 1.4375rem;
+    height: 1.4375rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 500;
+    border-radius: 0.375rem;
     /* Mixing against the card keeps this readable in both themes. */
-    background: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 22%, var(--pico-card-background-color));
+    background: color-mix(
+      in oklch,
+      oklch(0.7 0.12 var(--hue)) 22%,
+      var(--pico-card-background-color)
+    );
     color: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 70%, var(--pico-color));
   }
 
@@ -82,15 +83,21 @@
 
   .name {
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
+  /* Bank · type · number runs long; one line keeps the rows the same height. */
   .meta {
-    font-size: 0.8125rem;
-    line-height: 1.35;
+    font-size: var(--text-meta);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .balance {
-    font-size: 1.0625rem;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -101,6 +108,6 @@
 
   .empty {
     justify-content: center;
-    padding-block: 2rem;
+    padding-block: 1.5rem;
   }
 </style>

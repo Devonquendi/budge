@@ -129,6 +129,9 @@ export const api = {
   connect: (app_token: string, user_token: string) =>
     request<Connection>('/akahu', 'PUT', { app_token, user_token }),
 
+  /** Forgets the tokens and the account picks — back to onboarding after this. */
+  disconnect: () => request<void>('/akahu', 'DELETE'),
+
   accounts: () => request<Account[]>('/accounts'),
 
   selection: () => request<Selection>('/accounts/selection'),

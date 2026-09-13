@@ -49,6 +49,21 @@ async def verify_and_save(
     return True
 
 
+async def forget(session: AsyncSession, user_id: int) -> None:
+    """Drops the tokens and the account picks, putting the user back before setup.
+
+    The picks go too: they are Akahu account ids, and a later reconnection —
+    even to the same banks — is a new set of ids that these rows would silently
+    exclude from the dashboard.
+    """
+    credential = await get(session, user_id)
+    if credential is not None:
+        await session.delete(credential)
+    for setting in await _settings(session, user_id):
+        await session.delete(setting)
+    await session.commit()
+
+
 async def client_for(session: AsyncSession, user_id: int) -> AkahuClient | None:
     """An Akahu client using the user's tokens, or None if they haven't onboarded."""
     credential = await get(session, user_id)

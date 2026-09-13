@@ -1,6 +1,6 @@
 """The user's Akahu connection: the two tokens budge reads their banks with."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
 from budge import credentials
@@ -38,3 +38,10 @@ async def connect(
     if not saved:
         raise HTTPException(status_code=400, detail=BAD_TOKENS)
     return Connection(connected=True)
+
+
+@router.delete("", status_code=204)
+async def disconnect(user_id: CurrentUserId, session: SessionDep) -> Response:
+    """Forgets the tokens, sending the user back to onboarding on the next load."""
+    await credentials.forget(session, user_id)
+    return Response(status_code=204)

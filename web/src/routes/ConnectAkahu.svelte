@@ -24,29 +24,54 @@
   }
 </script>
 
-<AuthCard width="28rem">
-  <hgroup>
-    <p class="eyebrow">Step 1 of 2</p>
+<AuthCard width="24rem" padded={false} step={{ current: 1, total: 2 }}>
+  <header>
     <h1>Connect your banks</h1>
-  </hgroup>
+    <p class="muted sub">
+      Budge reads your balances through Akahu. Paste the two tokens from your
+      Akahu app.
+    </p>
+  </header>
 
   <form onsubmit={submit}>
     <TokenFields bind:appToken bind:userToken />
 
     {#if error}<p class="error">{error}</p>{/if}
 
-    <button type="submit" disabled={busy}>{busy ? 'Checking…' : 'Connect'}</button>
+    <button type="submit" class="go" disabled={busy}>
+      {busy ? 'Checking…' : 'Connect'}
+    </button>
   </form>
 </AuthCard>
 
 <style>
+  header {
+    padding: 0.6875rem 0.8125rem;
+    border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
+  }
+
   h1 {
-    margin-block: 0.375rem;
+    margin: 0;
+    font-size: 0.96875rem;
+    line-height: 1.3;
+  }
+
+  .sub {
+    margin: 0.1875rem 0 0;
+    font-size: var(--text-label);
+    line-height: 1.4;
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5625rem;
+    padding: 0.6875rem 0.8125rem 0.8125rem;
+  }
+
+  .go {
+    width: 100%;
+    margin-top: 0.1875rem;
+    font-weight: 600;
   }
 </style>

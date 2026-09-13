@@ -3,6 +3,7 @@
   import AuthCard from './lib/components/AuthCard.svelte'
   import Link from './lib/components/Link.svelte'
   import { navigate, path } from './lib/router.svelte'
+  import { Workspace, setWorkspace } from './lib/workspace.svelte'
   import ChooseAccounts from './routes/ChooseAccounts.svelte'
   import ConnectAkahu from './routes/ConnectAkahu.svelte'
   import Dashboard from './routes/Dashboard.svelte'
@@ -18,6 +19,18 @@
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
   let unreachable = $state('')
+
+  /**
+   * One store for the whole signed-in app: the sidebar shows a net balance and
+   * a transaction count beside the nav, so this data outlives any one page.
+   * A 409 from anywhere in it means the tokens went away underneath us.
+   */
+  const workspace = new Workspace(() => {
+    me = me && { ...me, onboarded: false }
+    navigate(ONBOARDING, { replace: true })
+  })
+
+  setWorkspace(workspace)
 
   /**
    * Sends the browser to a page the session can actually use. Only runs when
@@ -40,6 +53,7 @@
     try {
       me = await api.me()
       land()
+      if (me?.onboarded) workspace.load()
     } catch (failure) {
       // Signed out is a normal answer api.me() folds into null, so anything
       // thrown here means the backend is unreachable. Say so — without this
@@ -52,6 +66,7 @@
   function signedIn(user: Me) {
     me = user
     land()
+    if (user.onboarded) workspace.load()
   }
 
   async function signedOut() {
@@ -62,7 +77,14 @@
 
   function connected() {
     me = me && { ...me, onboarded: true }
+    // Step two picks from these, so they have to be on their way before it renders.
+    workspace.load()
     navigate(CHOOSE_ACCOUNTS)
+  }
+
+  function disconnected() {
+    me = me && { ...me, onboarded: false }
+    navigate(ONBOARDING, { replace: true })
   }
 
   bootstrap()
@@ -72,10 +94,8 @@
   <!-- One frame of nothing beats a spinner that flashes: /auth/me is local. -->
 {:else if unreachable}
   <AuthCard>
-    <hgroup>
-      <h1>Can't reach budge</h1>
-      <p class="muted">The app loaded but the server didn't answer.</p>
-    </hgroup>
+    <h1>Can't reach budge</h1>
+    <p class="muted">The app loaded but the server didn't answer.</p>
     <p class="error">{unreachable}</p>
     <button type="button" onclick={() => location.reload()}>Try again</button>
   </AuthCard>
@@ -90,11 +110,11 @@
 {:else if path() === CHOOSE_ACCOUNTS}
   <ChooseAccounts ondone={() => navigate('/', { replace: true })} />
 {:else if path() === '/transactions'}
-  <Transactions onsignout={signedOut} />
+  <Transactions email={me.email} onsignout={signedOut} />
 {:else if path() === '/settings'}
-  <Settings onsignout={signedOut} />
+  <Settings email={me.email} onsignout={signedOut} ondisconnect={disconnected} />
 {:else if path() === '/'}
-  <Dashboard onsignout={signedOut} />
+  <Dashboard email={me.email} onsignout={signedOut} />
 {:else}
   <AuthCard>
     <h1>Not found</h1>
