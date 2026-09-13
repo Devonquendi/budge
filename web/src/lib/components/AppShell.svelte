@@ -15,9 +15,8 @@
 
   const workspace = getWorkspace()
 
-  // A count beside each nav item, so the sidebar says how much is behind a page
-  // before you open it. Blank rather than zero while the first load is running —
-  // "0 transactions" and "not loaded yet" are different things.
+  // Blank rather than zero until the first load answers — "no transactions"
+  // and "not loaded yet" shouldn't look the same.
   const counts = $derived({
     dashboard: workspace.ready ? String(workspace.dashboardAccounts.length) : '',
     transactions: workspace.transactions.length
@@ -26,9 +25,41 @@
   })
 </script>
 
+<!--
+  Rendered twice, in the sidebar on a phone and in the content bar on a desktop,
+  because the two layouts want them in different parents. Only ever one is
+  displayed, so the hidden copy stays out of the accessibility tree.
+-->
+{#snippet actions()}
+  <div class="actions">
+    <button
+      type="button"
+      class="secondary outline icon"
+      onclick={toggleTheme}
+      aria-label={isDark() ? 'Switch to light theme' : 'Switch to dark theme'}
+    >
+      {#if isDark()}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.25" />
+          <path
+            d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"
+          />
+        </svg>
+      {:else}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.5 14.2A8.7 8.7 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7Z" />
+        </svg>
+      {/if}
+    </button>
+    <button type="button" class="secondary outline" onclick={onsignout}>Log out</button>
+  </div>
+{/snippet}
+
 <div class="layout">
   <aside>
     <Link href="/" class="brand"><Wordmark /></Link>
+
+    <div class="beside-brand">{@render actions()}</div>
 
     <nav>
       <Link href="/">
@@ -64,43 +95,20 @@
       </div>
     {/if}
 
-    <div class="foot">
-      <div class="actions">
-        <button
-          type="button"
-          class="secondary outline icon"
-          onclick={toggleTheme}
-          aria-label={isDark() ? 'Switch to light theme' : 'Switch to dark theme'}
-        >
-          {#if isDark()}
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="4.25" />
-              <path
-                d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"
-              />
-            </svg>
-          {:else}
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20.5 14.2A8.7 8.7 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7Z" />
-            </svg>
-          {/if}
-        </button>
-        <button type="button" class="secondary outline signout" onclick={onsignout}>
-          Log out
-        </button>
-      </div>
-      <p class="email" title={email}>{email}</p>
-    </div>
+    <p class="email" title={email}>{email}</p>
   </aside>
 
-  <main>{@render children()}</main>
+  <div class="column">
+    <header class="topbar">{@render actions()}</header>
+    <main>{@render children()}</main>
+  </div>
 </div>
 
 <style>
   /*
-   * Narrow first: the sidebar is a top bar that scrolls away, and the balance
-   * card is hidden because the dashboard's own tiles already carry those
-   * numbers. It becomes a real sidebar once there's width to spare.
+   * Narrow first: the sidebar is a top bar, and the balance card is hidden
+   * because the dashboard's own tiles already carry those numbers. It becomes
+   * a real sidebar once there's width to spare.
    */
   .layout {
     display: flex;
@@ -118,24 +126,21 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 0.875rem;
-    padding: 0.625rem max(0.875rem, env(safe-area-inset-left))
-      0.625rem max(0.875rem, env(safe-area-inset-right));
+    padding: 0.625rem max(0.875rem, env(safe-area-inset-left)) 0.625rem
+      max(0.875rem, env(safe-area-inset-right));
     border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
-    /* Rows scroll underneath this, so it can't be transparent. */
     background: color-mix(in srgb, var(--ctp-mantle) 88%, transparent);
     backdrop-filter: blur(12px);
   }
 
-  /* Three items fit one row on a phone; a narrower one scrolls rather than
-     wrapping each item onto its own line. */
-  nav::-webkit-scrollbar {
-    display: none;
-  }
-
   aside :global(.brand) {
+    padding: 0 0.25rem;
     color: var(--pico-color);
     text-decoration: none;
-    padding: 0 0.25rem;
+  }
+
+  .beside-brand {
+    margin-left: auto;
   }
 
   nav {
@@ -145,6 +150,10 @@
     width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
+  }
+
+  nav::-webkit-scrollbar {
+    display: none;
   }
 
   nav :global(a) {
@@ -161,17 +170,12 @@
     border-radius: 0.4375rem;
   }
 
-  nav :global(a:hover) {
-    color: var(--pico-color);
-    background: var(--ctp-surface0);
-  }
-
+  nav :global(a:hover),
   nav :global(a[aria-current='page']) {
     color: var(--pico-color);
     background: var(--ctp-surface0);
   }
 
-  /* Pushed to the right edge of the item, the way a folder shows its size. */
   .count {
     margin-left: auto;
     font-family: var(--font-mono);
@@ -197,30 +201,23 @@
     margin: 0;
   }
 
-  .figure {
-    margin-top: 0.25rem !important;
+  .net .figure {
+    margin-top: 0.25rem;
     font-size: 1.0625rem;
     font-weight: 600;
     line-height: 1.1;
     letter-spacing: -0.02em;
   }
 
-  /* Only the second currency onwards needs separating from the one above. */
-  .net .eyebrow + .figure ~ .eyebrow {
-    margin-top: 0.5rem !important;
+  /* Only a second currency onwards follows a figure, and only it needs the gap. */
+  .net .figure + .eyebrow {
+    margin-top: 0.5rem;
   }
 
-  .meta {
-    margin-top: 0.125rem !important;
+  .net .meta {
+    margin-top: 0.125rem;
     font-size: var(--text-meta);
     line-height: 1.3;
-  }
-
-  .foot {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-left: auto;
   }
 
   .actions {
@@ -264,6 +261,17 @@
     text-overflow: ellipsis;
   }
 
+  .column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .topbar {
+    display: none;
+  }
+
   main {
     flex: 1;
     min-width: 0;
@@ -278,8 +286,6 @@
     }
 
     aside {
-      position: sticky;
-      top: 0;
       align-self: flex-start;
       flex: none;
       flex-wrap: nowrap;
@@ -298,6 +304,10 @@
       padding: 0.125rem 0.4375rem 0.25rem;
     }
 
+    .beside-brand {
+      display: none;
+    }
+
     nav {
       order: 0;
       flex-direction: column;
@@ -307,21 +317,21 @@
       display: block;
     }
 
-    .foot {
-      /* Pinned to the bottom of the column, whatever is above it. */
-      margin-top: auto;
-      margin-left: 0;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.4375rem;
-    }
-
-    .actions .signout {
-      flex: 1;
-    }
-
     .email {
       display: block;
+      margin-top: auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: flex-end;
+      padding: 0.5rem 1.125rem;
+      border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
+      background: color-mix(in srgb, var(--ctp-mantle) 88%, transparent);
+      backdrop-filter: blur(12px);
     }
 
     main {
