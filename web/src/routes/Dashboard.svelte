@@ -33,42 +33,7 @@
   {:else if error}
     <p class="error">Couldn't load your accounts: {error}</p>
   {:else}
-    <div class="skeleton" aria-busy="true" aria-label="Loading accounts">
-      <span class="line total"></span>
-      <span class="line"></span>
-    </div>
+    <!-- aria-busy is Pico's spinner; no markup of our own needed. -->
+    <p aria-busy="true">Loading your accounts&hellip;</p>
   {/if}
 </AppShell>
-
-<style>
-  .skeleton {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .line {
-    height: 1.25rem;
-    width: 12rem;
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    animation: pulse 1.4s ease-in-out infinite;
-  }
-
-  .total {
-    height: 4rem;
-    width: 18rem;
-  }
-
-  @keyframes pulse {
-    50% {
-      opacity: 0.45;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .line {
-      animation: none;
-    }
-  }
-</style>

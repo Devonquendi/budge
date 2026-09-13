@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type Me } from './lib/api'
+  import { api, errorMessage, type Me } from './lib/api'
   import AuthCard from './lib/components/AuthCard.svelte'
   import Link from './lib/components/Link.svelte'
   import { navigate, path } from './lib/router.svelte'
@@ -16,6 +16,7 @@
 
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
+  let unreachable = $state('')
 
   /**
    * Sends the browser to a page the session can actually use. Only runs when
@@ -35,8 +36,15 @@
   }
 
   async function bootstrap() {
-    me = await api.me()
-    land()
+    try {
+      me = await api.me()
+      land()
+    } catch (failure) {
+      // Signed out is a normal answer api.me() folds into null, so anything
+      // thrown here means the backend is unreachable. Say so — without this
+      // the app never reaches its first render and the page stays blank.
+      unreachable = errorMessage(failure)
+    }
     ready = true
   }
 
@@ -61,6 +69,15 @@
 
 {#if !ready}
   <!-- One frame of nothing beats a spinner that flashes: /auth/me is local. -->
+{:else if unreachable}
+  <AuthCard>
+    <hgroup>
+      <h1>Can't reach budge</h1>
+      <p class="muted">The app loaded but the server didn't answer.</p>
+    </hgroup>
+    <p class="error">{unreachable}</p>
+    <button type="button" onclick={() => location.reload()}>Try again</button>
+  </AuthCard>
 {:else if !me}
   {#if path() === '/signup'}
     <Signup onsignin={signedIn} />

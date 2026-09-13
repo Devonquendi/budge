@@ -18,7 +18,7 @@
     <div class="actions">
       <button
         type="button"
-        class="ghost icon"
+        class="secondary outline icon"
         onclick={toggleTheme}
         aria-label={isDark() ? 'Switch to light theme' : 'Switch to dark theme'}
       >
@@ -35,7 +35,7 @@
           </svg>
         {/if}
       </button>
-      <button type="button" class="ghost" onclick={onsignout}>Log out</button>
+      <button type="button" class="secondary outline" onclick={onsignout}>Log out</button>
     </div>
   </div>
 </header>
@@ -47,8 +47,8 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid var(--border);
-    background: color-mix(in oklch, var(--paper) 82%, transparent);
+    border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
+    background: color-mix(in srgb, var(--ctp-mantle) 82%, transparent);
     backdrop-filter: blur(12px);
   }
 
@@ -68,7 +68,7 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1;
-    color: var(--ink);
+    color: var(--pico-color);
     text-decoration: none;
     margin-right: auto;
   }
@@ -84,19 +84,19 @@
     padding: 0.3125rem 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--ink-muted);
+    color: var(--pico-muted-color);
     text-decoration: none;
     border-radius: 999px;
   }
 
   nav :global(a:hover) {
-    color: var(--ink);
-    background: var(--surface);
+    color: var(--pico-color);
+    background: var(--pico-card-background-color);
   }
 
   nav :global(a[aria-current='page']) {
-    color: var(--on-accent);
-    background: var(--accent);
+    color: var(--pico-primary-inverse);
+    background: var(--pico-primary-background);
   }
 
   .actions {
@@ -105,12 +105,17 @@
     gap: 0.5rem;
   }
 
+  .actions button {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
   .icon {
     display: grid;
     place-items: center;
     padding: 0;
-    width: 2.375rem;
-    height: 2.375rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .icon svg {

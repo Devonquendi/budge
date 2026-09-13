@@ -49,35 +49,36 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border: var(--pico-border-width) solid var(--pico-card-border-color);
+    border-radius: var(--pico-border-radius);
     overflow: hidden;
   }
 
   li + li {
-    border-top: 1px solid var(--border);
+    border-top: var(--pico-border-width) solid var(--pico-card-border-color);
   }
 
   label {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    /* Pico shrink-wraps labels; these are rows, so they fill the card. */
+    width: 100%;
+    margin: 0;
     padding: 0.75rem 0.875rem;
     font-size: 1rem;
     font-weight: 400;
-    color: var(--ink);
+    color: var(--pico-color);
     cursor: pointer;
   }
 
   label:hover {
-    background: var(--surface-sunken);
+    background: var(--ctp-mantle);
   }
 
   input {
     flex: none;
-    width: 1.125rem;
-    height: 1.125rem;
-    accent-color: var(--accent);
+    margin: 0;
   }
 
   .who {

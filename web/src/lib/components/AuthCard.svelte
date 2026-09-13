@@ -9,9 +9,9 @@
 <div class="frame">
   <div class="panel" style:--panel-width={width}>
     <p class="wordmark">budge</p>
-    <div class="card body">
+    <article>
       {@render children()}
-    </div>
+    </article>
   </div>
 </div>
 
@@ -37,11 +37,11 @@
     text-align: center;
   }
 
-  .body {
+  article {
     display: flex;
     flex-direction: column;
-    gap: 1.125rem;
-    padding: clamp(1.5rem, 5vw, 2rem);
-    box-shadow: var(--shadow-lift);
+    gap: 1.25rem;
+    margin: 0;
+    border: var(--pico-border-width) solid var(--pico-card-border-color);
   }
 </style>

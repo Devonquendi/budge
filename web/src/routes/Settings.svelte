@@ -6,7 +6,9 @@
 
   let { email, onsignout }: { email: string; onsignout: () => void } = $props()
 
-  let connected = $state(false)
+  // Null until the first load answers. Without the third state the page
+  // claims you aren't connected for as long as the request takes.
+  let connected = $state<boolean | null>(null)
   let selection = $state.raw<Selection | null>(null)
   let included = $state.raw<string[]>([])
   let notice = $state('')
@@ -77,13 +79,15 @@
   {#if notice}<p class="notice">{notice}</p>{/if}
   {#if error}<p class="error">{error}</p>{/if}
 
-  <section class="card">
+  <article>
     <header>
       <h2>Dashboard accounts</h2>
       <p class="muted">Only ticked accounts count towards your net balance.</p>
     </header>
 
-    {#if !connected}
+    {#if connected === null}
+      <p aria-busy="true">Loading&hellip;</p>
+    {:else if !connected}
       <p class="muted">Connect Akahu below to choose accounts.</p>
     {:else if selection}
       <form onsubmit={saveAccounts}>
@@ -97,18 +101,22 @@
         </button>
       </form>
     {:else}
-      <p class="muted">Loading accounts…</p>
+      <p aria-busy="true">Loading accounts&hellip;</p>
     {/if}
-  </section>
+  </article>
 
-  <section class="card">
+  <article>
     <header>
       <h2>Akahu connection</h2>
-      <p class="muted">
-        {connected
-          ? 'Connected. Paste new tokens to replace the ones stored.'
-          : 'Not connected yet.'}
-      </p>
+      {#if connected === null}
+        <p aria-busy="true">Loading&hellip;</p>
+      {:else}
+        <p class="muted">
+          {connected
+            ? 'Connected. Paste new tokens to replace the ones stored.'
+            : 'Not connected yet.'}
+        </p>
+      {/if}
     </header>
 
     <form onsubmit={saveTokens}>
@@ -117,7 +125,7 @@
         {savingTokens ? 'Checking…' : connected ? 'Replace tokens' : 'Connect'}
       </button>
     </form>
-  </section>
+  </article>
 </AppShell>
 
 <style>
@@ -133,24 +141,16 @@
     margin-top: 0.25rem;
   }
 
-  section {
-    padding: clamp(1.25rem, 4vw, 1.75rem);
-  }
-
-  section + section {
-    margin-top: 1.25rem;
-  }
-
-  section header {
-    margin-bottom: 1.25rem;
+  article {
+    border: var(--pico-border-width) solid var(--pico-card-border-color);
   }
 
   h2 {
     font-size: 1.0625rem;
+    margin-bottom: 0.25rem;
   }
 
-  section header p {
-    margin-top: 0.25rem;
+  article header p {
     font-size: 0.875rem;
   }
 
@@ -160,13 +160,11 @@
     gap: 1rem;
   }
 
-  /* Buttons size to their label; everything above them fills the card. */
+  /* Pico makes submit buttons full-width, which suits a sign-in form but not
+     a settings card. Everything above them still fills the card. */
   form button {
+    width: auto;
     align-self: start;
   }
 
-  .notice,
-  .error {
-    margin-bottom: 1.25rem;
-  }
 </style>

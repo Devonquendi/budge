@@ -52,7 +52,7 @@
     gap: 2.5rem;
     margin: 1.75rem 0 0;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: var(--pico-border-width) solid var(--pico-card-border-color);
   }
 
   dd {
@@ -62,6 +62,6 @@
   }
 
   .owing {
-    color: var(--negative);
+    color: var(--ctp-red);
   }
 </style>

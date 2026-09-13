@@ -6,7 +6,7 @@
   let { accounts }: { accounts: Account[] } = $props()
 </script>
 
-<ul class="card">
+<ul>
   {#each accounts as account (account.id)}
     <li>
       <span class="badge" style:--hue={hue(account.connection_name)} aria-hidden="true">
@@ -42,6 +42,9 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background: var(--pico-card-background-color);
+    border: var(--pico-border-width) solid var(--pico-card-border-color);
+    border-radius: var(--pico-border-radius);
   }
 
   li {
@@ -52,7 +55,7 @@
   }
 
   li + li {
-    border-top: 1px solid var(--border);
+    border-top: var(--pico-border-width) solid var(--pico-card-border-color);
   }
 
   .badge {
@@ -64,10 +67,10 @@
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.02em;
-    border-radius: var(--radius-sm);
-    /* Mixing against the surface keeps this readable in both themes. */
-    background: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 22%, var(--surface));
-    color: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 70%, var(--ink));
+    border-radius: 0.5rem;
+    /* Mixing against the card keeps this readable in both themes. */
+    background: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 22%, var(--pico-card-background-color));
+    color: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 70%, var(--pico-color));
   }
 
   .who {
@@ -93,7 +96,7 @@
   }
 
   .negative {
-    color: var(--negative);
+    color: var(--ctp-red);
   }
 
   .empty {
