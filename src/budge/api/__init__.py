@@ -1,1 +1,1 @@
-"""JSON endpoints. These outlive the HTML in views/."""
+"""JSON endpoints. The only thing the browser app talks to."""

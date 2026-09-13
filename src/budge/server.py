@@ -4,14 +4,11 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from budge.api import accounts
 from budge.auth import require_auth
-from budge.templating import STATIC_DIR
-from budge.views import auth, dashboard, onboarding, settings
 
 load_dotenv()
 
@@ -27,10 +24,4 @@ app.add_middleware(
     https_only=bool(os.environ.get("VERCEL")),
 )
 
-app.include_router(auth.router)
-app.include_router(dashboard.router)
-app.include_router(onboarding.router)
-app.include_router(settings.router)
 app.include_router(accounts.router, prefix="/api")
-
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
