@@ -71,10 +71,7 @@
 </script>
 
 <AppShell {onsignout}>
-  <hgroup>
-    <h1>Settings</h1>
-    <p class="muted">Signed in as {email}</p>
-  </hgroup>
+  <p class="muted whoami">Signed in as {email}</p>
 
   {#if notice}<p class="notice">{notice}</p>{/if}
   {#if error}<p class="error">{error}</p>{/if}
@@ -124,16 +121,8 @@
 </AppShell>
 
 <style>
-  hgroup {
+  .whoami {
     margin-bottom: 2rem;
-  }
-
-  h1 {
-    font-size: clamp(1.625rem, 5vw, 2rem);
-  }
-
-  hgroup p {
-    margin-top: 0.25rem;
   }
 
   article {
