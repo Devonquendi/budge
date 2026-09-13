@@ -1,5 +1,6 @@
 """Domain models for Akahu data."""
 
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -17,3 +18,43 @@ class Account(BaseModel):
     # digits Akahu sent and decides for itself how to add them up.
     balance_current: Decimal
     balance_available: Decimal | None = None
+
+
+class Category(BaseModel):
+    """What a transaction was spent on, however we worked that out."""
+
+    name: str
+    # Akahu's NZFCC id, absent when Genie matched on name alone.
+    id: str | None = None
+    # The broad "personal finance" grouping NZFCC rolls up into: "Lifestyle",
+    # "Household", and so on. Coarse enough to chart, unlike the ~200 NZFCCs.
+    group: str | None = None
+    # "akahu" when it arrived on the transaction, "genie" when we asked Genie.
+    # The page shows the split, which is the only way to tell whether Genie is
+    # earning its keep.
+    source: str
+    confidence: float | None = None
+
+
+class Merchant(BaseModel):
+    name: str
+    id: str | None = None
+    logo: str | None = None
+    website: str | None = None
+
+
+class Transaction(BaseModel):
+    id: str
+    account_id: str
+    # Resolved from the account, because Akahu hangs currency off the account
+    # rather than repeating it on every transaction.
+    account_name: str
+    currency: str
+    connection_id: str
+    date: datetime
+    description: str
+    # Akahu's sign convention: negative is money out, positive is money in.
+    amount: Decimal
+    type: str
+    merchant: Merchant | None = None
+    category: Category | None = None

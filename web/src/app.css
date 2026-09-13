@@ -24,6 +24,7 @@
   --ctp-on-blue: #eff1f5;
   --ctp-green: #40a02b;
   --ctp-red: #d20f39;
+  --ctp-mauve: #8839ef;
 }
 
 /* With no explicit choice stored, follow the system. */
@@ -43,6 +44,7 @@
     --ctp-on-blue: #1e1e2e;
     --ctp-green: #a6e3a1;
     --ctp-red: #f38ba8;
+    --ctp-mauve: #cba6f7;
   }
 }
 
@@ -62,6 +64,7 @@
   --ctp-on-blue: #1e1e2e;
   --ctp-green: #a6e3a1;
   --ctp-red: #f38ba8;
+  --ctp-mauve: #cba6f7;
 }
 
 /*
