@@ -27,6 +27,44 @@ export type Me = {
 
 export type Connection = { connected: boolean }
 
+export type Category = {
+  name: string
+  id: string | null
+  /** The broad NZFCC grouping — "Lifestyle", "Household" — or null. */
+  group: string | null
+  /** "akahu" if it came with the transaction, "genie" if we looked it up. */
+  source: 'akahu' | 'genie'
+  confidence: number | null
+}
+
+export type Merchant = {
+  name: string
+  id: string | null
+  logo: string | null
+  website: string | null
+}
+
+export type Transaction = {
+  id: string
+  account_id: string
+  account_name: string
+  currency: string
+  connection_id: string
+  /** ISO 8601, UTC. */
+  date: string
+  description: string
+  /** A decimal string; negative is money out. */
+  amount: string
+  type: string
+  merchant: Merchant | null
+  category: Category | null
+}
+
+export type History = {
+  transactions: Transaction[]
+  days: number
+}
+
 export type Selection = {
   accounts: Account[]
   included: string[]
@@ -97,6 +135,8 @@ export const api = {
 
   saveSelection: (included: string[]) =>
     request<Selection>('/accounts/selection', 'PUT', { included }),
+
+  transactions: (days: number) => request<History>(`/transactions?days=${days}`),
 }
 
 /** The message to put in front of the user when a call fails. */

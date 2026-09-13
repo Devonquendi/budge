@@ -12,6 +12,7 @@
 
     <nav>
       <Link href="/">Dashboard</Link>
+      <Link href="/transactions">Transactions</Link>
       <Link href="/settings">Settings</Link>
     </nav>
 

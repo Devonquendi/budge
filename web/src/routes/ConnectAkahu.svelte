@@ -28,11 +28,6 @@
   <hgroup>
     <p class="eyebrow">Step 1 of 2</p>
     <h1>Connect your banks</h1>
-    <p class="muted">
-      Budge reads your accounts through
-      <a href="https://my.akahu.nz" target="_blank" rel="noopener">Akahu</a>. Create a
-      personal app there, connect your banks, then paste its two tokens below.
-    </p>
   </hgroup>
 
   <form onsubmit={submit}>

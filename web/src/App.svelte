@@ -9,6 +9,7 @@
   import Login from './routes/Login.svelte'
   import Settings from './routes/Settings.svelte'
   import Signup from './routes/Signup.svelte'
+  import Transactions from './routes/Transactions.svelte'
 
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
@@ -88,8 +89,10 @@
   <ConnectAkahu onconnected={connected} />
 {:else if path() === CHOOSE_ACCOUNTS}
   <ChooseAccounts ondone={() => navigate('/', { replace: true })} />
+{:else if path() === '/transactions'}
+  <Transactions onsignout={signedOut} />
 {:else if path() === '/settings'}
-  <Settings email={me.email} onsignout={signedOut} />
+  <Settings onsignout={signedOut} />
 {:else if path() === '/'}
   <Dashboard onsignout={signedOut} />
 {:else}

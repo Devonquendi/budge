@@ -1,0 +1,82 @@
+<script lang="ts">
+  import { api, ApiError, errorMessage, type History } from '../lib/api'
+  import AppShell from '../lib/components/AppShell.svelte'
+  import TransactionList from '../lib/components/TransactionList.svelte'
+  import { navigate } from '../lib/router.svelte'
+
+  let { onsignout }: { onsignout: () => void } = $props()
+
+  const RANGES = [
+    { days: 30, label: '30 days' },
+    { days: 90, label: '3 months' },
+    { days: 365, label: '12 months' },
+  ]
+
+  const DEFAULT_DAYS = 90
+
+  let days = $state(DEFAULT_DAYS)
+  let history = $state.raw<History | null>(null)
+  let error = $state('')
+  let loading = $state(false)
+
+  async function load(range: number) {
+    days = range
+    loading = true
+    error = ''
+    try {
+      history = await api.transactions(range)
+    } catch (failure) {
+      // 409 means the Akahu tokens are gone, so there is nothing to show yet.
+      if (failure instanceof ApiError && failure.status === 409) {
+        navigate('/onboarding', { replace: true })
+      } else {
+        error = errorMessage(failure)
+      }
+    }
+    loading = false
+  }
+
+  load(DEFAULT_DAYS)
+</script>
+
+<AppShell {onsignout}>
+  <div class="controls" role="group" aria-label="Date range">
+    {#each RANGES as range (range.days)}
+      <button
+        type="button"
+        class={range.days === days ? '' : 'secondary outline'}
+        aria-pressed={range.days === days}
+        onclick={() => load(range.days)}
+      >
+        {range.label}
+      </button>
+    {/each}
+  </div>
+
+  {#if history}
+    <div class={{ stale: loading }}>
+      <TransactionList transactions={history.transactions} />
+    </div>
+  {:else if error}
+    <p class="error">Couldn't load your transactions: {error}</p>
+  {:else}
+    <p aria-busy="true">Loading&hellip;</p>
+  {/if}
+</AppShell>
+
+<style>
+  .controls {
+    margin-bottom: 1.5rem;
+  }
+
+  .controls button {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+  }
+
+  /* Dim the old rows while a new range loads, rather than blanking the page. */
+  .stale {
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+</style>

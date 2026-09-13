@@ -45,7 +45,6 @@
   <hgroup>
     <p class="eyebrow">Step 2 of 2</p>
     <h1>Pick your accounts</h1>
-    <p class="muted">These are the ones your dashboard adds up. You can change them later.</p>
   </hgroup>
 
   {#if selection}
@@ -63,7 +62,7 @@
   {:else if error}
     <p class="error">{error}</p>
   {:else}
-    <p class="muted">Loading accounts…</p>
+    <p class="muted">Loading…</p>
   {/if}
 </AuthCard>
 

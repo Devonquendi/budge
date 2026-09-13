@@ -4,7 +4,7 @@
   import AppShell from '../lib/components/AppShell.svelte'
   import TokenFields from '../lib/components/TokenFields.svelte'
 
-  let { email, onsignout }: { email: string; onsignout: () => void } = $props()
+  let { onsignout }: { onsignout: () => void } = $props()
 
   // Null until the first load answers. Without the third state the page
   // claims you aren't connected for as long as the request takes.
@@ -71,24 +71,18 @@
 </script>
 
 <AppShell {onsignout}>
-  <hgroup>
-    <h1>Settings</h1>
-    <p class="muted">Signed in as {email}</p>
-  </hgroup>
-
   {#if notice}<p class="notice">{notice}</p>{/if}
   {#if error}<p class="error">{error}</p>{/if}
 
   <article>
     <header>
       <h2>Dashboard accounts</h2>
-      <p class="muted">Only ticked accounts count towards your net balance.</p>
     </header>
 
     {#if connected === null}
       <p aria-busy="true">Loading&hellip;</p>
     {:else if !connected}
-      <p class="muted">Connect Akahu below to choose accounts.</p>
+      <p class="muted">Not connected.</p>
     {:else if selection}
       <form onsubmit={saveAccounts}>
         <AccountPicker
@@ -101,7 +95,7 @@
         </button>
       </form>
     {:else}
-      <p aria-busy="true">Loading accounts&hellip;</p>
+      <p aria-busy="true">Loading&hellip;</p>
     {/if}
   </article>
 
@@ -111,11 +105,7 @@
       {#if connected === null}
         <p aria-busy="true">Loading&hellip;</p>
       {:else}
-        <p class="muted">
-          {connected
-            ? 'Connected. Paste new tokens to replace the ones stored.'
-            : 'Not connected yet.'}
-        </p>
+        <p class="muted">{connected ? 'Connected' : 'Not connected'}</p>
       {/if}
     </header>
 
@@ -129,18 +119,6 @@
 </AppShell>
 
 <style>
-  hgroup {
-    margin-bottom: 2rem;
-  }
-
-  h1 {
-    font-size: clamp(1.625rem, 5vw, 2rem);
-  }
-
-  hgroup p {
-    margin-top: 0.25rem;
-  }
-
   article {
     border: var(--pico-border-width) solid var(--pico-card-border-color);
   }
