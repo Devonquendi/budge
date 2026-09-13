@@ -1,89 +1,84 @@
-<script>
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from './assets/vite.svg'
-  import heroImg from './assets/hero.png'
-  import Counter from './lib/Counter.svelte'
+<script lang="ts">
+  import { api, type Me } from './lib/api'
+  import AuthCard from './lib/components/AuthCard.svelte'
+  import Link from './lib/components/Link.svelte'
+  import { navigate, path } from './lib/router.svelte'
+  import ChooseAccounts from './routes/ChooseAccounts.svelte'
+  import ConnectAkahu from './routes/ConnectAkahu.svelte'
+  import Dashboard from './routes/Dashboard.svelte'
+  import Login from './routes/Login.svelte'
+  import Settings from './routes/Settings.svelte'
+  import Signup from './routes/Signup.svelte'
+
+  const SIGNED_OUT = ['/login', '/signup']
+  const ONBOARDING = '/onboarding'
+  const CHOOSE_ACCOUNTS = '/onboarding/accounts'
+
+  let me = $state.raw<Me | null>(null)
+  let ready = $state(false)
+
+  /**
+   * Sends the browser to a page the session can actually use. Only runs when
+   * the session itself changes — navigating around afterwards is the user's
+   * business, not ours.
+   */
+  function land() {
+    if (!me) {
+      if (!SIGNED_OUT.includes(path())) navigate('/login', { replace: true })
+    } else if (!me.onboarded) {
+      navigate(ONBOARDING, { replace: true })
+    } else if (SIGNED_OUT.includes(path()) || path() === ONBOARDING) {
+      // Step two stays reachable once connected, so reloading it mid-setup
+      // doesn't dump you on the dashboard with every account switched on.
+      navigate('/', { replace: true })
+    }
+  }
+
+  async function bootstrap() {
+    me = await api.me()
+    land()
+    ready = true
+  }
+
+  function signedIn(user: Me) {
+    me = user
+    land()
+  }
+
+  async function signedOut() {
+    await api.logout()
+    me = null
+    land()
+  }
+
+  function connected() {
+    me = me && { ...me, onboarded: true }
+    navigate(CHOOSE_ACCOUNTS)
+  }
+
+  bootstrap()
 </script>
 
-<section id="center">
-  <div class="hero">
-    <img src={heroImg} class="base" width="170" height="179" alt="" />
-    <img src={svelteLogo} class="framework" alt="Svelte logo" />
-    <img src={viteLogo} class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/App.svelte</code> and save to test <code>HMR</code></p>
-  </div>
-  <Counter />
-</section>
-
-<div class="ticks"></div>
-
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true">
-      <use href="/icons.svg#documentation-icon"></use>
-    </svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank" rel="noreferrer">
-          <img class="logo" src={viteLogo} alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://svelte.dev/" target="_blank" rel="noreferrer">
-          <img class="button-icon" src={svelteLogo} alt="" />
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true">
-      <use href="/icons.svg#social-icon"></use>
-    </svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li>
-        <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#github-icon"></use>
-          </svg>
-          GitHub
-        </a>
-      </li>
-      <li>
-        <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#discord-icon"></use>
-          </svg>
-          Discord
-        </a>
-      </li>
-      <li>
-        <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#x-icon"></use>
-          </svg>
-          X.com
-        </a>
-      </li>
-      <li>
-        <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#bluesky-icon"></use>
-          </svg>
-          Bluesky
-        </a>
-      </li>
-    </ul>
-  </div>
-</section>
-
-<div class="ticks"></div>
-<section id="spacer"></section>
+{#if !ready}
+  <!-- One frame of nothing beats a spinner that flashes: /auth/me is local. -->
+{:else if !me}
+  {#if path() === '/signup'}
+    <Signup onsignin={signedIn} />
+  {:else}
+    <Login onsignin={signedIn} />
+  {/if}
+{:else if path() === ONBOARDING}
+  <ConnectAkahu onconnected={connected} />
+{:else if path() === CHOOSE_ACCOUNTS}
+  <ChooseAccounts ondone={() => navigate('/', { replace: true })} />
+{:else if path() === '/settings'}
+  <Settings email={me.email} onsignout={signedOut} />
+{:else if path() === '/'}
+  <Dashboard onsignout={signedOut} />
+{:else}
+  <AuthCard>
+    <h1>Not found</h1>
+    <p class="muted">There's no page at <code>{path()}</code>.</p>
+    <p><Link href="/">Back to your dashboard</Link></p>
+  </AuthCard>
+{/if}
