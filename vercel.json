@@ -2,7 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["syd1"],
   "services": {
-    "web": { "root": "web/" },
+    "web": {
+      "root": "web/",
+      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+    },
     "api": {
       "root": "backend/",
       "entrypoint": "server:app",

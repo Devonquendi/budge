@@ -1,5 +1,7 @@
 """Client for Akahu's personal-app REST API."""
 
+from decimal import Decimal
+
 import httpx2
 
 from budge.akahu import transform
@@ -24,4 +26,7 @@ class AkahuClient:
         ) as client:
             response = await client.get("/accounts")
             response.raise_for_status()
-            return [transform.to_account(item) for item in response.json()["items"]]
+            # parse_float keeps balances exact: by the time json() has built a
+            # float the cents are already gone, so Decimal has to happen here.
+            payload = response.json(parse_float=Decimal)
+            return [transform.to_account(item) for item in payload["items"]]

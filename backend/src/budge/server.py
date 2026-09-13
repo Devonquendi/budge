@@ -4,18 +4,15 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from budge.api import accounts
-from budge.auth import require_auth
+from budge.api import accounts, akahu, auth
 
 load_dotenv()
 
 SESSION_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
 
 app = FastAPI(title="Budge")
-app.add_middleware(BaseHTTPMiddleware, dispatch=require_auth)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.environ["AUTH_SECRET"],
@@ -24,4 +21,5 @@ app.add_middleware(
     https_only=bool(os.environ.get("VERCEL")),
 )
 
-app.include_router(accounts.router, prefix="/api")
+for router in (auth.router, akahu.router, accounts.router):
+    app.include_router(router, prefix="/api")

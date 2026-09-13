@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, Response
+from fastapi import Depends, HTTPException, Request
 from pwdlib import PasswordHash
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -14,19 +14,19 @@ password_hash = PasswordHash.recommended()
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-async def require_auth(request: Request, call_next) -> Response:
-    """Rejects unauthenticated requests. Signing in is the browser app's job.
-
-    Sign-in endpoints have to be exempted here once they land, or nobody can
-    reach them to get a session in the first place.
-    """
-    if request.session.get("user_id"):
-        return await call_next(request)
-    return Response(status_code=401)
+def user_id(user: User) -> int:
+    """Narrows the optional primary key — a row in the DB always has one."""
+    if user.id is None:
+        raise HTTPException(status_code=401)
+    return user.id
 
 
 async def get_current_user(request: Request, session: SessionDep) -> User:
-    """The logged-in user, or 401 if the session doesn't map to one."""
+    """The logged-in user, or 401 if the session doesn't map to one.
+
+    Routes opt into auth by depending on this (or CurrentUserId). There is no
+    blanket middleware: a route without the dependency is public on purpose.
+    """
     user = await session.get(User, request.session.get("user_id"))
     if user is None:
         raise HTTPException(status_code=401)
@@ -37,10 +37,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 async def get_current_user_id(user: CurrentUser) -> int:
-    """Narrows the optional primary key — a row loaded from the DB always has one."""
-    if user.id is None:
-        raise HTTPException(status_code=401)
-    return user.id
+    return user_id(user)
 
 
 CurrentUserId = Annotated[int, Depends(get_current_user_id)]
