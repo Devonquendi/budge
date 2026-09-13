@@ -1,7 +1,7 @@
 {
   "ty": {
     "command": "uv",
-    "args": ["--directory", "backend", "run", "ty", "server"],
+    "args": ["--directory", "backend", "run", "--with", "ty", "ty", "server"],
     "workspaceFolder": "backend",
     "extensionToLanguage": {
       ".py": "python",
