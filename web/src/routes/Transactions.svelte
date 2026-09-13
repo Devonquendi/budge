@@ -47,8 +47,6 @@
 </script>
 
 <AppShell {onsignout}>
-  <h1>What came in and what went out</h1>
-
   <div class="controls" role="group" aria-label="Date range">
     {#each RANGES as range (range.days)}
       <button
@@ -80,11 +78,6 @@
 </AppShell>
 
 <style>
-  h1 {
-    font-size: clamp(1.625rem, 5vw, 2rem);
-    margin-bottom: 1.5rem;
-  }
-
   .controls {
     margin-bottom: 1.5rem;
   }
