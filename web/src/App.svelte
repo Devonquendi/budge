@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api, errorMessage, type Me } from './lib/api'
+  import AppShell from './lib/components/AppShell.svelte'
   import AuthCard from './lib/components/AuthCard.svelte'
   import Link from './lib/components/Link.svelte'
   import { navigate, path } from './lib/router.svelte'
@@ -15,6 +16,8 @@
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
+  /** The pages that live inside the sidebar shell. */
+  const SIGNED_IN = ['/', '/transactions', '/settings']
 
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
@@ -109,12 +112,22 @@
   <ConnectAkahu onconnected={connected} />
 {:else if path() === CHOOSE_ACCOUNTS}
   <ChooseAccounts ondone={() => navigate('/', { replace: true })} />
-{:else if path() === '/transactions'}
-  <Transactions email={me.email} onsignout={signedOut} />
-{:else if path() === '/settings'}
-  <Settings email={me.email} onsignout={signedOut} ondisconnect={disconnected} />
-{:else if path() === '/'}
-  <Dashboard email={me.email} onsignout={signedOut} />
+{:else if SIGNED_IN.includes(path())}
+  <!--
+    The one place the shell is applied. Routes render their own content and
+    nothing else, so adding a page is a branch here plus a link in the sidebar
+    — not another copy of the wrapper. It also keeps one AppShell alive across
+    navigation instead of tearing the sidebar down and rebuilding it per page.
+  -->
+  <AppShell email={me.email} onsignout={signedOut}>
+    {#if path() === '/transactions'}
+      <Transactions />
+    {:else if path() === '/settings'}
+      <Settings ondisconnect={disconnected} />
+    {:else}
+      <Dashboard />
+    {/if}
+  </AppShell>
 {:else}
   <AuthCard>
     <h1>Not found</h1>

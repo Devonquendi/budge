@@ -1,6 +1,5 @@
 <script lang="ts">
   import AccountList from '../lib/components/AccountList.svelte'
-  import AppShell from '../lib/components/AppShell.svelte'
   import Link from '../lib/components/Link.svelte'
   import Panel from '../lib/components/Panel.svelte'
   import SpendingBreakdown from '../lib/components/SpendingBreakdown.svelte'
@@ -9,8 +8,6 @@
   import { format, formatCents, toCents } from '../lib/money'
   import { monthlySpend, totalSpend } from '../lib/spending'
   import { getWorkspace } from '../lib/workspace.svelte'
-
-  let { email, onsignout }: { email: string; onsignout: () => void } = $props()
 
   const workspace = getWorkspace()
 
@@ -42,113 +39,111 @@
   const spend = $derived(monthlySpend(workspace.transactions, primary))
 </script>
 
-<AppShell {email} {onsignout}>
-  <div class="page">
-    <div class="head">
-      <div class="titles">
-        <h1>Dashboard</h1>
-        <p class="muted sub">
-          {#if workspace.loadedAt}
-            Balances as at {asAt.format(workspace.loadedAt)}
-          {:else}
-            Loading your balances&hellip;
-          {/if}
-        </p>
-      </div>
-      <button
-        type="button"
-        class="secondary outline"
-        onclick={() => workspace.load()}
-        disabled={workspace.loadingAccounts || workspace.loadingTransactions}
-      >
-        {workspace.loadingAccounts || workspace.loadingTransactions
-          ? 'Refreshing…'
-          : 'Refresh'}
-      </button>
+<div class="page">
+  <div class="head">
+    <div class="titles">
+      <h1>Dashboard</h1>
+      <p class="muted sub">
+        {#if workspace.loadedAt}
+          Balances as at {asAt.format(workspace.loadedAt)}
+        {:else}
+          Loading your balances&hellip;
+        {/if}
+      </p>
     </div>
-
-    {#if workspace.accountsError}
-      <p class="error">Couldn't load your accounts: {workspace.accountsError}</p>
-    {/if}
-
-    {#if workspace.ready}
-      <Summary
-        totals={workspace.totals}
-        accounts={workspace.dashboardAccounts}
-        transactions={workspace.transactions}
-      />
-
-      <div class="panels">
-        <Panel title="Accounts">
-          {#snippet action()}
-            <Link href="/settings" class="more">Manage</Link>
-          {/snippet}
-
-          <AccountList accounts={workspace.dashboardAccounts} />
-
-          {#snippet footer()}
-            {#if workspace.hiddenCount > 0}
-              <span>
-                {workspace.hiddenCount}
-                {workspace.hiddenCount === 1 ? 'account' : 'accounts'} hidden from dashboard
-              </span>
-            {:else}
-              <span>Every account is on the dashboard</span>
-            {/if}
-          {/snippet}
-        </Panel>
-
-        <Panel title="Recent activity">
-          {#snippet action()}
-            <Link href="/transactions" class="more">All transactions</Link>
-          {/snippet}
-
-          <ul class="recent">
-            {#each recent as transaction (transaction.id)}
-              {@const cents = toCents(transaction.amount)}
-              <li>
-                <span class="when numeric">
-                  {shortDate.format(new Date(transaction.date))}
-                </span>
-                <span class="what">
-                  {transaction.merchant?.name ?? transaction.description}
-                </span>
-                <span
-                  class="cat"
-                  style:--accent={categoryColor(transaction.category?.name)}
-                >
-                  {transaction.category?.name ?? 'Uncategorised'}
-                </span>
-                <span class={['sum', 'numeric', { incoming: cents > 0 }]}>
-                  {cents > 0 ? '+' : ''}{format(
-                    transaction.amount,
-                    transaction.currency,
-                  )}
-                </span>
-              </li>
-            {:else}
-              <li class="none muted">
-                {workspace.transactionsError || 'No transactions yet'}
-              </li>
-            {/each}
-          </ul>
-        </Panel>
-
-        <Panel title="Spending this month" padded>
-          {#snippet action()}
-            <span class="total numeric">
-              {formatCents(totalSpend(spend), primary)}
-            </span>
-          {/snippet}
-
-          <SpendingBreakdown slices={spend} currency={primary} />
-        </Panel>
-      </div>
-    {:else if !workspace.accountsError}
-      <p aria-busy="true">Loading&hellip;</p>
-    {/if}
+    <button
+      type="button"
+      class="secondary outline"
+      onclick={() => workspace.load()}
+      disabled={workspace.loadingAccounts || workspace.loadingTransactions}
+    >
+      {workspace.loadingAccounts || workspace.loadingTransactions
+        ? 'Refreshing…'
+        : 'Refresh'}
+    </button>
   </div>
-</AppShell>
+
+  {#if workspace.accountsError}
+    <p class="error">Couldn't load your accounts: {workspace.accountsError}</p>
+  {/if}
+
+  {#if workspace.ready}
+    <Summary
+      totals={workspace.totals}
+      accounts={workspace.dashboardAccounts}
+      transactions={workspace.transactions}
+    />
+
+    <div class="panels">
+      <Panel title="Accounts">
+        {#snippet action()}
+          <Link href="/settings" class="more">Manage</Link>
+        {/snippet}
+
+        <AccountList accounts={workspace.dashboardAccounts} />
+
+        {#snippet footer()}
+          {#if workspace.hiddenCount > 0}
+            <span>
+              {workspace.hiddenCount}
+              {workspace.hiddenCount === 1 ? 'account' : 'accounts'} hidden from dashboard
+            </span>
+          {:else}
+            <span>Every account is on the dashboard</span>
+          {/if}
+        {/snippet}
+      </Panel>
+
+      <Panel title="Recent activity">
+        {#snippet action()}
+          <Link href="/transactions" class="more">All transactions</Link>
+        {/snippet}
+
+        <ul class="recent">
+          {#each recent as transaction (transaction.id)}
+            {@const cents = toCents(transaction.amount)}
+            <li>
+              <span class="when numeric">
+                {shortDate.format(new Date(transaction.date))}
+              </span>
+              <span class="what">
+                {transaction.merchant?.name ?? transaction.description}
+              </span>
+              <span
+                class="cat"
+                style:--accent={categoryColor(transaction.category?.name)}
+              >
+                {transaction.category?.name ?? 'Uncategorised'}
+              </span>
+              <span class={['sum', 'numeric', { incoming: cents > 0 }]}>
+                {cents > 0 ? '+' : ''}{format(
+                  transaction.amount,
+                  transaction.currency,
+                )}
+              </span>
+            </li>
+          {:else}
+            <li class="none muted">
+              {workspace.transactionsError || 'No transactions yet'}
+            </li>
+          {/each}
+        </ul>
+      </Panel>
+
+      <Panel title="Spending this month" padded>
+        {#snippet action()}
+          <span class="total numeric">
+            {formatCents(totalSpend(spend), primary)}
+          </span>
+        {/snippet}
+
+        <SpendingBreakdown slices={spend} currency={primary} />
+      </Panel>
+    </div>
+  {:else if !workspace.accountsError}
+    <p aria-busy="true">Loading&hellip;</p>
+  {/if}
+</div>
 
 <style>
   .page {

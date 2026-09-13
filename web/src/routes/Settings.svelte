@@ -1,18 +1,13 @@
 <script lang="ts">
   import { errorMessage } from '../lib/api'
   import AccountPicker from '../lib/components/AccountPicker.svelte'
-  import AppShell from '../lib/components/AppShell.svelte'
   import Panel from '../lib/components/Panel.svelte'
   import TokenFields from '../lib/components/TokenFields.svelte'
   import { prefs, setPref } from '../lib/prefs.svelte'
   import { followSystem, followsSystem, isDark, setTheme } from '../lib/theme.svelte'
   import { getWorkspace } from '../lib/workspace.svelte'
 
-  let {
-    email,
-    onsignout,
-    ondisconnect,
-  }: { email: string; onsignout: () => void; ondisconnect: () => void } = $props()
+  let { ondisconnect }: { ondisconnect: () => void } = $props()
 
   const workspace = getWorkspace()
 
@@ -96,115 +91,113 @@
   }
 </script>
 
-<AppShell {email} {onsignout}>
-  <div class="page">
-    <div class="titles">
-      <h1>Settings</h1>
-      <p class="muted sub">
-        <!-- The separator carries its own spaces: Svelte trims whitespace at
-             the block boundary, which would run "connected" into the dot. -->
-        Akahu connected{#if workspace.loadedAt}{' · '}last synced {asAt.format(
-            workspace.loadedAt,
-          )}{/if}
-      </p>
-    </div>
+<div class="page">
+  <div class="titles">
+    <h1>Settings</h1>
+    <p class="muted sub">
+      <!-- The separator carries its own spaces: Svelte trims whitespace at
+           the block boundary, which would run "connected" into the dot. -->
+      Akahu connected{#if workspace.loadedAt}{' · '}last synced {asAt.format(
+          workspace.loadedAt,
+        )}{/if}
+    </p>
+  </div>
 
-    {#if notice}<p class="notice">{notice}</p>{/if}
-    {#if error}<p class="error">{error}</p>{/if}
+  {#if notice}<p class="notice">{notice}</p>{/if}
+  {#if error}<p class="error">{error}</p>{/if}
 
-    <div class="panels">
-      <form onsubmit={saveAccounts}>
-        <Panel title="Dashboard accounts">
+  <div class="panels">
+    <form onsubmit={saveAccounts}>
+      <Panel title="Dashboard accounts">
+        {#snippet action()}
+          <span class="of numeric">
+            {included.length} of {workspace.accounts.length}
+          </span>
+        {/snippet}
+
+        {#if workspace.ready}
+          <AccountPicker
+            accounts={workspace.accounts}
+            {included}
+            onchange={(next) => (edits = next)}
+          />
+        {:else}
+          <p class="loading" aria-busy="true">Loading&hellip;</p>
+        {/if}
+
+        {#snippet footer()}
+          <span>{dirty ? 'Unsaved changes' : 'All changes saved'}</span>
+          <button type="submit" disabled={savingAccounts || !dirty}>
+            {savingAccounts ? 'Saving…' : 'Save'}
+          </button>
+        {/snippet}
+      </Panel>
+    </form>
+
+    <div class="column">
+      <form onsubmit={saveTokens}>
+        <Panel title="Akahu connection" padded>
           {#snippet action()}
-            <span class="of numeric">
-              {included.length} of {workspace.accounts.length}
+            <span class="status">
+              <span class="dot" aria-hidden="true"></span>Connected
             </span>
           {/snippet}
 
-          {#if workspace.ready}
-            <AccountPicker
-              accounts={workspace.accounts}
-              {included}
-              onchange={(next) => (edits = next)}
-            />
-          {:else}
-            <p class="loading" aria-busy="true">Loading&hellip;</p>
-          {/if}
+          <TokenFields bind:appToken bind:userToken inline />
 
-          {#snippet footer()}
-            <span>{dirty ? 'Unsaved changes' : 'All changes saved'}</span>
-            <button type="submit" disabled={savingAccounts || !dirty}>
-              {savingAccounts ? 'Saving…' : 'Save'}
+          <div class="buttons">
+            <button type="submit" disabled={savingTokens || disconnecting}>
+              {savingTokens ? 'Checking…' : 'Replace tokens'}
             </button>
-          {/snippet}
+            <button
+              type="button"
+              class="secondary outline"
+              onclick={disconnect}
+              disabled={savingTokens || disconnecting}
+            >
+              {disconnecting ? 'Disconnecting…' : 'Disconnect'}
+            </button>
+          </div>
         </Panel>
       </form>
 
-      <div class="column">
-        <form onsubmit={saveTokens}>
-          <Panel title="Akahu connection" padded>
-            {#snippet action()}
-              <span class="status">
-                <span class="dot" aria-hidden="true"></span>Connected
-              </span>
-            {/snippet}
-
-            <TokenFields bind:appToken bind:userToken inline />
-
-            <div class="buttons">
-              <button type="submit" disabled={savingTokens || disconnecting}>
-                {savingTokens ? 'Checking…' : 'Replace tokens'}
-              </button>
-              <button
-                type="button"
-                class="secondary outline"
-                onclick={disconnect}
-                disabled={savingTokens || disconnecting}
-              >
-                {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-              </button>
-            </div>
-          </Panel>
-        </form>
-
-        <Panel title="Preferences">
-          <div class="prefs">
-            <label>
-              <input
-                type="checkbox"
-                checked={followsSystem()}
-                onchange={(event) => {
-                  // Unticking has to land somewhere, so it pins whatever is
-                  // already on screen rather than flipping the lights.
-                  if (event.currentTarget.checked) followSystem()
-                  else setTheme(isDark() ? 'dark' : 'light')
-                }}
-              />
-              <span>Follow system theme</span>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={prefs().groupByDay}
-                onchange={(event) =>
-                  setPref('groupByDay', event.currentTarget.checked)}
-              />
-              <span>Group transactions by day</span>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={prefs().hideCents}
-                onchange={(event) => setPref('hideCents', event.currentTarget.checked)}
-              />
-              <span>Hide cents on balances over $10k</span>
-            </label>
-          </div>
-        </Panel>
-      </div>
+      <Panel title="Preferences">
+        <div class="prefs">
+          <label>
+            <input
+              type="checkbox"
+              checked={followsSystem()}
+              onchange={(event) => {
+                // Unticking has to land somewhere, so it pins whatever is
+                // already on screen rather than flipping the lights.
+                if (event.currentTarget.checked) followSystem()
+                else setTheme(isDark() ? 'dark' : 'light')
+              }}
+            />
+            <span>Follow system theme</span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={prefs().groupByDay}
+              onchange={(event) =>
+                setPref('groupByDay', event.currentTarget.checked)}
+            />
+            <span>Group transactions by day</span>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={prefs().hideCents}
+              onchange={(event) => setPref('hideCents', event.currentTarget.checked)}
+            />
+            <span>Hide cents on balances over $10k</span>
+          </label>
+        </div>
+      </Panel>
     </div>
   </div>
-</AppShell>
+</div>
 
 <style>
   .page {

@@ -1,11 +1,8 @@
 <script lang="ts">
-  import AppShell from '../lib/components/AppShell.svelte'
   import TransactionList from '../lib/components/TransactionList.svelte'
   import { formatCents, toCents } from '../lib/money'
   import { prefs } from '../lib/prefs.svelte'
   import { RANGES, getWorkspace } from '../lib/workspace.svelte'
-
-  let { email, onsignout }: { email: string; onsignout: () => void } = $props()
 
   const workspace = getWorkspace()
 
@@ -93,115 +90,113 @@
   }
 </script>
 
-<AppShell {email} {onsignout}>
-  <div class="page">
-    <div class="titles">
-      <h1>Transactions</h1>
-      <p class="muted sub">
-        {#if workspace.transactionsError}
-          Couldn't load your transactions
-        {:else if filtered.length}
-          {filtered.length}
-          {filtered.length === 1 ? 'transaction' : 'transactions'}
-          {#if span}· {span}{/if}
-        {:else}
-          No transactions in this range
-        {/if}
-      </p>
-    </div>
-
-    <div class="controls">
-      <div class="segmented" role="group" aria-label="Date range">
-        {#each RANGES as range (range.days)}
-          <button
-            type="button"
-            class={range.days === workspace.days ? 'on' : ''}
-            aria-pressed={range.days === workspace.days}
-            onclick={() => refilter(() => workspace.loadTransactions(range.days))}
-          >
-            {range.label}
-          </button>
-        {/each}
-      </div>
-
-      <input
-        type="search"
-        class="search"
-        placeholder="Search merchant"
-        aria-label="Search merchant"
-        value={search}
-        oninput={(event) => {
-          const { value } = event.currentTarget
-          refilter(() => (search = value))
-        }}
-      />
-
-      <select
-        aria-label="Filter by category"
-        value={category}
-        onchange={(event) => {
-          const { value } = event.currentTarget
-          refilter(() => (category = value))
-        }}
-      >
-        {#each categories as name (name)}
-          <option>{name}</option>
-        {/each}
-      </select>
-
-      <select
-        aria-label="Filter by account"
-        value={account}
-        onchange={(event) => {
-          const { value } = event.currentTarget
-          refilter(() => (account = value))
-        }}
-      >
-        {#each accounts as name (name)}
-          <option>{name}</option>
-        {/each}
-      </select>
-
-      <p class="flows">
-        <span>In <b class="numeric in">{formatCents(flows.incoming, flows.currency)}</b></span>
-        <span>
-          Out <b class="numeric">{formatCents(Math.abs(flows.outgoing), flows.currency)}</b>
-        </span>
-        <span>
-          Net
-          <b class="numeric">
-            {flows.net > 0 ? '+' : ''}{formatCents(flows.net, flows.currency)}
-          </b>
-        </span>
-      </p>
-    </div>
-
-    {#if workspace.transactionsError}
-      <p class="error">Couldn't load your transactions: {workspace.transactionsError}</p>
-    {:else if workspace.transactions.length === 0 && workspace.loadingTransactions}
-      <p aria-busy="true">Loading&hellip;</p>
-    {:else}
-      <div class={{ stale: workspace.loadingTransactions }}>
-        <TransactionList transactions={visible} grouped={prefs().groupByDay}>
-          {#snippet footer()}
-            <span class="count">
-              Showing {visible.length} of {filtered.length}
-            </span>
-            {#if visible.length < filtered.length}
-              <button
-                type="button"
-                class="secondary outline"
-                onclick={() => (shown += PAGE)}
-              >
-                Load more
-              </button>
-            {/if}
-          {/snippet}
-        </TransactionList>
-      </div>
-    {/if}
+<div class="page">
+  <div class="titles">
+    <h1>Transactions</h1>
+    <p class="muted sub">
+      {#if workspace.transactionsError}
+        Couldn't load your transactions
+      {:else if filtered.length}
+        {filtered.length}
+        {filtered.length === 1 ? 'transaction' : 'transactions'}
+        {#if span}· {span}{/if}
+      {:else}
+        No transactions in this range
+      {/if}
+    </p>
   </div>
-</AppShell>
+
+  <div class="controls">
+    <div class="segmented" role="group" aria-label="Date range">
+      {#each RANGES as range (range.days)}
+        <button
+          type="button"
+          class={range.days === workspace.days ? 'on' : ''}
+          aria-pressed={range.days === workspace.days}
+          onclick={() => refilter(() => workspace.loadTransactions(range.days))}
+        >
+          {range.label}
+        </button>
+      {/each}
+    </div>
+
+    <input
+      type="search"
+      class="search"
+      placeholder="Search merchant"
+      aria-label="Search merchant"
+      value={search}
+      oninput={(event) => {
+        const { value } = event.currentTarget
+        refilter(() => (search = value))
+      }}
+    />
+
+    <select
+      aria-label="Filter by category"
+      value={category}
+      onchange={(event) => {
+        const { value } = event.currentTarget
+        refilter(() => (category = value))
+      }}
+    >
+      {#each categories as name (name)}
+        <option>{name}</option>
+      {/each}
+    </select>
+
+    <select
+      aria-label="Filter by account"
+      value={account}
+      onchange={(event) => {
+        const { value } = event.currentTarget
+        refilter(() => (account = value))
+      }}
+    >
+      {#each accounts as name (name)}
+        <option>{name}</option>
+      {/each}
+    </select>
+
+    <p class="flows">
+      <span>In <b class="numeric in">{formatCents(flows.incoming, flows.currency)}</b></span>
+      <span>
+        Out <b class="numeric">{formatCents(Math.abs(flows.outgoing), flows.currency)}</b>
+      </span>
+      <span>
+        Net
+        <b class="numeric">
+          {flows.net > 0 ? '+' : ''}{formatCents(flows.net, flows.currency)}
+        </b>
+      </span>
+    </p>
+  </div>
+
+  {#if workspace.transactionsError}
+    <p class="error">Couldn't load your transactions: {workspace.transactionsError}</p>
+  {:else if workspace.transactions.length === 0 && workspace.loadingTransactions}
+    <p aria-busy="true">Loading&hellip;</p>
+  {:else}
+    <div class={{ stale: workspace.loadingTransactions }}>
+      <TransactionList transactions={visible} grouped={prefs().groupByDay}>
+        {#snippet footer()}
+          <span class="count">
+            Showing {visible.length} of {filtered.length}
+          </span>
+          {#if visible.length < filtered.length}
+            <button
+              type="button"
+              class="secondary outline"
+              onclick={() => (shown += PAGE)}
+            >
+              Load more
+            </button>
+          {/if}
+        {/snippet}
+      </TransactionList>
+    </div>
+  {/if}
+</div>
 
 <style>
   .page {
