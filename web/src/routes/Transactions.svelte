@@ -19,13 +19,6 @@
   let error = $state('')
   let loading = $state(false)
 
-  // How many of the range got a name put to them. Without this the page looks
-  // fully categorised as long as you don't scroll.
-  const coverage = $derived.by(() => {
-    const rows = history?.transactions ?? []
-    return { total: rows.length, named: rows.filter((row) => row.category).length }
-  })
-
   async function load(range: number) {
     days = range
     loading = true
@@ -61,12 +54,6 @@
   </div>
 
   {#if history}
-    {#if coverage.total}
-      <p class="coverage muted">
-        {coverage.named}/{coverage.total} classified
-      </p>
-    {/if}
-
     <div class={{ stale: loading }}>
       <TransactionList transactions={history.transactions} />
     </div>
@@ -84,11 +71,6 @@
 
   .controls button {
     margin-bottom: 0;
-    font-size: 0.875rem;
-  }
-
-  .coverage {
-    margin-bottom: 1.5rem;
     font-size: 0.875rem;
   }
 

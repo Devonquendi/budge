@@ -4,7 +4,7 @@
   import AppShell from '../lib/components/AppShell.svelte'
   import TokenFields from '../lib/components/TokenFields.svelte'
 
-  let { email, onsignout }: { email: string; onsignout: () => void } = $props()
+  let { onsignout }: { onsignout: () => void } = $props()
 
   // Null until the first load answers. Without the third state the page
   // claims you aren't connected for as long as the request takes.
@@ -71,8 +71,6 @@
 </script>
 
 <AppShell {onsignout}>
-  <p class="muted whoami">Signed in as {email}</p>
-
   {#if notice}<p class="notice">{notice}</p>{/if}
   {#if error}<p class="error">{error}</p>{/if}
 
@@ -121,10 +119,6 @@
 </AppShell>
 
 <style>
-  .whoami {
-    margin-bottom: 2rem;
-  }
-
   article {
     border: var(--pico-border-width) solid var(--pico-card-border-color);
   }

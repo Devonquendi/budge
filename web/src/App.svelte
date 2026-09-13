@@ -92,7 +92,7 @@
 {:else if path() === '/transactions'}
   <Transactions onsignout={signedOut} />
 {:else if path() === '/settings'}
-  <Settings email={me.email} onsignout={signedOut} />
+  <Settings onsignout={signedOut} />
 {:else if path() === '/'}
   <Dashboard onsignout={signedOut} />
 {:else}
