@@ -29,6 +29,7 @@ const NAMED: [pattern: string, accent: string][] = [
   ['supermarket', '--ctp-green'],
   ['rent', '--ctp-lavender'],
   ['mortgage', '--ctp-lavender'],
+  ['loan', '--ctp-lavender'],
   ['housing', '--ctp-lavender'],
   ['utilit', '--ctp-sky'],
   ['power', '--ctp-sky'],
@@ -50,8 +51,7 @@ const NAMED: [pattern: string, accent: string][] = [
   ['medical', '--ctp-teal'],
 ]
 
-/** The custom property holding this category's colour. */
-export function categoryAccent(name: string | null | undefined): string {
+function categoryAccent(name: string | null | undefined): string {
   if (!name) return '--ctp-overlay0'
 
   const lower = name.toLowerCase()
@@ -66,7 +66,6 @@ export function categoryAccent(name: string | null | undefined): string {
   return ACCENTS[total % ACCENTS.length]
 }
 
-/** The colour itself, ready for a `background` or `color`. */
 export function categoryColor(name: string | null | undefined): string {
   return `var(${categoryAccent(name)})`
 }

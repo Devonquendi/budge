@@ -30,12 +30,10 @@ export function applyStoredTheme(): void {
   if (chosen.theme) document.documentElement.dataset.theme = chosen.theme
 }
 
-/** True while nothing is stored, so the system preference is in charge. */
 export function followsSystem(): boolean {
   return chosen.theme === null
 }
 
-/** Drops the stored choice and hands the decision back to the system. */
 export function followSystem(): void {
   chosen.theme = null
   delete document.documentElement.dataset.theme
@@ -50,7 +48,6 @@ export function isDark(): boolean {
   return chosen.theme ? chosen.theme === 'dark' : systemPrefersDark.current
 }
 
-/** Pins a theme, which is what stops the system preference applying. */
 export function setTheme(theme: Theme): void {
   chosen.theme = theme
   document.documentElement.dataset.theme = theme

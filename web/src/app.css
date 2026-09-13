@@ -201,6 +201,9 @@
 
 body {
   font-size: var(--text-body);
+  /* The layout paints its own ground, but overscroll rubber-banding exposes
+     the body behind it — white against a dark theme without this. */
+  background: var(--ctp-mantle);
 }
 
 h1,
@@ -243,10 +246,16 @@ h3 {
   width: auto;
 }
 
-:root:root [type='checkbox'] {
+/* Switches are excluded: Pico sizes those as a track and knob, and forcing a
+   square on them collapses the slider. */
+:root:root [type='checkbox']:not([role='switch']) {
   --pico-border-radius: 0.25rem;
   width: 0.875rem;
   height: 0.875rem;
+  margin: 0;
+}
+
+:root:root [type='checkbox'][role='switch'] {
   margin: 0;
 }
 
@@ -277,7 +286,7 @@ h3 {
   color: var(--pico-muted-color);
 }
 
-/* Small caps in mono: the label above a number, and the ledger's column heads. */
+/* The label above a number, and the ledger's column heads. */
 .eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-micro);

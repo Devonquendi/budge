@@ -19,7 +19,6 @@
 
   const monthName = new Intl.DateTimeFormat('en-NZ', { month: 'short' })
 
-  /** Money in and out since the first of this month, for one currency. */
   function flows(currency: string) {
     const now = new Date()
     const month = now.getMonth()
@@ -48,7 +47,6 @@
     return { incoming, outgoing, deposits, payments }
   }
 
-  /** Accounts in the red — the credit cards and overdrafts behind "Owing". */
   function owingCount(currency: string): number {
     return accounts.filter(
       (account) =>
@@ -60,11 +58,6 @@
     return `${count} ${count === 1 ? one : many}`
   }
 
-  /**
-   * Up to five figures per currency: what you have, what it's made of, and how
-   * this month has gone so far. Owing is dropped when nothing is owed rather
-   * than shown as a zero.
-   */
   const groups = $derived(
     totals.map((total) => {
       const { currency } = total

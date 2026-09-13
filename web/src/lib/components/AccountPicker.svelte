@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { badge, hue, typeLabel } from '../accounts'
+  import { typeLabel } from '../accounts'
   import type { Account } from '../api'
   import { format, toCents } from '../money'
   import { prefs } from '../prefs.svelte'
+  import BankBadge from './BankBadge.svelte'
 
   // Props in, event out: the page owns the selection, this just draws it.
   let {
@@ -34,13 +35,7 @@
         />
 
         {#if badges}
-          <span
-            class="badge"
-            style:--hue={hue(account.connection_name)}
-            aria-hidden="true"
-          >
-            {badge(account.connection_name)}
-          </span>
+          <BankBadge connection={account.connection_name} />
         {/if}
 
         <span class="who">
@@ -100,23 +95,6 @@
     flex: none;
   }
 
-  .badge {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 1.4375rem;
-    height: 1.4375rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    font-weight: 500;
-    border-radius: 0.375rem;
-    background: color-mix(
-      in oklch,
-      oklch(0.7 0.12 var(--hue)) 22%,
-      var(--pico-card-background-color)
-    );
-    color: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 70%, var(--pico-color));
-  }
 
   .who {
     display: flex;

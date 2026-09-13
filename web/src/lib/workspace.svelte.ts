@@ -143,11 +143,11 @@ export class Workspace {
     await Promise.all([this.loadAccounts(), this.loadTransactions()])
   }
 
-  /** Saves the ticks and keeps the pages already showing them in step. */
   async saveSelection(included: string[]): Promise<void> {
     const selection = await api.saveSelection(included)
     this.accounts = selection.accounts
     this.included = selection.included
+    this.loadedAt = new Date()
     // The included set decides which accounts the history covers, so it's
     // stale the moment the ticks change.
     await this.loadTransactions()
@@ -165,6 +165,7 @@ export class Workspace {
     this.included = []
     this.transactions = []
     this.loadedAt = null
+    this.ready = false
   }
 }
 

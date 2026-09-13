@@ -258,13 +258,12 @@
     color: var(--ctp-green);
   }
 
-  .none {
+  .recent li.none {
     justify-content: center;
-    padding-block: 1.5rem !important;
+    padding-block: 1.5rem;
     font-size: var(--text-label);
   }
 
-  /* The category column is the first thing to go when there's no room for it. */
   @media (max-width: 26rem) {
     .cat {
       display: none;

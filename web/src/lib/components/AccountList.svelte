@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { badge, hue, typeLabel } from '../accounts'
+  import { typeLabel } from '../accounts'
   import type { Account } from '../api'
   import { format, toCents } from '../money'
   import { prefs } from '../prefs.svelte'
+  import BankBadge from './BankBadge.svelte'
 
   let { accounts }: { accounts: Account[] } = $props()
 </script>
@@ -10,9 +11,7 @@
 <ul>
   {#each accounts as account (account.id)}
     <li>
-      <span class="badge" style:--hue={hue(account.connection_name)} aria-hidden="true">
-        {badge(account.connection_name)}
-      </span>
+      <BankBadge connection={account.connection_name} />
 
       <span class="who">
         <span class="name">{account.name}</span>
@@ -55,24 +54,6 @@
     border-top: var(--pico-border-width) solid var(--ctp-divider);
   }
 
-  .badge {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 1.4375rem;
-    height: 1.4375rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    font-weight: 500;
-    border-radius: 0.375rem;
-    /* Mixing against the card keeps this readable in both themes. */
-    background: color-mix(
-      in oklch,
-      oklch(0.7 0.12 var(--hue)) 22%,
-      var(--pico-card-background-color)
-    );
-    color: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 70%, var(--pico-color));
-  }
 
   .who {
     display: flex;

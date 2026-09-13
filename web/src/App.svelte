@@ -16,7 +16,6 @@
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
-  /** The pages that live inside the sidebar shell. */
   const SIGNED_IN = ['/', '/transactions', '/settings']
 
   let me = $state.raw<Me | null>(null)
@@ -80,8 +79,9 @@
 
   function connected() {
     me = me && { ...me, onboarded: true }
-    // Step two picks from these, so they have to be on their way before it renders.
-    workspace.load()
+    // Accounts only: nothing is ticked yet, so a transaction fetch here covers
+    // every account and is thrown away by the save at the end of step two.
+    workspace.loadAccounts()
     navigate(CHOOSE_ACCOUNTS)
   }
 

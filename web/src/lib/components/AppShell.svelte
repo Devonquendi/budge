@@ -32,25 +32,18 @@
 -->
 {#snippet actions()}
   <div class="actions">
-    <button
-      type="button"
-      class="secondary outline icon"
-      onclick={toggleTheme}
-      aria-label={isDark() ? 'Switch to light theme' : 'Switch to dark theme'}
-    >
-      {#if isDark()}
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="4.25" />
-          <path
-            d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"
-          />
-        </svg>
-      {:else}
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20.5 14.2A8.7 8.7 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7Z" />
-        </svg>
-      {/if}
-    </button>
+    <label class="theme">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.5 14.2A8.7 8.7 0 1 1 9.8 3.5a7 7 0 0 0 10.7 10.7Z" />
+      </svg>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={isDark()}
+        onchange={toggleTheme}
+        aria-label="Dark theme"
+      />
+    </label>
     <button type="button" class="secondary outline" onclick={onsignout}>Log out</button>
   </div>
 {/snippet}
@@ -180,13 +173,13 @@
     margin-left: auto;
     font-family: var(--font-mono);
     font-size: var(--text-micro);
-    color: var(--ctp-overlay0);
+    color: var(--count-fg, var(--ctp-overlay0));
   }
 
-  /* The anchor belongs to Link, so the whole tail has to be global — scoped by
-     the `nav` in front of it, which is ours. */
-  nav :global(a[aria-current='page'] .count) {
-    color: var(--pico-muted-color);
+  /* Svelte rejects :global() mid-selector, so rather than globalising .count
+     itself the active link passes the colour down. */
+  nav :global(a[aria-current='page']) {
+    --count-fg: var(--pico-muted-color);
   }
 
   .net {
@@ -230,23 +223,29 @@
     white-space: nowrap;
   }
 
-  .icon {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 1.6875rem;
-    height: 1.6875rem;
-    padding: 0;
+  /* The moon says what the switch is for; the switch says which way it's set. */
+  .theme {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0 0.125rem;
+    cursor: pointer;
   }
 
-  .icon svg {
+  .theme svg {
     width: 0.875rem;
     height: 0.875rem;
+    flex: none;
     fill: none;
-    stroke: currentColor;
+    stroke: var(--pico-muted-color);
     stroke-width: 1.7;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .theme input {
+    cursor: pointer;
   }
 
   .email {

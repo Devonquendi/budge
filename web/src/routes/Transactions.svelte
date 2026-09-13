@@ -6,7 +6,6 @@
 
   const workspace = getWorkspace()
 
-  /** How many rows to add each time "Load more" is pressed. */
   const PAGE = 25
 
   const ALL_CATEGORIES = 'All categories'
@@ -59,19 +58,31 @@
 
   const visible = $derived(filtered.slice(0, shown))
 
-  /** In, out and net across everything the filters left, not just what's on screen. */
+  /**
+   * In, out and net across everything the filters left, not just what's on
+   * screen. Split by currency and never summed across them, the same rule the
+   * account totals follow — a figure adding NZD to AUD would mean nothing.
+   */
   const flows = $derived.by(() => {
-    const currency = filtered[0]?.currency ?? 'NZD'
-    let incoming = 0
-    let outgoing = 0
+    const byCurrency = new Map<string, { incoming: number; outgoing: number }>()
 
     for (const transaction of filtered) {
+      let flow = byCurrency.get(transaction.currency)
+      if (!flow) {
+        flow = { incoming: 0, outgoing: 0 }
+        byCurrency.set(transaction.currency, flow)
+      }
+
       const cents = toCents(transaction.amount)
-      if (cents > 0) incoming += cents
-      else outgoing += cents
+      if (cents > 0) flow.incoming += cents
+      else flow.outgoing += cents
     }
 
-    return { currency, incoming, outgoing, net: incoming + outgoing }
+    return [...byCurrency].map(([currency, flow]) => ({
+      currency,
+      ...flow,
+      net: flow.incoming + flow.outgoing,
+    }))
   })
 
   /** The dates the window actually covers, which is tidier than "last 90 days". */
@@ -83,7 +94,6 @@
     return from === to ? from : `${from} – ${to}`
   })
 
-  /** Any change to what's being filtered starts the list again from the top. */
   function refilter(change: () => void) {
     change()
     shown = PAGE
@@ -158,18 +168,23 @@
       {/each}
     </select>
 
-    <p class="flows">
-      <span>In <b class="numeric in">{formatCents(flows.incoming, flows.currency)}</b></span>
-      <span>
-        Out <b class="numeric">{formatCents(Math.abs(flows.outgoing), flows.currency)}</b>
-      </span>
-      <span>
-        Net
-        <b class="numeric">
-          {flows.net > 0 ? '+' : ''}{formatCents(flows.net, flows.currency)}
-        </b>
-      </span>
-    </p>
+    <div class="flows">
+      {#each flows as flow (flow.currency)}
+        <p class="flow">
+          {#if flows.length > 1}<span class="currency">{flow.currency}</span>{/if}
+          <span>In <b class="numeric in">{formatCents(flow.incoming, flow.currency)}</b></span>
+          <span>
+            Out <b class="numeric">{formatCents(Math.abs(flow.outgoing), flow.currency)}</b>
+          </span>
+          <span>
+            Net
+            <b class="numeric">
+              {flow.net > 0 ? '+' : ''}{formatCents(flow.net, flow.currency)}
+            </b>
+          </span>
+        </p>
+      {/each}
+    </div>
   </div>
 
   {#if workspace.transactionsError}
@@ -275,13 +290,26 @@
 
   .flows {
     display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+    margin-left: auto;
+  }
+
+  .flow {
+    display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
     margin: 0;
-    margin-left: auto;
     font-size: var(--text-meta);
     color: var(--pico-muted-color);
+  }
+
+  .currency {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    color: var(--ctp-overlay0);
   }
 
   .flows b {
@@ -320,6 +348,10 @@
     .flows {
       width: 100%;
       margin-left: 0;
+      align-items: stretch;
+    }
+
+    .flow {
       justify-content: space-between;
     }
   }

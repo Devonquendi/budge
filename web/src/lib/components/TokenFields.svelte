@@ -4,7 +4,6 @@
   let {
     appToken = $bindable(''),
     userToken = $bindable(''),
-    /** Label beside the field instead of above it — for the wider settings card. */
     inline = false,
   } = $props()
 </script>

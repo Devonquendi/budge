@@ -49,7 +49,6 @@
     return transaction.merchant?.name ?? transaction.description
   }
 
-  /** The raw bank line, but only when it isn't already the title. */
   function subtitle(transaction: Transaction): string {
     return transaction.merchant ? transaction.description : ''
   }
@@ -105,7 +104,7 @@
     <p class="empty muted">No transactions</p>
   {:else if grouped}
     {#each days as day (day.key)}
-      <h3 class="eyebrow day">{day.label}</h3>
+      <h2 class="eyebrow day">{day.label}</h2>
       <ul>
         {#each day.rows as transaction (transaction.id)}
           {@render row(transaction)}
@@ -174,7 +173,6 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    /* Pushes the amount to the right edge on both layouts. */
     margin-right: auto;
   }
 
@@ -245,14 +243,14 @@
     color: var(--ctp-green);
   }
 
-  .day {
+  h2.day {
     margin: 0;
     padding: 0.375rem 0.6875rem;
     background: var(--ctp-recessed);
     border-top: var(--pico-border-width) solid var(--pico-card-border-color);
   }
 
-  section > .day:first-child {
+  section > h2.day:first-child {
     border-top: 0;
   }
 
