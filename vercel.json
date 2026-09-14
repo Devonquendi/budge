@@ -9,7 +9,7 @@
     "api": {
       "root": "backend/",
       "entrypoint": "server:app",
-      "buildCommand": "uv run --frozen alembic upgrade head",
+      "buildCommand": "python -m alembic upgrade head",
       "functions": {
         "server.py": { "excludeFiles": ".venv/**" }
       }
