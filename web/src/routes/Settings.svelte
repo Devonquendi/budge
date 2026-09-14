@@ -139,7 +139,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.6875rem;
-    max-width: 56rem;
+    max-width: 38rem;
     margin-inline: auto;
   }
 
@@ -154,11 +154,12 @@
     line-height: 1.4;
   }
 
+  /* One column, like the profile: both panels are forms, and a second column
+     only makes them narrower. */
   .panels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 0.625rem;
-    align-items: start;
   }
 
   /* The form is only a wrapper: the panel inside it is the visible box. It

@@ -141,10 +141,18 @@
       <Panel title="Akahu connection" padded>
         <!-- Connected and broken are the same glyph with the bar whole or
              snapped, so the pair reads as one idea and its undoing. -->
-        {#snippet action()}
+        <div class="connection">
+          <p class="synced">
+            <span class="dot" aria-hidden="true"></span>
+            {#if workspace.loadedAt}
+              Last synced {syncedAt.format(workspace.loadedAt)}
+            {:else}
+              Nothing synced yet
+            {/if}
+          </p>
+
           <span class="tools">
-            <span class="status" data-tooltip="Connected" data-placement="left">
-              <span class="dot" aria-hidden="true"></span>
+            <span class="tool status" data-tooltip="Connected" data-placement="top">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 17H7A5 5 0 0 1 7 7h2" />
                 <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
@@ -156,7 +164,7 @@
               type="button"
               class="tool"
               data-tooltip="Replace tokens"
-              data-placement="left"
+              data-placement="top"
               aria-label="Replace tokens"
               aria-expanded={replacing}
               aria-controls="akahu-tokens"
@@ -172,7 +180,7 @@
               type="button"
               class="tool danger"
               data-tooltip="Disconnect"
-              data-placement="left"
+              data-placement="top"
               aria-label="Disconnect Akahu"
               disabled={savingTokens || disconnecting}
               onclick={disconnect}
@@ -184,15 +192,7 @@
               </svg>
             </button>
           </span>
-        {/snippet}
-
-        <p class="synced muted">
-          {#if workspace.loadedAt}
-            Last synced {syncedAt.format(workspace.loadedAt)}
-          {:else}
-            Nothing synced yet
-          {/if}
-        </p>
+        </div>
 
         {#if replacing}
           <div id="akahu-tokens" class="tokens">
@@ -277,53 +277,65 @@
     font-size: var(--text-meta);
   }
 
-  .tools {
-    display: inline-flex;
+  .connection {
+    display: flex;
     align-items: center;
-    gap: 0.125rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
   }
 
-  .status {
-    display: inline-flex;
+  .synced {
+    display: flex;
     align-items: center;
-    gap: 0.3125rem;
-    padding-right: 0.25rem;
-    color: var(--ctp-green);
-  }
-
-  /* Pico gives a tooltip on anything that isn't a control a dotted underline,
-     which under an icon just looks like a stray rule. */
-  .status[data-tooltip] {
-    border-bottom: 0;
-    cursor: default;
+    gap: 0.4375rem;
+    margin: 0 auto 0 0;
+    font-size: var(--text-meta);
+    color: var(--pico-muted-color);
   }
 
   .dot {
-    width: 0.375rem;
-    height: 0.375rem;
+    flex: none;
+    width: 0.4375rem;
+    height: 0.4375rem;
     border-radius: 999px;
-    background: currentColor;
+    background: var(--ctp-green);
+  }
+
+  .tools {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
   }
 
   .tool {
     display: grid;
     place-items: center;
-    width: 1.625rem;
-    height: 1.625rem;
+    width: 2rem;
+    height: 2rem;
     padding: 0;
-    border: 0;
-    border-radius: 0.375rem;
-    background: transparent;
+    border: var(--pico-border-width) solid var(--pico-card-border-color);
+    border-radius: 0.4375rem;
+    background: var(--pico-card-background-color);
     color: var(--pico-muted-color);
   }
 
-  .tool:hover:not(:disabled) {
+  .tool:hover:not(:disabled, .status) {
     background: var(--ctp-surface0);
     color: var(--pico-color);
   }
 
+  /* A border shorthand, not just a colour: Pico turns the bottom border of a
+     tooltip on a non-control into a dotted underline. */
+  .tool.status {
+    border: var(--pico-border-width) solid
+      color-mix(in srgb, var(--ctp-green) 40%, transparent);
+    color: var(--ctp-green);
+    cursor: default;
+  }
+
   .tool.danger {
     color: var(--ctp-red);
+    border-color: color-mix(in srgb, var(--ctp-red) 35%, transparent);
   }
 
   .tool.danger:hover:not(:disabled) {
@@ -336,8 +348,8 @@
   }
 
   .tools svg {
-    width: 0.9375rem;
-    height: 0.9375rem;
+    width: 1.0625rem;
+    height: 1.0625rem;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.9;

@@ -7,10 +7,11 @@
 <span class="mark" style:--size={size}>
   <svg viewBox="0 0 32 32" aria-hidden="true">
     <rect class="tile" width="32" height="32" rx="8" />
-    <g class="letter">
-      <path d="M9.6 7.4v17.2" />
-      <circle cx="17.3" cy="19.4" r="5.2" />
-    </g>
+    <path
+      class="letter"
+      fill-rule="evenodd"
+      d="M10.4 4.4a2.3 2.3 0 0 0-2.3 2.3v12.9a8.4 8.4 0 1 0 4.6-7.5V6.7a2.3 2.3 0 0 0-2.3-2.3Zm6.1 11.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"
+    />
   </svg>
   <span class="name">budge</span>
 </span>
@@ -32,13 +33,11 @@
     fill: var(--ctp-blue);
   }
 
-  /* Stroked rather than filled: a drawn letter keeps its counter open at the
-     size a favicon is actually seen at, where a set b would fill in. */
+  /* One outline with the counter punched out of it, rather than a stem drawn
+     beside a circle: in a b the stem is the bowl's left wall, and two shapes
+     that merely touch read as two shapes. */
   .letter {
-    fill: none;
-    stroke: var(--ctp-on-blue);
-    stroke-width: 3.4;
-    stroke-linecap: round;
+    fill: var(--ctp-on-blue);
   }
 
   .name {

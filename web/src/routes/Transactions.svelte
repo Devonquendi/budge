@@ -250,6 +250,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.6875rem;
+    /* The ledger's columns are fixed but for the merchant name, so past this
+       the name just keeps growing and the figures drift off to the right. */
+    max-width: 60rem;
+    margin-inline: auto;
   }
 
   h1 {

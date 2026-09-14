@@ -101,7 +101,7 @@
           {categoryName(transaction)}
         </span>
       </span>
-      <span class="account">
+      <span class="account" title={transaction.account_name}>
         {#if account}
           <BankBadge
             connection={account.connection_name}
@@ -242,9 +242,7 @@
     min-width: 0;
     font-size: var(--text-meta);
     color: var(--pico-muted-color);
-    /* Small enough to read as a hint next to the name rather than a second
-       subject, which the merchant mark on the left already is. */
-    --mark-size: 1.0625rem;
+    --mark-size: 1.375rem;
   }
 
   .account .label {
@@ -350,13 +348,9 @@
       gap: 0.4375rem;
     }
 
-    /* The marks the rows carry, so the heads sit over their own columns. */
+    /* The mark the rows carry, so the head sits over its own column. */
     .head .who {
       padding-left: 1.9375rem;
-    }
-
-    .head .account {
-      padding-left: 1.375rem;
     }
 
     .date {
@@ -373,8 +367,14 @@
 
     .account {
       flex: none;
-      width: 7rem;
+      width: 4rem;
       order: 4;
+    }
+
+    /* Once there are columns the mark is the account and the name is on hover.
+       It stays written out on a phone, where there is no hover to reveal it. */
+    .account .label {
+      display: none;
     }
 
     .amount {
