@@ -40,7 +40,9 @@ async def get_transactions(
 ) -> History:
     """Recent transactions for the accounts on the dashboard, newest first."""
     client = await _client(session, user_id)
-    accounts = await client.get_accounts()
+    accounts = await credentials.name_accounts(
+        session, user_id, await client.get_accounts()
+    )
 
     included = await credentials.included_account_ids(session, user_id)
     if included is not None:

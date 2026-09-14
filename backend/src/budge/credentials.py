@@ -5,6 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from budge.akahu import AkahuClient
+from budge.akahu.models import Account
 from budge.db import crypto
 from budge.db.models import AkahuAccountSetting, AkahuCredential
 
@@ -100,4 +101,57 @@ async def set_included_account_ids(
         )
         setting.included_in_dashboard = account_id in included
         session.add(setting)
+    await session.commit()
+
+
+async def name_accounts(
+    session: AsyncSession, user_id: int, accounts: list[Account]
+) -> list[Account]:
+    """Stamp each account with the name the user gave it, if they gave it one.
+
+    Everything downstream reads `display_name`, so this has to run before the
+    accounts are handed out or transactions are built from them.
+    """
+    nicknames = {
+        s.akahu_account_id: s.nickname
+        for s in await _settings(session, user_id)
+        if s.nickname
+    }
+    for account in accounts:
+        account.nickname = nicknames.get(account.id)
+    return accounts
+
+
+async def set_nickname(
+    session: AsyncSession,
+    user_id: int,
+    all_ids: list[str],
+    account_id: str,
+    nickname: str | None,
+) -> None:
+    """Renames one account. None puts Akahu's own name back.
+
+    Every account id comes in because an empty table is what means "the
+    dashboard shows all of them". Writing one row would quietly reduce that to
+    "the dashboard shows the account you just renamed", so it gets filled in
+    first.
+    """
+    settings = {s.akahu_account_id: s for s in await _settings(session, user_id)}
+    if not settings:
+        settings = {
+            other: AkahuAccountSetting(user_id=user_id, akahu_account_id=other)
+            for other in all_ids
+        }
+
+    setting = settings.get(account_id) or AkahuAccountSetting(
+        user_id=user_id,
+        akahu_account_id=account_id,
+        # Missing from a table that has rows means excluded, and renaming an
+        # account is not how it should arrive on the dashboard.
+        included_in_dashboard=False,
+    )
+    setting.nickname = nickname
+    settings[account_id] = setting
+
+    session.add_all(settings.values())
     await session.commit()

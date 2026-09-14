@@ -4,13 +4,13 @@ import os
 import secrets
 
 from fastapi import APIRouter, HTTPException, Request, Response
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from budge import credentials
 from budge.auth import CurrentUser, SessionDep, password_hash, user_id
-from budge.db.models import User
+from budge.db.models import NAME_MAX, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -27,15 +27,22 @@ class SignUp(Login):
 
 
 class Me(BaseModel):
-    """Everything the browser app needs to pick a landing page."""
+    """What the browser app knows about whoever is signed in."""
 
     email: str
+    name: str | None = None
     onboarded: bool
+
+
+class ProfileUpdate(BaseModel):
+    """Blank clears the name, which leaves the email standing on its own."""
+
+    name: str = Field(default="", max_length=NAME_MAX)
 
 
 async def _me(session: AsyncSession, user: User) -> Me:
     credential = await credentials.get(session, user_id(user))
-    return Me(email=user.email, onboarded=credential is not None)
+    return Me(email=user.email, name=user.name, onboarded=credential is not None)
 
 
 async def _by_email(session: AsyncSession, email: str) -> User | None:
@@ -86,4 +93,14 @@ async def logout(request: Request) -> Response:
 
 @router.get("/me")
 async def me(user: CurrentUser, session: SessionDep) -> Me:
+    return await _me(session, user)
+
+
+@router.patch("/me")
+async def update_me(body: ProfileUpdate, user: CurrentUser, session: SessionDep) -> Me:
+    """Sets what to call the user. Blank puts it back to nothing."""
+    user.name = body.name.strip() or None
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
     return await _me(session, user)

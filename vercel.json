@@ -9,6 +9,7 @@
     "api": {
       "root": "backend/",
       "entrypoint": "server:app",
+      "buildCommand": "python -m alembic upgrade head",
       "functions": {
         "server.py": { "excludeFiles": ".venv/**" }
       }

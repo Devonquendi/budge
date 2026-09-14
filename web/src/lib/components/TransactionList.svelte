@@ -1,19 +1,26 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import type { Transaction } from '../api'
+  import type { Account, Transaction } from '../api'
   import { categoryColor } from '../categories'
   import { format, toCents } from '../money'
+  import BankBadge from './BankBadge.svelte'
+  import MerchantBadge from './MerchantBadge.svelte'
 
   let {
     transactions,
+    accounts = [],
     grouped = false,
     footer,
   }: {
     transactions: Transaction[]
+    /** Only for the bank mark beside the account column; the name is on the row. */
+    accounts?: Account[]
     /** Break the rows into a heading per day, the way a bank statement reads. */
     grouped?: boolean
     footer?: Snippet
   } = $props()
+
+  const byId = $derived(new Map(accounts.map((account) => [account.id, account])))
 
   const dayFormat = new Intl.DateTimeFormat('en-NZ', {
     weekday: 'short',
@@ -69,12 +76,16 @@
 
 {#snippet row(transaction: Transaction)}
   {@const cents = toCents(transaction.amount)}
+  {@const account = byId.get(transaction.account_id)}
   <li>
     <span class="who">
-      <span class="name">{title(transaction)}</span>
-      {#if subtitle(transaction)}
-        <span class="desc">{subtitle(transaction)}</span>
-      {/if}
+      <MerchantBadge {transaction} />
+      <span class="text">
+        <span class="name">{title(transaction)}</span>
+        {#if subtitle(transaction)}
+          <span class="desc">{subtitle(transaction)}</span>
+        {/if}
+      </span>
     </span>
 
     <span class="meta">
@@ -90,7 +101,16 @@
           {categoryName(transaction)}
         </span>
       </span>
-      <span class="account">{transaction.account_name}</span>
+      <span class="account" title={transaction.account_name}>
+        {#if account}
+          <BankBadge
+            connection={account.connection_name}
+            logo={account.connection_logo}
+            compact
+          />
+        {/if}
+        <span class="label">{transaction.account_name}</span>
+      </span>
     </span>
 
     <span class={['amount', 'numeric', { incoming: cents > 0 }]}>
@@ -159,7 +179,7 @@
   li {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 0.125rem 0.625rem;
     padding: 0.4375rem 0.6875rem;
   }
@@ -171,9 +191,16 @@
 
   .who {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
     min-width: 0;
     margin-right: auto;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .name {
@@ -209,8 +236,16 @@
   }
 
   .account {
+    display: flex;
+    align-items: center;
+    gap: 0.3125rem;
+    min-width: 0;
     font-size: var(--text-meta);
     color: var(--pico-muted-color);
+    --mark-size: 1.375rem;
+  }
+
+  .account .label {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -294,7 +329,6 @@
 
     li {
       flex-wrap: nowrap;
-      align-items: center;
       gap: 0.625rem;
     }
 
@@ -305,10 +339,18 @@
 
     .head .who,
     li .who {
+      order: 2;
+    }
+
+    li .text {
       flex-direction: row;
       align-items: baseline;
       gap: 0.4375rem;
-      order: 2;
+    }
+
+    /* The mark the rows carry, so the head sits over its own column. */
+    .head .who {
+      padding-left: 1.9375rem;
     }
 
     .date {
@@ -325,8 +367,15 @@
 
     .account {
       flex: none;
-      width: 6rem;
+      width: 4rem;
       order: 4;
+      justify-content: center;
+    }
+
+    /* Once there are columns the mark is the account and the name is on hover.
+       It stays written out on a phone, where there is no hover to reveal it. */
+    .account .label {
+      display: none;
     }
 
     .amount {

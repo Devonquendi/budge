@@ -147,6 +147,20 @@ export class Workspace {
     await this.loadTransactions()
   }
 
+  /**
+   * Renames one account, or puts the bank's name back when the nickname is
+   * blank. Transactions carry the name they were fetched under, so they have
+   * to be reloaded for the ledger to catch up.
+   */
+  async saveNickname(id: string, nickname: string): Promise<void> {
+    const selection = await api.saveNickname(id, nickname)
+    this.accounts = selection.accounts
+    this.included = selection.included
+    // The endpoint reads Akahu to check the id, so these balances are fresh.
+    this.loadedAt = new Date()
+    await this.loadTransactions()
+  }
+
   /** New tokens mean a new set of accounts, so everything on screen is stale. */
   async reconnect(appToken: string, userToken: string): Promise<void> {
     await api.connect(appToken, userToken)

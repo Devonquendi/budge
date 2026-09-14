@@ -1,5 +1,7 @@
 /** Presentation helpers shared by anything that draws an Akahu account. */
 
+import type { Account } from './api'
+
 const TYPE_LABELS: Record<string, string> = {
   CHECKING: 'Checking',
   SAVINGS: 'Savings',
@@ -11,6 +13,15 @@ const TYPE_LABELS: Record<string, string> = {
   FOREIGN: 'Foreign currency',
   WALLET: 'Wallet',
   REWARDS: 'Rewards',
+}
+
+/** Matches the column the server stores a nickname in, so the field can't
+ *  offer more room than the database has. */
+export const NICKNAME_MAX = 40
+
+/** What to call an account: the user's own name for it, else the bank's. */
+export function accountName(account: Account): string {
+  return account.nickname ?? account.name
 }
 
 export function typeLabel(type: string): string {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import AccountList from '../lib/components/AccountList.svelte'
   import Link from '../lib/components/Link.svelte'
+  import MerchantBadge from '../lib/components/MerchantBadge.svelte'
   import Panel from '../lib/components/Panel.svelte'
   import SpendingBreakdown from '../lib/components/SpendingBreakdown.svelte'
   import Summary from '../lib/components/Summary.svelte'
@@ -75,67 +76,72 @@
     />
 
     <div class="panels">
-      <Panel title="Accounts">
-        {#snippet action()}
-          <Link href="/settings" class="more">Manage</Link>
-        {/snippet}
+      <div class="stack">
+        <Panel title="Accounts">
+          {#snippet action()}
+            <Link href="/settings" class="more">Manage</Link>
+          {/snippet}
 
-        <AccountList accounts={workspace.dashboardAccounts} />
+          <AccountList accounts={workspace.dashboardAccounts} />
 
-        {#snippet footer()}
-          {#if workspace.hiddenCount > 0}
-            <span>
-              {workspace.hiddenCount}
-              {workspace.hiddenCount === 1 ? 'account' : 'accounts'} hidden from dashboard
+          {#snippet footer()}
+            {#if workspace.hiddenCount > 0}
+              <span>
+                {workspace.hiddenCount}
+                {workspace.hiddenCount === 1 ? 'account' : 'accounts'} hidden from dashboard
+              </span>
+            {:else}
+              <span>Every account is on the dashboard</span>
+            {/if}
+          {/snippet}
+        </Panel>
+
+        <Panel title="Spending this month" padded>
+          {#snippet action()}
+            <span class="total numeric">
+              {formatCents(totalSpend(spend), primary)}
             </span>
-          {:else}
-            <span>Every account is on the dashboard</span>
-          {/if}
-        {/snippet}
-      </Panel>
+          {/snippet}
 
-      <Panel title="Recent activity">
-        {#snippet action()}
-          <Link href="/transactions" class="more">All transactions</Link>
-        {/snippet}
+          <SpendingBreakdown slices={spend} currency={primary} />
+        </Panel>
+      </div>
 
-        <ul class="recent">
-          {#each recent as transaction (transaction.id)}
-            {@const cents = toCents(transaction.amount)}
-            <li>
-              <span class="when numeric">
-                {shortDate.format(new Date(transaction.date))}
-              </span>
-              <span class="what">
-                {transaction.merchant?.name ?? transaction.description}
-              </span>
-              <span
-                class="cat"
-                style:--accent={categoryColor(transaction.category?.name)}
-              >
-                {transaction.category?.name ?? 'Uncategorised'}
-              </span>
-              <span class={['sum', 'numeric', { incoming: cents > 0 }]}>
-                {cents > 0 ? '+' : ''}{format(transaction.amount, transaction.currency)}
-              </span>
-            </li>
-          {:else}
-            <li class="none muted">
-              {workspace.transactionsError || 'No transactions yet'}
-            </li>
-          {/each}
-        </ul>
-      </Panel>
+      <div class="stack">
+        <Panel title="Recent activity">
+          {#snippet action()}
+            <Link href="/transactions" class="more">All transactions</Link>
+          {/snippet}
 
-      <Panel title="Spending this month" padded>
-        {#snippet action()}
-          <span class="total numeric">
-            {formatCents(totalSpend(spend), primary)}
-          </span>
-        {/snippet}
-
-        <SpendingBreakdown slices={spend} currency={primary} />
-      </Panel>
+          <ul class="recent">
+            {#each recent as transaction (transaction.id)}
+              {@const cents = toCents(transaction.amount)}
+              <li>
+                <MerchantBadge {transaction} />
+                <span class="what">
+                  {transaction.merchant?.name ?? transaction.description}
+                </span>
+                <span class="when numeric">
+                  {shortDate.format(new Date(transaction.date))}
+                </span>
+                <span
+                  class="cat"
+                  style:--accent={categoryColor(transaction.category?.name)}
+                >
+                  {transaction.category?.name ?? 'Uncategorised'}
+                </span>
+                <span class={['sum', 'numeric', { incoming: cents > 0 }]}>
+                  {cents > 0 ? '+' : ''}{format(transaction.amount, transaction.currency)}
+                </span>
+              </li>
+            {:else}
+              <li class="none muted">
+                {workspace.transactionsError || 'No transactions yet'}
+              </li>
+            {/each}
+          </ul>
+        </Panel>
+      </div>
     </div>
   {:else if !workspace.accountsError}
     <p aria-busy="true">Loading&hellip;</p>
@@ -147,6 +153,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    /* Wide enough for two columns of ledger rows and no wider: past this the
+       numbers drift so far from their labels that the page stops reading.
+       Centred, so the spare width falls either side rather than all of it
+       piling up to the right of the page. */
+    max-width: 60rem;
+    margin-inline: auto;
   }
 
   .head {
@@ -172,14 +184,29 @@
   }
 
   /*
-   * One column on a phone, then as many as fit. 20rem is the narrowest the
-   * ledger-style rows stay readable at.
+   * Two columns, or one until there is room for two. 26rem is what a digest
+   * row needs before the merchant names start ellipsing: the date, category
+   * and amount columns are fixed, so everything a narrow column costs comes
+   * out of the name.
+   *
+   * The panels are grouped into stacks rather than placed individually because
+   * grid rows are as tall as their tallest cell: on its own, a short panel next
+   * to the ledger would leave the gap under it empty.
    */
   .panels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    /* min() because the minimum in minmax() is a floor, not a wish: a bare
+       26rem is wider than a phone and pushes the page sideways. */
+    grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
     gap: 0.625rem;
     align-items: start;
+  }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    min-width: 0;
   }
 
   .panels :global(.more) {
@@ -204,7 +231,7 @@
   .recent li {
     display: flex;
     align-items: center;
-    gap: 0.5625rem;
+    gap: 0.5rem;
     padding: 0.375rem 0.6875rem;
   }
 
@@ -212,11 +239,14 @@
     border-top: var(--pico-border-width) solid var(--ctp-divider);
   }
 
+  /* Fixed widths from here to the amount, so the date and the figure line up
+     down the card however long the category is. */
   .when {
     flex: none;
-    width: 2.625rem;
+    width: 3rem;
     font-family: var(--font-mono);
     font-size: var(--text-micro);
+    white-space: nowrap;
     color: var(--ctp-overlay0);
   }
 
@@ -235,7 +265,7 @@
      and a column of pills would shout over the amounts. */
   .cat {
     flex: none;
-    max-width: 6rem;
+    width: 6rem;
     font-size: var(--text-meta);
     color: var(--accent);
     overflow: hidden;

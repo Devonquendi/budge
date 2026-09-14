@@ -1,13 +1,19 @@
 <script lang="ts">
   import Link from './Link.svelte'
 
-  let { email, onsignout }: { email: string; onsignout: () => void } = $props()
+  let {
+    email,
+    name,
+    onsignout,
+  }: { email: string; name: string | null; onsignout: () => void } = $props()
 
   let open = $state(false)
   let root = $state.raw<HTMLElement | null>(null)
   let trigger = $state.raw<HTMLButtonElement | null>(null)
 
-  const initial = $derived(email.trim().charAt(0).toUpperCase() || '?')
+  /** Whoever the account belongs to: their name once they've given one. */
+  const who = $derived(name?.trim() || email.trim())
+  const initial = $derived(who.charAt(0).toUpperCase() || '?')
 
   /**
    * A disclosure, not a `role="menu"`: an ARIA menu owes its children
@@ -38,7 +44,7 @@
     bind:this={trigger}
     onclick={() => (open = !open)}
     aria-expanded={open}
-    aria-label="Account menu for {email}"
+    aria-label="Account menu for {who}"
   >
     {initial}
   </button>

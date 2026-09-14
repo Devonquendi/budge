@@ -12,15 +12,21 @@ export type Account = {
   name: string
   type: string
   connection_name: string
+  /** Akahu's URL for the bank's own mark, absent for some providers. */
+  connection_logo: string | null
   formatted_account: string | null
   currency: string
   /** A decimal string, not a number. See money.ts. */
   balance_current: string
   balance_available: string | null
+  /** What the user renamed this account to. Null means the bank's name stands. */
+  nickname: string | null
 }
 
 export type Me = {
   email: string
+  /** What the user asked to be called, or null if they never said. */
+  name: string | null
   /** False until Akahu tokens are stored, which gates every account endpoint. */
   onboarded: boolean
 }
@@ -47,6 +53,7 @@ export type Merchant = {
 export type Transaction = {
   id: string
   account_id: string
+  /** Already the nickname if the account has one: the server resolves it. */
   account_name: string
   currency: string
   connection_id: string
@@ -124,6 +131,9 @@ export const api = {
 
   logout: () => request<void>('/auth/logout', 'POST'),
 
+  /** Blank clears the name. Answers with the whole profile. */
+  saveName: (name: string) => request<Me>('/auth/me', 'PATCH', { name }),
+
   connect: (app_token: string, user_token: string) =>
     request<Connection>('/akahu', 'PUT', { app_token, user_token }),
 
@@ -133,6 +143,12 @@ export const api = {
 
   saveSelection: (included: string[]) =>
     request<Selection>('/accounts/selection', 'PUT', { included }),
+
+  /** Blank puts the bank's own name back. Answers with the whole selection. */
+  saveNickname: (id: string, nickname: string) =>
+    request<Selection>(`/accounts/${encodeURIComponent(id)}/nickname`, 'PUT', {
+      nickname,
+    }),
 
   transactions: (days: number) => request<History>(`/transactions?days=${days}`),
 }

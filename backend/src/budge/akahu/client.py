@@ -65,7 +65,7 @@ class AkahuClient:
         transactions = [
             transform.to_transaction(
                 item,
-                account_name=by_id[item["_account"]].name,
+                account_name=by_id[item["_account"]].display_name,
                 currency=by_id[item["_account"]].currency,
             )
             for item in items
