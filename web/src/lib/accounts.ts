@@ -20,7 +20,12 @@ export function typeLabel(type: string): string {
 /** Two or three letters for a connection's badge: "Kiwibank" -> "KIW", "Kiwi Bank" -> "KB". */
 export function badge(connection: string): string {
   const words = connection.trim().split(/\s+/)
-  if (words.length > 1) return words.slice(0, 2).map((word) => word[0]).join('').toUpperCase()
+  if (words.length > 1)
+    return words
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase()
   return connection.slice(0, 3).toUpperCase()
 }
 

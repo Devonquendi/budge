@@ -1,6 +1,6 @@
 /**
  * The display preferences on the settings page. They only change how things are
- * drawn, so they live in the browser rather than the database — nothing here is
+ * drawn, so they live in the browser rather than the database. Nothing here is
  * worth a round trip, and a stale value costs nothing.
  *
  * The theme is deliberately not one of these: it has to be applied before the
@@ -28,11 +28,13 @@ function read(): Prefs {
     // non-boolean into the object every component reads.
     const saved = parsed as Partial<Record<keyof Prefs, unknown>>
     return {
-      groupByDay: typeof saved.groupByDay === 'boolean' ? saved.groupByDay : DEFAULTS.groupByDay,
-      hideCents: typeof saved.hideCents === 'boolean' ? saved.hideCents : DEFAULTS.hideCents,
+      groupByDay:
+        typeof saved.groupByDay === 'boolean' ? saved.groupByDay : DEFAULTS.groupByDay,
+      hideCents:
+        typeof saved.hideCents === 'boolean' ? saved.hideCents : DEFAULTS.hideCents,
     }
   } catch {
-    // Unavailable or unparseable — the defaults are a fine answer.
+    // Unavailable or unparseable, so the defaults are a fine answer.
     return DEFAULTS
   }
 }
@@ -49,6 +51,6 @@ export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(current))
   } catch {
-    // Ignore — the preference just won't survive a reload.
+    // Ignore: the preference just won't survive a reload.
   }
 }

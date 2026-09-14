@@ -2,7 +2,7 @@
  * The account and transaction data every signed-in page draws from.
  *
  * The sidebar shows a net balance and a transaction count beside the nav, so
- * this data is no longer one page's business — it outlives any single route.
+ * this data is no longer one page's business. It outlives any single route.
  * Holding it in one place also means moving between pages doesn't refetch, and
  * the account picker on the settings page updates the dashboard behind it.
  *
@@ -11,13 +11,7 @@
  */
 
 import { createContext } from 'svelte'
-import {
-  ApiError,
-  api,
-  errorMessage,
-  type Account,
-  type Transaction,
-} from './api'
+import { ApiError, api, errorMessage, type Account, type Transaction } from './api'
 import { toCents } from './money'
 
 export const RANGES = [
@@ -43,7 +37,7 @@ export class Workspace {
   accounts = $state.raw<Account[]>([])
   /** The ids ticked for the dashboard. */
   included = $state.raw<string[]>([])
-  /** Already filtered to the dashboard accounts — the API does that for us. */
+  /** Already filtered to the dashboard accounts. The API does that for us. */
   transactions = $state.raw<Transaction[]>([])
   days = $state<number>(DEFAULT_DAYS)
 
@@ -94,7 +88,7 @@ export class Workspace {
   )
 
   /**
-   * A 409 means the tokens are gone, which isn't an error to show — it's a
+   * A 409 means the tokens are gone, which isn't an error to show. It's a
    * signal to start onboarding again. Anything else is worth a message.
    */
   #handle(failure: unknown): string {
@@ -153,7 +147,7 @@ export class Workspace {
     await this.loadTransactions()
   }
 
-  /** New tokens mean a new set of accounts — everything on screen is stale. */
+  /** New tokens mean a new set of accounts, so everything on screen is stale. */
   async reconnect(appToken: string, userToken: string): Promise<void> {
     await api.connect(appToken, userToken)
     await this.load()

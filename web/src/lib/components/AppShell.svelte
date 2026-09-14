@@ -16,7 +16,7 @@
 
   const workspace = getWorkspace()
 
-  // Blank rather than zero until the first load answers — "no transactions"
+  // Blank rather than zero until the first load answers. "No transactions"
   // and "not loaded yet" shouldn't look the same.
   const counts = $derived({
     dashboard: workspace.ready ? String(workspace.dashboardAccounts.length) : '',
@@ -250,7 +250,7 @@
   /*
    * The switch shows the mode rather than whether a feature is on: a pale sky
    * with a low sun, or a night sky with a pale moon. Safe to read the palette
-   * for it — the checked state and the dark palette are the same condition, so
+   * for it: the checked state and the dark palette are the same condition, so
    * these two blocks never evaluate against the wrong theme.
    */
   .theme input {
@@ -321,7 +321,6 @@
     .net {
       display: block;
     }
-
 
     .topbar {
       position: sticky;

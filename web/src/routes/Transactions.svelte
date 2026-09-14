@@ -25,9 +25,7 @@
   const categories = $derived([
     ALL_CATEGORIES,
     ...[
-      ...new Set(
-        workspace.transactions.map((t) => t.category?.name ?? 'Uncategorised'),
-      ),
+      ...new Set(workspace.transactions.map((t) => t.category?.name ?? 'Uncategorised')),
     ].sort(),
   ])
 
@@ -61,7 +59,7 @@
   /**
    * In, out and net across everything the filters left, not just what's on
    * screen. Split by currency and never summed across them, the same rule the
-   * account totals follow — a figure adding NZD to AUD would mean nothing.
+   * account totals follow. A figure adding NZD to AUD would mean nothing.
    */
   const flows = $derived.by(() => {
     const byCurrency = new Map<string, { incoming: number; outgoing: number }>()
@@ -172,9 +170,14 @@
       {#each flows as flow (flow.currency)}
         <p class="flow">
           {#if flows.length > 1}<span class="currency">{flow.currency}</span>{/if}
-          <span>In <b class="numeric in">{formatCents(flow.incoming, flow.currency)}</b></span>
+          <span
+            >In <b class="numeric in">{formatCents(flow.incoming, flow.currency)}</b
+            ></span
+          >
           <span>
-            Out <b class="numeric">{formatCents(Math.abs(flow.outgoing), flow.currency)}</b>
+            Out <b class="numeric"
+              >{formatCents(Math.abs(flow.outgoing), flow.currency)}</b
+            >
           </span>
           <span>
             Net
@@ -241,7 +244,7 @@
   /*
    * A pill group rather than three buttons: it reads as one choice. The role
    * is worth keeping for screen readers, but Pico styles [role=group] as a bar
-   * of joined, full-width buttons — hence the four undos below.
+   * of joined, full-width buttons, hence the four undos below.
    */
   .segmented {
     display: flex;

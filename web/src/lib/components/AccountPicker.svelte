@@ -95,7 +95,6 @@
     flex: none;
   }
 
-
   .who {
     display: flex;
     flex-direction: column;

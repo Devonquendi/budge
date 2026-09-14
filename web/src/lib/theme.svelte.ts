@@ -18,7 +18,7 @@ function read(): Theme | null {
     const stored = localStorage.getItem(THEME_KEY)
     return stored === 'light' || stored === 'dark' ? stored : null
   } catch {
-    // localStorage unavailable (private browsing, etc.) — the system
+    // localStorage unavailable (private browsing, etc.), so the system
     // preference in app.css still applies.
     return null
   }
@@ -54,7 +54,7 @@ export function setTheme(theme: Theme): void {
   try {
     localStorage.setItem(THEME_KEY, theme)
   } catch {
-    // Ignore — the theme just won't persist across reloads.
+    // Ignore: the theme just won't persist across reloads.
   }
 }
 

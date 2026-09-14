@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The mark and the name, together. Three rising bars — a balance going the
+  // The mark and the name, together. Three rising bars, a balance going the
   // way you'd hope.
   let { size = '1.0625rem' }: { size?: string } = $props()
 </script>

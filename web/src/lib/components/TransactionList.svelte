@@ -57,7 +57,7 @@
     return transaction.category?.name ?? 'Uncategorised'
   }
 
-  /** Why this row is tagged the way it is — Akahu's word, Genie's guess, or neither. */
+  /** Why this row is tagged the way it is: Akahu's word, Genie's guess, or neither. */
   function categoryHint(transaction: Transaction): string {
     const { category } = transaction
     if (!category) return 'No category'
@@ -149,7 +149,7 @@
 
   /*
    * Phone layout: the merchant and the amount share the first line, and
-   * everything else — date, category, account — runs along a second. The
+   * everything else (date, category, account) runs along a second. The
    * column head is meaningless here, so it's hidden until there are columns.
    */
   .head {
@@ -164,7 +164,7 @@
     padding: 0.4375rem 0.6875rem;
   }
 
-  /* Only between rows of the same day — the day heading brings its own rule. */
+  /* Only between rows of the same day: the day heading brings its own rule. */
   li + li {
     border-top: var(--pico-border-width) solid var(--ctp-divider);
   }

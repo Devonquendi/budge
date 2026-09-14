@@ -28,8 +28,7 @@
   <header>
     <h1>Connect your banks</h1>
     <p class="muted sub">
-      Budge reads your balances through Akahu. Paste the two tokens from your
-      Akahu app.
+      Budge reads your balances through Akahu. Paste the two tokens from your Akahu app.
     </p>
   </header>
 

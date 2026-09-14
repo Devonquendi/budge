@@ -14,7 +14,7 @@ export type Account = {
   connection_name: string
   formatted_account: string | null
   currency: string
-  /** A decimal string, not a number — see money.ts. */
+  /** A decimal string, not a number. See money.ts. */
   balance_current: string
   balance_available: string | null
 }
@@ -30,7 +30,7 @@ export type Connection = { connected: boolean }
 export type Category = {
   name: string
   id: string | null
-  /** The broad NZFCC grouping — "Lifestyle", "Household" — or null. */
+  /** The broad NZFCC grouping ("Lifestyle", "Household"), or null. */
   group: string | null
   /** "akahu" if it came with the transaction, "genie" if we looked it up. */
   source: 'akahu' | 'genie'

@@ -1,6 +1,6 @@
 [settings]
 # [deps.*] is still experimental. This lives here rather than in a personal
-# config so a fresh clone — CI, or a new machine — can run `mise install`.
+# config so a fresh clone (CI, or a new machine) can run `mise install`.
 experimental = true
 
 [tools]

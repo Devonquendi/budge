@@ -11,7 +11,7 @@ from budge.akahu.models import Account, Transaction
 BASE_URL = "https://api.akahu.io/v1"
 
 # Akahu pages transactions with a cursor and no total. A year of a busy account
-# is a few thousand rows, so this is headroom rather than a real limit — but an
+# is a few thousand rows, so this is headroom rather than a real limit, but an
 # unbounded loop against someone else's API is not something to ship.
 MAX_PAGES = 50
 
@@ -70,7 +70,7 @@ class AkahuClient:
             )
             for item in items
             # An account the user has switched off, or one Akahu stopped
-            # returning, has no name to show — drop it rather than guess.
+            # returning, has no name to show, so drop it rather than guess.
             if item["_account"] in by_id
         ]
         transactions.sort(key=lambda transaction: transaction.date, reverse=True)

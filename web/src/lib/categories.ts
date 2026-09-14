@@ -1,6 +1,6 @@
 /**
  * A colour per spending category, so the same kind of spending is the same
- * colour everywhere it appears — the ledger's tags and the dashboard's bars.
+ * colour everywhere it appears: the ledger's tags and the dashboard's bars.
  *
  * Every colour is a Catppuccin accent named as a custom property rather than a
  * literal, so the mapping holds in both themes without a second table.

@@ -96,7 +96,7 @@ def _query(transaction: Transaction) -> dict:
 async def classify(transactions: list[Transaction]) -> list[Transaction]:
     """Fill in the categories and merchants Akahu left blank.
 
-    Anything Akahu already classified is left alone — it knows the user's own
+    Anything Akahu already classified is left alone: it knows the user's own
     connection, which Genie is only guessing at from the description. Returns
     the list unchanged if Genie isn't configured or doesn't answer, because a
     missing category should degrade the page, not break it.

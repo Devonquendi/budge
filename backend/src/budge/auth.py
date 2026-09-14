@@ -15,7 +15,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 def user_id(user: User) -> int:
-    """Narrows the optional primary key — a row in the DB always has one."""
+    """Narrows the optional primary key: a row in the DB always has one."""
     if user.id is None:
         raise HTTPException(status_code=401)
     return user.id

@@ -1,6 +1,6 @@
 /**
  * A history-API router in thirty lines. Six flat pages with no nested layouts
- * isn't enough to justify a dependency — SvelteKit is ruled out by the
+ * isn't enough to justify a dependency. SvelteKit is ruled out by the
  * architecture, and everything else would be more code than this.
  */
 

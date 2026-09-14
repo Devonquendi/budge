@@ -1,11 +1,7 @@
 <script lang="ts">
   // Bindable so the page holding the form owns the values; the tokens
   // themselves are never sent back from the server.
-  let {
-    appToken = $bindable(''),
-    userToken = $bindable(''),
-    inline = false,
-  } = $props()
+  let { appToken = $bindable(''), userToken = $bindable(''), inline = false } = $props()
 </script>
 
 <label class={{ inline }}>
@@ -50,7 +46,7 @@
   /*
    * Beside the field rather than above it: two stacked pairs is a lot of
    * vertical space for a card that's mostly about the buttons underneath.
-   * Only where there's width for it — on a phone they stack regardless.
+   * Only where there's width for it. On a phone they stack regardless.
    */
   @media (min-width: 30rem) {
     .inline {

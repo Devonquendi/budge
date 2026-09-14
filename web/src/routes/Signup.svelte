@@ -8,9 +8,7 @@
   let email = $state('')
   let password = $state('')
   // ?invite=<code> prefills the field, so a shared link just works.
-  let inviteCode = $state(
-    new URLSearchParams(window.location.search).get('invite') ?? '',
-  )
+  let inviteCode = $state(new URLSearchParams(window.location.search).get('invite') ?? '')
   let error = $state('')
   let busy = $state(false)
 
@@ -45,12 +43,7 @@
     </label>
     <label>
       <span>Password</span>
-      <input
-        type="password"
-        autocomplete="new-password"
-        bind:value={password}
-        required
-      />
+      <input type="password" autocomplete="new-password" bind:value={password} required />
     </label>
     <label>
       <span>Invite code</span>
