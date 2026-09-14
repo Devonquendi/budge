@@ -10,9 +10,15 @@
 
   let {
     email,
+    name,
     onsignout,
     children,
-  }: { email: string; onsignout: () => void; children: Snippet } = $props()
+  }: {
+    email: string
+    name: string | null
+    onsignout: () => void
+    children: Snippet
+  } = $props()
 
   const workspace = getWorkspace()
 
@@ -69,7 +75,7 @@
       />
     </label>
 
-    <ProfileMenu {email} {onsignout} />
+    <ProfileMenu {email} {name} {onsignout} />
   </div>
 {/snippet}
 

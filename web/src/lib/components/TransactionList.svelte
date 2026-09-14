@@ -369,6 +369,7 @@
       flex: none;
       width: 4rem;
       order: 4;
+      justify-content: center;
     }
 
     /* Once there are columns the mark is the account and the name is on hover.

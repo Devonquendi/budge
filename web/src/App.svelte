@@ -120,7 +120,7 @@
     not another copy of the wrapper. It also keeps one AppShell alive across
     navigation instead of tearing the sidebar down and rebuilding it per page.
   -->
-  <AppShell email={me.email} onsignout={signedOut}>
+  <AppShell email={me.email} name={me.name} onsignout={signedOut}>
     {#if path() === '/transactions'}
       <Transactions />
     {:else if path() === '/profile'}

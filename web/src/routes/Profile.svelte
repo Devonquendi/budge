@@ -139,8 +139,6 @@
 
     <form onsubmit={saveTokens}>
       <Panel title="Akahu connection" padded>
-        <!-- Connected and broken are the same glyph with the bar whole or
-             snapped, so the pair reads as one idea and its undoing. -->
         <div class="connection">
           <p class="synced">
             <span class="dot" aria-hidden="true"></span>
@@ -152,19 +150,11 @@
           </p>
 
           <span class="tools">
-            <span class="tool status" data-tooltip="Connected" data-placement="top">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 17H7A5 5 0 0 1 7 7h2" />
-                <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
-                <path d="M8 12h8" />
-              </svg>
-            </span>
-
             <button
               type="button"
               class="tool"
               data-tooltip="Replace tokens"
-              data-placement="top"
+              data-placement="left"
               aria-label="Replace tokens"
               aria-expanded={replacing}
               aria-controls="akahu-tokens"
@@ -179,16 +169,24 @@
             <button
               type="button"
               class="tool danger"
-              data-tooltip="Disconnect"
-              data-placement="top"
-              aria-label="Disconnect Akahu"
+              data-tooltip="Disconnect accounts"
+              data-placement="left"
+              aria-label="Disconnect accounts"
               disabled={savingTokens || disconnecting}
               onclick={disconnect}
             >
+              <!-- Whole at rest, snapped on hover. Each half is its own group,
+                   so sliding them apart parts the bar between them: one icon
+                   rather than two swapped at the last moment. -->
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 17H7A5 5 0 0 1 7 7h2" />
-                <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
-                <path d="M8 12h2.5M13.5 12H16" />
+                <g class="half left">
+                  <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+                  <path d="M8 12h4" />
+                </g>
+                <g class="half right">
+                  <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
+                  <path d="M12 12h4" />
+                </g>
               </svg>
             </button>
           </span>
@@ -307,44 +305,58 @@
     gap: 0.3125rem;
   }
 
-  .tool {
+  /*
+   * `.tools .tool`, not `.tool`: app.css sets `width: auto` on every button at
+   * a specificity one class can't reach, which quietly left these narrower
+   * than the square they're given.
+   */
+  .tools .tool {
+    --fill: var(--ctp-subtext0);
     display: grid;
     place-items: center;
     width: 2rem;
     height: 2rem;
     padding: 0;
-    border: var(--pico-border-width) solid var(--pico-card-border-color);
+    border: 0;
     border-radius: 0.4375rem;
-    background: var(--pico-card-background-color);
-    color: var(--pico-muted-color);
+    background: var(--fill);
+    /* The colour the palette keeps for ink on a filled accent: near-white in
+       the light theme, near-black in the dark one, where the fills are pale. */
+    color: var(--ctp-on-blue);
   }
 
-  .tool:hover:not(:disabled, .status) {
-    background: var(--ctp-surface0);
-    color: var(--pico-color);
+  .tools .tool.danger {
+    --fill: var(--ctp-red);
   }
 
-  /* A border shorthand, not just a colour: Pico turns the bottom border of a
-     tooltip on a non-control into a dotted underline. */
-  .tool.status {
-    border: var(--pico-border-width) solid
-      color-mix(in srgb, var(--ctp-green) 40%, transparent);
-    color: var(--ctp-green);
-    cursor: default;
+  .tools .tool:hover:not(:disabled) {
+    opacity: 0.85;
   }
 
-  .tool.danger {
-    color: var(--ctp-red);
-    border-color: color-mix(in srgb, var(--ctp-red) 35%, transparent);
-  }
-
-  .tool.danger:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--ctp-red) 14%, transparent);
-    color: var(--ctp-red);
-  }
-
-  .tool:disabled {
+  .tools .tool:disabled {
     opacity: 0.45;
+  }
+
+  /* Lengths inside an SVG are user units, so this is 1.7 of the 24 the icon is
+     drawn in rather than 1.7 device pixels. */
+  .half {
+    transition: transform 180ms ease;
+  }
+
+  .tool:hover:not(:disabled) .left,
+  .tool:focus-visible:not(:disabled) .left {
+    transform: translateX(-1.7px);
+  }
+
+  .tool:hover:not(:disabled) .right,
+  .tool:focus-visible:not(:disabled) .right {
+    transform: translateX(1.7px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .half {
+      transition: none;
+    }
   }
 
   .tools svg {
