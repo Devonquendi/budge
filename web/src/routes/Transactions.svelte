@@ -16,6 +16,11 @@
   let account = $state(ALL_ACCOUNTS)
   let shown = $state(PAGE)
 
+  // On a phone the three fields are taller than the first few rows they're
+  // meant to help you find, so they fold away behind a button. The date range
+  // stays out: it's the one you reach for without looking.
+  let filtersOpen = $state(false)
+
   const spanFormat = new Intl.DateTimeFormat('en-NZ', {
     day: 'numeric',
     month: 'short',
@@ -92,6 +97,13 @@
     return from === to ? from : `${from} – ${to}`
   })
 
+  /** How many of the three are narrowing the list, for the button's badge. */
+  const activeFilters = $derived(
+    [search.trim() !== '', category !== ALL_CATEGORIES, account !== ALL_ACCOUNTS].filter(
+      Boolean,
+    ).length,
+  )
+
   function refilter(change: () => void) {
     change()
     shown = PAGE
@@ -128,43 +140,56 @@
       {/each}
     </div>
 
-    <input
-      type="search"
-      class="search"
-      placeholder="Search merchant"
-      aria-label="Search merchant"
-      value={search}
-      oninput={(event) => {
-        const { value } = event.currentTarget
-        refilter(() => (search = value))
-      }}
-    />
-
-    <select
-      aria-label="Filter by category"
-      value={category}
-      onchange={(event) => {
-        const { value } = event.currentTarget
-        refilter(() => (category = value))
-      }}
+    <button
+      type="button"
+      class="toggle secondary outline"
+      aria-expanded={filtersOpen}
+      aria-controls="txn-filters"
+      onclick={() => (filtersOpen = !filtersOpen)}
     >
-      {#each categories as name (name)}
-        <option>{name}</option>
-      {/each}
-    </select>
+      Filters
+      {#if activeFilters}<span class="badge numeric">{activeFilters}</span>{/if}
+    </button>
 
-    <select
-      aria-label="Filter by account"
-      value={account}
-      onchange={(event) => {
-        const { value } = event.currentTarget
-        refilter(() => (account = value))
-      }}
-    >
-      {#each accounts as name (name)}
-        <option>{name}</option>
-      {/each}
-    </select>
+    <div id="txn-filters" class={['filters', { open: filtersOpen }]}>
+      <input
+        type="search"
+        class="search"
+        placeholder="Search merchant"
+        aria-label="Search merchant"
+        value={search}
+        oninput={(event) => {
+          const { value } = event.currentTarget
+          refilter(() => (search = value))
+        }}
+      />
+
+      <select
+        aria-label="Filter by category"
+        value={category}
+        onchange={(event) => {
+          const { value } = event.currentTarget
+          refilter(() => (category = value))
+        }}
+      >
+        {#each categories as name (name)}
+          <option>{name}</option>
+        {/each}
+      </select>
+
+      <select
+        aria-label="Filter by account"
+        value={account}
+        onchange={(event) => {
+          const { value } = event.currentTarget
+          refilter(() => (account = value))
+        }}
+      >
+        {#each accounts as name (name)}
+          <option>{name}</option>
+        {/each}
+      </select>
+    </div>
 
     <div class="flows">
       {#each flows as flow (flow.currency)}
@@ -285,6 +310,30 @@
     box-shadow: 0 1px 2px color-mix(in srgb, var(--ctp-crust) 45%, transparent);
   }
 
+  /* Dissolved, so the three fields lay out as part of the bar rather than as a
+     box inside it. On a phone the wrapper becomes real and folds them away. */
+  .filters {
+    display: contents;
+  }
+
+  .toggle {
+    display: none;
+  }
+
+  .badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1rem;
+    height: 1rem;
+    margin-left: 0.375rem;
+    padding: 0 0.25rem;
+    font-size: var(--text-micro);
+    line-height: 1;
+    border-radius: 999px;
+    background: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+  }
+
   .search {
     flex: 1;
     min-width: 9rem;
@@ -341,15 +390,35 @@
   /* On a phone the summary gets its own line rather than squeezing the search
      box down to nothing. */
   @media (max-width: 40rem) {
-    /* Its own row: sharing one with a select leaves it too narrow to read the
-       placeholder, let alone a query. */
-    .search {
-      flex: 1 1 100%;
-      max-width: none;
+    .toggle {
+      display: inline-flex;
+      align-items: center;
     }
 
-    select {
-      flex: 1 1 8rem;
+    /* Tighter so the range and the Filters button share a line even once the
+       badge appears. Four pixels over and the button drops to its own row the
+       moment you apply a filter. */
+    .segmented > button {
+      padding-inline: 0.5rem;
+    }
+
+    .filters {
+      display: none;
+    }
+
+    /* One field per line: sharing a row leaves each too narrow to read its own
+       value, let alone a typed query. */
+    .filters.open {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .filters.open > * {
+      flex: none;
+      width: 100%;
+      max-width: none;
     }
 
     .flows {

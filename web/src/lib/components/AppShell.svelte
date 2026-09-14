@@ -24,7 +24,21 @@
       ? String(workspace.transactions.length)
       : '',
   })
+
+  // Narrow screens get a hamburger. Past the breakpoint the same <nav> is the
+  // sidebar and is always on screen, so this stops meaning anything.
+  let navOpen = $state(false)
+  let shell = $state.raw<HTMLElement | null>(null)
 </script>
+
+<svelte:window
+  onkeydown={(event) => {
+    if (navOpen && event.key === 'Escape') navOpen = false
+  }}
+  onpointerdown={(event) => {
+    if (navOpen && shell && !shell.contains(event.target as Node)) navOpen = false
+  }}
+/>
 
 <!--
   Rendered twice, in the sidebar on a phone and in the content bar on a desktop,
@@ -60,28 +74,47 @@
 {/snippet}
 
 <div class="layout">
-  <aside>
-    <Link href="/" class="brand"><Wordmark /></Link>
+  <aside bind:this={shell}>
+    <button
+      type="button"
+      class="hamburger"
+      aria-expanded={navOpen}
+      aria-controls="main-nav"
+      aria-label={navOpen ? 'Close menu' : 'Open menu'}
+      onclick={() => (navOpen = !navOpen)}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        {#if navOpen}
+          <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+        {:else}
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        {/if}
+      </svg>
+    </button>
+
+    <Link href="/" class="brand" onclick={() => (navOpen = false)}>
+      <Wordmark />
+    </Link>
 
     <div class="beside-brand">{@render actions()}</div>
 
-    <nav>
-      <Link href="/">
+    <nav id="main-nav" class={{ open: navOpen }}>
+      <Link href="/" onclick={() => (navOpen = false)}>
         Dashboard
         <span class="count numeric">{counts.dashboard}</span>
       </Link>
-      <Link href="/transactions">
+      <Link href="/transactions" onclick={() => (navOpen = false)}>
         Transactions
         <span class="count numeric">{counts.transactions}</span>
       </Link>
-      <Link href="/settings">
+      <Link href="/settings" onclick={() => (navOpen = false)}>
         Settings
         <span class="count"></span>
       </Link>
     </nav>
 
     {#if workspace.totals.length}
-      <div class="net">
+      <div class={['net', { open: navOpen }]}>
         {#each workspace.totals as total (total.currency)}
           <p class="eyebrow">
             Net balance{#if workspace.totals.length > 1}&nbsp;· {total.currency}{/if}
@@ -145,17 +178,46 @@
     margin-left: auto;
   }
 
+  /*
+   * The panel the hamburger opens. Gone rather than hidden when closed, so it
+   * stays out of the accessibility tree and off the tab order too. At the
+   * breakpoint it is the sidebar and is always on screen.
+   */
   nav {
-    display: flex;
+    display: none;
     order: 3;
+    flex-direction: column;
     gap: 0.0625rem;
     width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 
-  nav::-webkit-scrollbar {
-    display: none;
+  nav.open {
+    display: flex;
+  }
+
+  .hamburger {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 1.875rem;
+    height: 1.875rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.4375rem;
+    background: transparent;
+  }
+
+  .hamburger:hover {
+    background: var(--ctp-surface0);
+  }
+
+  .hamburger svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: var(--pico-color);
+    stroke-width: 1.8;
+    stroke-linecap: round;
   }
 
   nav :global(a) {
@@ -194,9 +256,17 @@
   .net {
     display: none;
     padding: 0.5625rem 0.625rem;
+    width: 100%;
     border: var(--pico-border-width) solid var(--pico-card-border-color);
     border-radius: var(--pico-border-radius);
     background: var(--pico-card-background-color);
+  }
+
+  /* Worth the room once the menu is open; the rest of the time the dashboard's
+     own tiles already carry the same number. */
+  .net.open {
+    display: block;
+    order: 4;
   }
 
   .net p {
@@ -313,9 +383,13 @@
       display: none;
     }
 
+    .hamburger {
+      display: none;
+    }
+
     nav {
+      display: flex;
       order: 0;
-      flex-direction: column;
     }
 
     .net {

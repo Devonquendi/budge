@@ -184,14 +184,20 @@
   }
 
   /*
-   * Two columns, or one on a phone. The panels are grouped into stacks rather
-   * than placed individually because grid rows are as tall as their tallest
-   * cell: on its own, a short panel next to the ledger would leave the gap
-   * under it empty.
+   * Two columns, or one until there is room for two. 26rem is what a digest
+   * row needs before the merchant names start ellipsing: the date, category
+   * and amount columns are fixed, so everything a narrow column costs comes
+   * out of the name.
+   *
+   * The panels are grouped into stacks rather than placed individually because
+   * grid rows are as tall as their tallest cell: on its own, a short panel next
+   * to the ledger would leave the gap under it empty.
    */
   .panels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    /* min() because the minimum in minmax() is a floor, not a wish: a bare
+       26rem is wider than a phone and pushes the page sideways. */
+    grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
     gap: 0.625rem;
     align-items: start;
   }
