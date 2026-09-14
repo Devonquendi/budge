@@ -153,7 +153,7 @@
   }
 
   /* One shape for every line in the panel, whether it's a label, a link or a
-     button — they only differ in what they do. */
+     button. They only differ in what they do. */
   .root :global(.row) {
     display: flex;
     align-items: center;

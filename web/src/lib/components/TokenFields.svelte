@@ -46,7 +46,7 @@
   /*
    * Beside the field rather than above it: two stacked pairs is a lot of
    * vertical space for a card that's mostly about the buttons underneath.
-   * Only where there's width for it — on a phone they stack regardless.
+   * Only where there's width for it. On a phone they stack regardless.
    */
   @media (min-width: 30rem) {
     .inline {

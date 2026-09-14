@@ -2,14 +2,14 @@
 
 A personal finance dashboard built on [Akahu](https://developers.akahu.nz).
 
-- `backend/` — FastAPI, SQLModel, Neon Postgres
-- `web/` — Svelte 5 + Vite
+- `backend/`: FastAPI, SQLModel, Neon Postgres
+- `web/`: Svelte 5 + Vite
 
 Both deploy as one Vercel project, so `/api` and the app share an origin.
 
 ## Getting started
 
-[mise](https://mise.jdx.dev) manages every tool this project needs — Python, uv,
+[mise](https://mise.jdx.dev) manages every tool this project needs: Python, uv,
 node, pnpm, prek and the Vercel CLI. Install it, then:
 
 ```sh
@@ -34,4 +34,4 @@ mise build    # production build of the web app
 ```
 
 Vite proxies `/api` to the backend in dev, matching how Vercel routes in
-production — which also keeps the session cookie working.
+production, which also keeps the session cookie working.

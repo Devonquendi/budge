@@ -17,7 +17,7 @@
     /** Onboarding replaces the wordmark with its progress through the steps. */
     step?: { current: number; total: number }
     children: Snippet
-    /** Small print under the card — the "no account?" line. */
+    /** Small print under the card: the "no account?" line. */
     below?: Snippet
   } = $props()
 </script>

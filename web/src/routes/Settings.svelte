@@ -10,8 +10,8 @@
 
   /**
    * Null until something is ticked, which is what lets the list follow the
-   * saved set while it's still loading — and go back to following it after a
-   * save — without an effect syncing the two.
+   * saved set while it's still loading, and go back to following it after a
+   * save, without an effect syncing the two.
    */
   let edits = $state.raw<string[] | null>(null)
   let notice = $state('')
@@ -145,7 +145,7 @@
     align-items: start;
   }
 
-  /* The form is only a wrapper — the panel inside it is the visible box. It
+  /* The form is only a wrapper: the panel inside it is the visible box. It
      still needs a box of its own, though: display:contents on a form is a
      known way to confuse assistive tech. */
   form {

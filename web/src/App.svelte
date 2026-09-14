@@ -37,7 +37,7 @@
 
   /**
    * Sends the browser to a page the session can actually use. Only runs when
-   * the session itself changes — navigating around afterwards is the user's
+   * the session itself changes. Navigating around afterwards is the user's
    * business, not ours.
    */
   function land() {
@@ -59,7 +59,7 @@
       if (me?.onboarded) workspace.load()
     } catch (failure) {
       // Signed out is a normal answer api.me() folds into null, so anything
-      // thrown here means the backend is unreachable. Say so — without this
+      // thrown here means the backend is unreachable. Say so, because without this
       // the app never reaches its first render and the page stays blank.
       unreachable = errorMessage(failure)
     }
@@ -117,7 +117,7 @@
   <!--
     The one place the shell is applied. Routes render their own content and
     nothing else, so adding a page is a branch here plus a link in the sidebar
-    — not another copy of the wrapper. It also keeps one AppShell alive across
+    not another copy of the wrapper. It also keeps one AppShell alive across
     navigation instead of tearing the sidebar down and rebuilding it per page.
   -->
   <AppShell email={me.email} onsignout={signedOut}>

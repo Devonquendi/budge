@@ -6,8 +6,8 @@ A personal finance app built on [Akahu](https://developers.akahu.nz/llms.txt).
 
 Two services, one Vercel project:
 
-- `backend/` — FastAPI app
-- `web/` — Svelte + Vite app
+- `backend/`: FastAPI app
+- `web/`: Svelte + Vite app
 
 ## Dev tools
 
@@ -34,9 +34,11 @@ Unless otherwise specified, all dev tools listed below are managed by mise:
 ## Documentation
 
 Markdown is not scratch space. Don't create, expand or restructure `CLAUDE.md`,
-`README.md` or any other markdown file unless asked — say what you think is
+`README.md` or any other markdown file unless asked. Say what you think is
 missing and let me decide. Two descriptions of one thing drift apart, and the
 code is the one that can't.
+
+Never use em dashes, in code, comments, markdown or commit messages.
 
 ## Tech stack
 

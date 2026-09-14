@@ -1,6 +1,6 @@
 # web
 
-Plain Svelte 5 and Vite — not SvelteKit. `src/routes/` is an ordinary folder with
+Plain Svelte 5 and Vite, not SvelteKit. `src/routes/` is an ordinary folder with
 no routing behaviour of its own: the router is `src/lib/router.svelte.ts` and the
 table is the `{#if}` chain in `src/App.svelte`. Adding a page means a component, a
 branch there, and a link in `AppShell`.

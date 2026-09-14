@@ -18,7 +18,7 @@
 
   /**
    * Bars are drawn against the largest category rather than the total, so the
-   * smallest one is still legible instead of a sliver — this is a ranking, not
+   * smallest one is still legible instead of a sliver. This is a ranking, not
    * a pie chart.
    */
   const bars = $derived.by((): Bar[] => {

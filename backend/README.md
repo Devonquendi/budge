@@ -1,1 +1,1 @@
-budge backend — FastAPI, SQLModel, Akahu.
+budge backend: FastAPI, SQLModel, Akahu.

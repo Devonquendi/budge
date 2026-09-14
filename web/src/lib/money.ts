@@ -21,7 +21,7 @@ export function sumCents(amounts: string[]): number {
  * `round` drops the cents once a balance passes $10k, which is the "hide cents
  * on big balances" preference: past that size the cents are noise, and the
  * column of figures lines up better without them. Off by default, and never
- * applied to a transaction amount — there the cents are the point.
+ * applied to a transaction amount, where the cents are the point.
  */
 export function formatCents(cents: number, currency: string, round = false): string {
   const whole = round && Math.abs(cents) >= ROUND_ABOVE_CENTS

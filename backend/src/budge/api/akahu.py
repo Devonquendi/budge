@@ -31,7 +31,7 @@ async def get_connection(user_id: CurrentUserId, session: SessionDep) -> Connect
 async def connect(
     body: Tokens, user_id: CurrentUserId, session: SessionDep
 ) -> Connection:
-    """Stores tokens, replacing any already held — but only if Akahu accepts them."""
+    """Stores tokens, replacing any already held, but only if Akahu accepts them."""
     saved = await credentials.verify_and_save(
         session, user_id, body.app_token.strip(), body.user_token.strip()
     )

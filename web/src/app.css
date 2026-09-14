@@ -1,7 +1,7 @@
 /*
  * Catppuccin Latte and Mocha, remapped onto Pico's tokens.
  *
- * Pico styles the plain elements — buttons, inputs, tables, <article> cards —
+ * Pico styles the plain elements (buttons, inputs, tables, <article> cards),
  * so the job here is theming it rather than restyling it. Overriding Pico's own
  * selectors is what makes stylesheets miserable; setting its variables is the
  * supported way in. Components with no Pico equivalent (the sidebar, the
@@ -102,7 +102,7 @@
 
   /*
    * The type scale, in one place because the density is the whole point of the
-   * layout — panels only fit side by side at these sizes. Body is 13.5px on a
+   * layout: panels only fit side by side at these sizes. Body is 13.5px on a
    * 16px root; the rest steps down from there.
    */
   --text-body: 0.845rem;
@@ -114,7 +114,7 @@
 }
 
 /*
- * :root:root, not :root — Pico's light theme is scoped to
+ * :root:root, not :root. Pico's light theme is scoped to
  * `:root:not([data-theme=dark])`, which outranks a bare `:root` and would win
  * every one of these. Doubling the pseudo-class matches its specificity, and
  * loading after Pico settles the tie.
@@ -202,7 +202,7 @@
 body {
   font-size: var(--text-body);
   /* The layout paints its own ground, but overscroll rubber-banding exposes
-     the body behind it — white against a dark theme without this. */
+     the body behind it, white against a dark theme without this. */
   background: var(--ctp-mantle);
 }
 
