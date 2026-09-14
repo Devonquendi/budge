@@ -116,10 +116,7 @@
                 {transaction.category?.name ?? 'Uncategorised'}
               </span>
               <span class={['sum', 'numeric', { incoming: cents > 0 }]}>
-                {cents > 0 ? '+' : ''}{format(
-                  transaction.amount,
-                  transaction.currency,
-                )}
+                {cents > 0 ? '+' : ''}{format(transaction.amount, transaction.currency)}
               </span>
             </li>
           {:else}

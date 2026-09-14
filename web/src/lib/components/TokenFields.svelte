@@ -1,11 +1,7 @@
 <script lang="ts">
   // Bindable so the page holding the form owns the values; the tokens
   // themselves are never sent back from the server.
-  let {
-    appToken = $bindable(''),
-    userToken = $bindable(''),
-    inline = false,
-  } = $props()
+  let { appToken = $bindable(''), userToken = $bindable(''), inline = false } = $props()
 </script>
 
 <label class={{ inline }}>

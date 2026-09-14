@@ -43,8 +43,8 @@
           Akahu found {workspace.accounts.length}
           {workspace.accounts.length === 1
             ? 'account'
-            : 'accounts'}{#if banks > 1}{` across ${banks} banks`}{/if}. Pick the
-          ones you want on your dashboard — you can change this later.
+            : 'accounts'}{#if banks > 1}{` across ${banks} banks`}{/if}. Pick the ones you
+          want on your dashboard — you can change this later.
         {:else}
           Looking up your accounts&hellip;
         {/if}

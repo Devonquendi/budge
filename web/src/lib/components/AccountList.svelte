@@ -22,11 +22,7 @@
       </span>
 
       <span
-        class={[
-          'balance',
-          'numeric',
-          { negative: toCents(account.balance_current) < 0 },
-        ]}
+        class={['balance', 'numeric', { negative: toCents(account.balance_current) < 0 }]}
       >
         {format(account.balance_current, account.currency, prefs().hideCents)}
       </span>
@@ -53,7 +49,6 @@
   li + li {
     border-top: var(--pico-border-width) solid var(--ctp-divider);
   }
-
 
   .who {
     display: flex;

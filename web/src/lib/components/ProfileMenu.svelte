@@ -194,5 +194,4 @@
   .label {
     margin-right: auto;
   }
-
 </style>

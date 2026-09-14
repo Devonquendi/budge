@@ -322,7 +322,6 @@
       display: block;
     }
 
-
     .topbar {
       position: sticky;
       top: 0;

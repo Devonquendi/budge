@@ -28,8 +28,10 @@ function read(): Prefs {
     // non-boolean into the object every component reads.
     const saved = parsed as Partial<Record<keyof Prefs, unknown>>
     return {
-      groupByDay: typeof saved.groupByDay === 'boolean' ? saved.groupByDay : DEFAULTS.groupByDay,
-      hideCents: typeof saved.hideCents === 'boolean' ? saved.hideCents : DEFAULTS.hideCents,
+      groupByDay:
+        typeof saved.groupByDay === 'boolean' ? saved.groupByDay : DEFAULTS.groupByDay,
+      hideCents:
+        typeof saved.hideCents === 'boolean' ? saved.hideCents : DEFAULTS.hideCents,
     }
   } catch {
     // Unavailable or unparseable — the defaults are a fine answer.

@@ -11,13 +11,7 @@
  */
 
 import { createContext } from 'svelte'
-import {
-  ApiError,
-  api,
-  errorMessage,
-  type Account,
-  type Transaction,
-} from './api'
+import { ApiError, api, errorMessage, type Account, type Transaction } from './api'
 import { toCents } from './money'
 
 export const RANGES = [

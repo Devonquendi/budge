@@ -25,9 +25,7 @@
   const categories = $derived([
     ALL_CATEGORIES,
     ...[
-      ...new Set(
-        workspace.transactions.map((t) => t.category?.name ?? 'Uncategorised'),
-      ),
+      ...new Set(workspace.transactions.map((t) => t.category?.name ?? 'Uncategorised')),
     ].sort(),
   ])
 
@@ -172,9 +170,14 @@
       {#each flows as flow (flow.currency)}
         <p class="flow">
           {#if flows.length > 1}<span class="currency">{flow.currency}</span>{/if}
-          <span>In <b class="numeric in">{formatCents(flow.incoming, flow.currency)}</b></span>
+          <span
+            >In <b class="numeric in">{formatCents(flow.incoming, flow.currency)}</b
+            ></span
+          >
           <span>
-            Out <b class="numeric">{formatCents(Math.abs(flow.outgoing), flow.currency)}</b>
+            Out <b class="numeric"
+              >{formatCents(Math.abs(flow.outgoing), flow.currency)}</b
+            >
           </span>
           <span>
             Net

@@ -31,6 +31,13 @@ Unless otherwise specified, all dev tools listed below are managed by mise:
 - Tools are pinned in `mise.toml`; add them with `mise use --pin <tool>@latest`.
 - `prek` runs on commit. `prek run --all-files` to run it by hand.
 
+## Documentation
+
+Markdown is not scratch space. Don't create, expand or restructure `CLAUDE.md`,
+`README.md` or any other markdown file unless asked — say what you think is
+missing and let me decide. Two descriptions of one thing drift apart, and the
+code is the one that can't.
+
 ## Tech stack
 
 - [Vercel](https://vercel.com/llms.txt)

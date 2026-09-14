@@ -49,8 +49,7 @@
 
   function owingCount(currency: string): number {
     return accounts.filter(
-      (account) =>
-        account.currency === currency && toCents(account.balance_current) < 0,
+      (account) => account.currency === currency && toCents(account.balance_current) < 0,
     ).length
   }
 
