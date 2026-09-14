@@ -8,6 +8,10 @@ from sqlmodel import Field, SQLModel, UniqueConstraint
 # wherever an account is listed.
 NICKNAME_MAX = 40
 
+# A display name, not a legal one: long enough for anything someone answers
+# "what should we call you" with.
+NAME_MAX = 60
+
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -15,6 +19,8 @@ class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
     password_hash: str
+    # What the user asked to be called. Null until they say.
+    name: str | None = Field(default=None, max_length=NAME_MAX)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 

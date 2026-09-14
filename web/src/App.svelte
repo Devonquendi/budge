@@ -124,7 +124,7 @@
     {#if path() === '/transactions'}
       <Transactions />
     {:else if path() === '/profile'}
-      <Profile email={me.email} ondisconnect={disconnected} />
+      <Profile {me} onupdate={(next) => (me = next)} ondisconnect={disconnected} />
     {:else if path() === '/settings'}
       <Settings />
     {:else}

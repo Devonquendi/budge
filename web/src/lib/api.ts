@@ -25,6 +25,8 @@ export type Account = {
 
 export type Me = {
   email: string
+  /** What the user asked to be called, or null if they never said. */
+  name: string | null
   /** False until Akahu tokens are stored, which gates every account endpoint. */
   onboarded: boolean
 }
@@ -128,6 +130,9 @@ export const api = {
     request<Me>('/auth/signup', 'POST', { email, password, invite_code }),
 
   logout: () => request<void>('/auth/logout', 'POST'),
+
+  /** Blank clears the name. Answers with the whole profile. */
+  saveName: (name: string) => request<Me>('/auth/me', 'PATCH', { name }),
 
   connect: (app_token: string, user_token: string) =>
     request<Connection>('/akahu', 'PUT', { app_token, user_token }),

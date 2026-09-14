@@ -154,8 +154,11 @@
     flex-direction: column;
     gap: 0.75rem;
     /* Wide enough for two columns of ledger rows and no wider: past this the
-       numbers drift so far from their labels that the page stops reading. */
+       numbers drift so far from their labels that the page stops reading.
+       Centred, so the spare width falls either side rather than all of it
+       piling up to the right of the page. */
     max-width: 60rem;
+    margin-inline: auto;
   }
 
   .head {

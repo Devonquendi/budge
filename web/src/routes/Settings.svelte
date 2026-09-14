@@ -140,6 +140,7 @@
     flex-direction: column;
     gap: 0.6875rem;
     max-width: 56rem;
+    margin-inline: auto;
   }
 
   h1 {
