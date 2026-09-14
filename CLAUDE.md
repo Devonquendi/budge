@@ -42,10 +42,9 @@ Never use em dashes: not in code, comments, markdown or commit messages.
 
 ## Comments
 
-Comment what the code can't say. Never restate the line beneath it: a named
-function, constant or type is already its own description, and a comment
-repeating it is one more thing to keep true. Prefer deleting a stale comment
-to updating it.
+Keep them short. Comment what the code can't say, and never restate the line
+beneath it: a named function, constant or type is already its own description.
+Prefer deleting a stale comment to updating it.
 
 ## Tech stack
 
