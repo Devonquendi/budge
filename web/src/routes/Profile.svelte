@@ -175,9 +175,9 @@
               disabled={savingTokens || disconnecting}
               onclick={disconnect}
             >
-              <!-- Whole at rest, snapped on hover. Each half is its own group,
-                   so sliding them apart parts the bar between them: one icon
-                   rather than two swapped at the last moment. -->
+              <!-- Whole and horizontal at rest. On hover both halves turn 45
+                   and pull apart along that new axis, so the bar between them
+                   parts and the two marks flick out of the break. -->
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <g class="half left">
                   <path d="M9 17H7A5 5 0 0 1 7 7h2" />
@@ -186,6 +186,10 @@
                 <g class="half right">
                   <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
                   <path d="M12 12h4" />
+                </g>
+                <g class="snap" stroke-width="1.6">
+                  <path d="M12 9V7.2" />
+                  <path d="M12 15v1.8" />
                 </g>
               </svg>
             </button>
@@ -337,24 +341,42 @@
     opacity: 0.45;
   }
 
-  /* Lengths inside an SVG are user units, so this is 1.7 of the 24 the icon is
-     drawn in rather than 1.7 device pixels. */
-  .half {
-    transition: transform 180ms ease;
+  /* Lengths and origins here are SVG user units, so they are of the 24 the
+     icon is drawn in rather than device pixels. */
+  .half,
+  .snap {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition:
+      transform 200ms ease,
+      opacity 200ms ease;
   }
 
+  .snap {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.5);
+  }
+
+  /* translateX after the turn runs along the chain, not along the screen. */
   .tool:hover:not(:disabled) .left,
   .tool:focus-visible:not(:disabled) .left {
-    transform: translateX(-1.7px);
+    transform: rotate(-45deg) translateX(-2.3px);
   }
 
   .tool:hover:not(:disabled) .right,
   .tool:focus-visible:not(:disabled) .right {
-    transform: translateX(1.7px);
+    transform: rotate(-45deg) translateX(2.3px);
+  }
+
+  .tool:hover:not(:disabled) .snap,
+  .tool:focus-visible:not(:disabled) .snap {
+    opacity: 1;
+    transform: rotate(-45deg) scale(1);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .half {
+    .half,
+    .snap {
       transition: none;
     }
   }
