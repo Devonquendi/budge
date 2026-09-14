@@ -38,7 +38,14 @@ Markdown is not scratch space. Don't create, expand or restructure `CLAUDE.md`,
 missing and let me decide. Two descriptions of one thing drift apart, and the
 code is the one that can't.
 
-Never use em dashes, in code, comments, markdown or commit messages.
+Never use em dashes: not in code, comments, markdown or commit messages.
+
+## Comments
+
+Comment what the code can't say. Never restate the line beneath it: a named
+function, constant or type is already its own description, and a comment
+repeating it is one more thing to keep true. Prefer deleting a stale comment
+to updating it.
 
 ## Tech stack
 

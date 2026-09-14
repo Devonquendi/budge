@@ -10,9 +10,5 @@ Money crosses the wire as decimal strings and is added up in integer cents by
 
 ## Comments
 
-Comment what the code can't say: a Pico or browser behaviour that would look like
-a mistake, a decision the next reader would otherwise undo.
-
-Never restate the line beneath it. A named function, constant or type is already
-its own description, and a comment repeating it is one more thing to keep true.
-When a comment goes stale, prefer deleting it to updating it.
+The root rule applies. Here that usually means a Pico or browser behaviour
+that would look like a mistake.

@@ -7,4 +7,3 @@ name = "prettier"
 entry = "pnpm exec prettier --write"
 language = "system"
 files = '\.(svelte|ts|js|css|html|json)$'
-exclude = '^(dist/|pnpm-lock\.yaml$)'
