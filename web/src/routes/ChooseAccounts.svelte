@@ -56,7 +56,6 @@
         <AccountPicker
           accounts={workspace.accounts}
           {included}
-          badges
           onchange={(next) => (edits = next)}
         />
       {:else}

@@ -196,7 +196,11 @@
     <p aria-busy="true">Loading&hellip;</p>
   {:else}
     <div class={{ stale: workspace.loadingTransactions }}>
-      <TransactionList transactions={visible} grouped={prefs().groupByDay}>
+      <TransactionList
+        transactions={visible}
+        accounts={workspace.dashboardAccounts}
+        grouped={prefs().groupByDay}
+      >
         {#snippet footer()}
           <span class="count">
             Showing {visible.length} of {filtered.length}

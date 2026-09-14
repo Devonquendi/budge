@@ -10,11 +10,14 @@ PERSONAL_FINANCE = "personal_finance"
 def to_account(data: dict) -> Account:
     """Build an Account from one item of GET /accounts."""
     balance = data["balance"]
+    connection = data["connection"]
     return Account(
         id=data["_id"],
         name=data["name"],
         type=data["type"],
-        connection_name=data["connection"]["name"],
+        connection_id=connection["_id"],
+        connection_name=connection["name"],
+        connection_logo=connection.get("logo"),
         formatted_account=data.get("formatted_account"),
         currency=balance["currency"],
         balance_current=balance["current"],
@@ -62,6 +65,10 @@ def to_transaction(data: dict, account_name: str, currency: str) -> Transaction:
     # record. It's still a better label than the raw description.
     if merchant is None and meta.get("merchant_name"):
         merchant = Merchant(name=meta["merchant_name"])
+    # Akahu hangs the merchant's logo off `meta` rather than the merchant
+    # record, so it has to be carried across by hand.
+    if merchant is not None and merchant.logo is None:
+        merchant.logo = meta.get("logo")
 
     return Transaction(
         id=data["_id"],

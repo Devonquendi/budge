@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { typeLabel } from '../accounts'
+  import { accountName, typeLabel } from '../accounts'
   import type { Account } from '../api'
   import { format, toCents } from '../money'
   import { prefs } from '../prefs.svelte'
@@ -11,12 +11,15 @@
 <ul>
   {#each accounts as account (account.id)}
     <li>
-      <BankBadge connection={account.connection_name} />
+      <BankBadge connection={account.connection_name} logo={account.connection_logo} />
 
       <span class="who">
-        <span class="name">{account.name}</span>
+        <span class="name">{accountName(account)}</span>
         <span class="meta muted">
-          {account.connection_name} · {typeLabel(account.type)}
+          <!-- A renamed account leads with the bank's own name for it, which
+               is otherwise nowhere on the page. -->
+          {#if account.nickname}{account.name} ·
+          {/if}{account.connection_name} · {typeLabel(account.type)}
           {#if account.formatted_account}· {account.formatted_account}{/if}
         </span>
       </span>

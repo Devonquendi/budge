@@ -11,12 +11,17 @@ export type Account = {
   id: string
   name: string
   type: string
+  connection_id: string
   connection_name: string
+  /** Akahu's URL for the bank's own mark, absent for some providers. */
+  connection_logo: string | null
   formatted_account: string | null
   currency: string
   /** A decimal string, not a number. See money.ts. */
   balance_current: string
   balance_available: string | null
+  /** What the user renamed this account to. Null means the bank's name stands. */
+  nickname: string | null
 }
 
 export type Me = {
@@ -47,6 +52,7 @@ export type Merchant = {
 export type Transaction = {
   id: string
   account_id: string
+  /** Already the nickname if the account has one: the server resolves it. */
   account_name: string
   currency: string
   connection_id: string
@@ -133,6 +139,12 @@ export const api = {
 
   saveSelection: (included: string[]) =>
     request<Selection>('/accounts/selection', 'PUT', { included }),
+
+  /** Blank puts the bank's own name back. Answers with the whole selection. */
+  saveNickname: (id: string, nickname: string) =>
+    request<Selection>(`/accounts/${encodeURIComponent(id)}/nickname`, 'PUT', {
+      nickname,
+    }),
 
   transactions: (days: number) => request<History>(`/transactions?days=${days}`),
 }

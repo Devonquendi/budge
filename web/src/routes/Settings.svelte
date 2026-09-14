@@ -26,6 +26,19 @@
       (edits.length !== saved.length || edits.some((id) => !saved.includes(id))),
   )
 
+  async function rename(id: string, nickname: string) {
+    notice = ''
+    error = ''
+    try {
+      await workspace.saveNickname(id, nickname)
+      notice = nickname ? 'Account renamed.' : 'Account name reset.'
+    } catch (failure) {
+      error = errorMessage(failure)
+      // Rethrown so the picker keeps the row open to try again.
+      throw failure
+    }
+  }
+
   async function saveAccounts(event: SubmitEvent) {
     event.preventDefault()
     savingAccounts = true
@@ -48,7 +61,8 @@
   <div class="titles">
     <h1>Settings</h1>
     <p class="muted sub">
-      {included.length} of {workspace.accounts.length} accounts on your dashboard
+      {included.length} of {workspace.accounts.length} accounts on your dashboard · rename one
+      with the pencil
     </p>
   </div>
 
@@ -69,6 +83,7 @@
             accounts={workspace.accounts}
             {included}
             onchange={(next) => (edits = next)}
+            onrename={rename}
           />
         {:else}
           <p class="loading" aria-busy="true">Loading&hellip;</p>

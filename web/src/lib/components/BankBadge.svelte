@@ -1,30 +1,19 @@
 <script lang="ts">
   import { badge, hue } from '../accounts'
+  import Mark from './Mark.svelte'
 
-  let { connection }: { connection: string } = $props()
+  let {
+    connection,
+    logo,
+    compact = false,
+  }: {
+    connection: string
+    logo?: string | null
+    /** For the small mark in the ledger, where three letters don't fit. */
+    compact?: boolean
+  } = $props()
+
+  const letters = $derived(compact ? badge(connection).slice(0, 1) : badge(connection))
 </script>
 
-<span class="badge" style:--hue={hue(connection)} aria-hidden="true">
-  {badge(connection)}
-</span>
-
-<style>
-  .badge {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 1.4375rem;
-    height: 1.4375rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    font-weight: 500;
-    border-radius: 0.375rem;
-    /* Mixing against the card keeps this readable in both themes. */
-    background: color-mix(
-      in oklch,
-      oklch(0.7 0.12 var(--hue)) 22%,
-      var(--pico-card-background-color)
-    );
-    color: color-mix(in oklch, oklch(0.7 0.12 var(--hue)) 70%, var(--pico-color));
-  }
-</style>
+<Mark {logo} fallback={letters} tint="oklch(0.7 0.12 {hue(connection)})" />
