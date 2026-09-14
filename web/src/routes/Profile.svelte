@@ -139,9 +139,50 @@
 
     <form onsubmit={saveTokens}>
       <Panel title="Akahu connection" padded>
+        <!-- Connected and broken are the same glyph with the bar whole or
+             snapped, so the pair reads as one idea and its undoing. -->
         {#snippet action()}
-          <span class="status">
-            <span class="dot" aria-hidden="true"></span>Connected
+          <span class="tools">
+            <span class="status" data-tooltip="Connected" data-placement="left">
+              <span class="dot" aria-hidden="true"></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+                <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
+                <path d="M8 12h8" />
+              </svg>
+            </span>
+
+            <button
+              type="button"
+              class="tool"
+              data-tooltip="Replace tokens"
+              data-placement="left"
+              aria-label="Replace tokens"
+              aria-expanded={replacing}
+              aria-controls="akahu-tokens"
+              onclick={() => (replacing ? stopReplacing() : (replacing = true))}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4.5 19.5h4L19 9a2.83 2.83 0 0 0-4-4L4.5 15.5v4Z" />
+                <path d="M14 6l4 4" />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              class="tool danger"
+              data-tooltip="Disconnect"
+              data-placement="left"
+              aria-label="Disconnect Akahu"
+              disabled={savingTokens || disconnecting}
+              onclick={disconnect}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+                <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
+                <path d="M8 12h2.5M13.5 12H16" />
+              </svg>
+            </button>
           </span>
         {/snippet}
 
@@ -154,36 +195,24 @@
         </p>
 
         {#if replacing}
-          <TokenFields bind:appToken bind:userToken inline />
-        {/if}
+          <div id="akahu-tokens" class="tokens">
+            <TokenFields bind:appToken bind:userToken inline />
 
-        <div class="buttons">
-          {#if replacing}
-            <button type="submit" disabled={savingTokens}>
-              {savingTokens ? 'Checking…' : 'Save tokens'}
-            </button>
-            <button
-              type="button"
-              class="secondary outline"
-              onclick={stopReplacing}
-              disabled={savingTokens}
-            >
-              Cancel
-            </button>
-          {:else}
-            <button type="button" onclick={() => (replacing = true)}>
-              Replace tokens
-            </button>
-            <button
-              type="button"
-              class="secondary outline"
-              onclick={disconnect}
-              disabled={disconnecting}
-            >
-              {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-            </button>
-          {/if}
-        </div>
+            <div class="buttons">
+              <button type="submit" disabled={savingTokens}>
+                {savingTokens ? 'Checking…' : 'Save tokens'}
+              </button>
+              <button
+                type="button"
+                class="secondary outline"
+                onclick={stopReplacing}
+                disabled={savingTokens}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        {/if}
       </Panel>
     </form>
   </div>
@@ -248,13 +277,25 @@
     font-size: var(--text-meta);
   }
 
+  .tools {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
   .status {
     display: inline-flex;
     align-items: center;
     gap: 0.3125rem;
-    font-size: var(--text-meta);
-    font-weight: 500;
+    padding-right: 0.25rem;
     color: var(--ctp-green);
+  }
+
+  /* Pico gives a tooltip on anything that isn't a control a dotted underline,
+     which under an icon just looks like a stray rule. */
+  .status[data-tooltip] {
+    border-bottom: 0;
+    cursor: default;
   }
 
   .dot {
@@ -262,6 +303,58 @@
     height: 0.375rem;
     border-radius: 999px;
     background: currentColor;
+  }
+
+  .tool {
+    display: grid;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: var(--pico-muted-color);
+  }
+
+  .tool:hover:not(:disabled) {
+    background: var(--ctp-surface0);
+    color: var(--pico-color);
+  }
+
+  .tool.danger {
+    color: var(--ctp-red);
+  }
+
+  .tool.danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--ctp-red) 14%, transparent);
+    color: var(--ctp-red);
+  }
+
+  .tool:disabled {
+    opacity: 0.45;
+  }
+
+  .tools svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Pico sizes tooltips for prose, which shouts over a card header. */
+  .tools [data-tooltip]::before {
+    padding: 0.1875rem 0.375rem;
+    font-size: var(--text-meta);
+  }
+
+  .tokens {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5625rem;
   }
 
   .buttons {

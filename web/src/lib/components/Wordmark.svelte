@@ -1,16 +1,15 @@
 <script lang="ts">
-  // The mark and the name, together. Three rising bars, a balance going the
-  // way you'd hope.
+  // The mark and the name, together: the wordmark's own first letter, drawn as
+  // a stem and a bowl. Two shapes is all a 16px browser tab can hold.
   let { size = '1.0625rem' }: { size?: string } = $props()
 </script>
 
 <span class="mark" style:--size={size}>
   <svg viewBox="0 0 32 32" aria-hidden="true">
     <rect class="tile" width="32" height="32" rx="8" />
-    <g class="bars">
-      <rect x="7" y="18" width="5" height="8" rx="1.5" />
-      <rect x="13.5" y="13" width="5" height="13" rx="1.5" />
-      <rect x="20" y="7" width="5" height="19" rx="1.5" />
+    <g class="letter">
+      <path d="M9.6 7.4v17.2" />
+      <circle cx="17.3" cy="19.4" r="5.2" />
     </g>
   </svg>
   <span class="name">budge</span>
@@ -33,8 +32,13 @@
     fill: var(--ctp-blue);
   }
 
-  .bars {
-    fill: var(--ctp-on-blue);
+  /* Stroked rather than filled: a drawn letter keeps its counter open at the
+     size a favicon is actually seen at, where a set b would fill in. */
+  .letter {
+    fill: none;
+    stroke: var(--ctp-on-blue);
+    stroke-width: 3.4;
+    stroke-linecap: round;
   }
 
   .name {
