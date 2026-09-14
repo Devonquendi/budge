@@ -22,13 +22,7 @@
 </script>
 
 {#if src}
-  <img
-    class="mark"
-    {src}
-    alt=""
-    loading="lazy"
-    onerror={() => (broken = logo ?? null)}
-  />
+  <img class="mark" {src} alt="" loading="lazy" onerror={() => (broken = logo ?? null)} />
 {:else}
   <span class="mark monogram" style:--tint={tint} aria-hidden="true">{fallback}</span>
 {/if}

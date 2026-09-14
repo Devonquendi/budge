@@ -15,7 +15,6 @@ def to_account(data: dict) -> Account:
         id=data["_id"],
         name=data["name"],
         type=data["type"],
-        connection_id=connection["_id"],
         connection_name=connection["name"],
         connection_logo=connection.get("logo"),
         formatted_account=data.get("formatted_account"),

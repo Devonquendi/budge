@@ -11,7 +11,6 @@ export type Account = {
   id: string
   name: string
   type: string
-  connection_id: string
   connection_name: string
   /** Akahu's URL for the bank's own mark, absent for some providers. */
   connection_logo: string | null

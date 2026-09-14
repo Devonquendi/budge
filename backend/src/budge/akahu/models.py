@@ -10,7 +10,6 @@ class Account(BaseModel):
     id: str
     name: str
     type: str
-    connection_id: str
     connection_name: str
     # Akahu hosts a logo per provider, which is what puts a bank's mark beside
     # its accounts instead of our own initials.
