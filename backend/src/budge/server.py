@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
-from budge.api import accounts, akahu, auth, transactions
+from budge.api import accounts, akahu, auth, demo, requests, transactions
 
 load_dotenv()
 
@@ -21,5 +21,12 @@ app.add_middleware(
     https_only=bool(os.environ.get("VERCEL")),
 )
 
-for router in (auth.router, akahu.router, accounts.router, transactions.router):
+for router in (
+    auth.router,
+    akahu.router,
+    accounts.router,
+    transactions.router,
+    requests.router,
+    demo.router,
+):
     app.include_router(router, prefix="/api")
