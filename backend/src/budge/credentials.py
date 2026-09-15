@@ -4,25 +4,39 @@ import httpx2
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from budge import environment
 from budge.akahu import AkahuClient
 from budge.akahu.models import Account
 from budge.db import crypto
 from budge.db.models import AkahuAccountSetting, AkahuCredential
 
 
-async def get(session: AsyncSession, user_id: int) -> AkahuCredential | None:
+async def _row(session: AsyncSession, user_id: int) -> AkahuCredential | None:
     statement = select(AkahuCredential).where(AkahuCredential.user_id == user_id)
     return (await session.exec(statement)).first()
+
+
+async def get(session: AsyncSession, user_id: int) -> AkahuCredential | None:
+    """The user's stored tokens, or None if this deployment may not have them.
+
+    A preview gets None whether or not a row exists, which reads all the way up
+    as "not connected yet". See environment.akahu_enabled.
+    """
+    if not environment.akahu_enabled():
+        return None
+    return await _row(session, user_id)
 
 
 async def save(
     session: AsyncSession, user_id: int, app_token: str, user_token: str
 ) -> None:
     """Stores the tokens encrypted, replacing any the user already had."""
+    if not environment.akahu_enabled():
+        raise PermissionError("Akahu is disabled on this deployment")
     app_encrypted = crypto.encrypt(app_token)
     user_encrypted = crypto.encrypt(user_token)
 
-    credential = await get(session, user_id)
+    credential = await _row(session, user_id)
     if credential is None:
         credential = AkahuCredential(
             user_id=user_id,
@@ -57,7 +71,7 @@ async def forget(session: AsyncSession, user_id: int) -> None:
     even to the same banks, is a new set of ids that these rows would silently
     exclude from the dashboard.
     """
-    credential = await get(session, user_id)
+    credential = await _row(session, user_id)
     if credential is not None:
         await session.delete(credential)
     for setting in await _settings(session, user_id):

@@ -72,6 +72,53 @@ export type History = {
   days: number
 }
 
+/** Derived from the event log on every read, never stored. See charges/ledger.py. */
+export type RequestState = 'open' | 'marked_paid' | 'declined' | 'confirmed' | 'cancelled'
+
+export type RequestEvent = {
+  type: string
+  /** 'creator' or 'payee'. The creator's actions win. */
+  actor: string
+  note: string | null
+  created_at: string
+}
+
+export type ChargeRequest = {
+  id: number
+  /** The whole address of the request: /r/<token> opens it without an account. */
+  token: string
+  title: string
+  amount_cents: number
+  bill_total_cents: number
+  payee_email: string
+  payee_name: string | null
+  from_name: string
+  from_email: string
+  state: RequestState
+  created_at: string
+  events: RequestEvent[]
+}
+
+export type Totals = {
+  owed: number
+  claimed: number
+  settled: number
+  /** owed + claimed: money asked for that hasn't been confirmed as arrived. */
+  outstanding: number
+}
+
+export type Inbox = {
+  sent: ChargeRequest[]
+  received: ChargeRequest[]
+  to_collect: Totals
+  to_pay: Totals
+}
+
+export type NewPayee = { email: string; name?: string }
+
+/** An invented person to sign in as. Empty in production, where demo is off. */
+export type Persona = { email: string; name: string; blurb: string }
+
 export type Selection = {
   accounts: Account[]
   included: string[]
@@ -149,6 +196,39 @@ export const api = {
     request<Selection>(`/accounts/${encodeURIComponent(id)}/nickname`, 'PUT', {
       nickname,
     }),
+
+  requests: () => request<Inbox>('/requests'),
+
+  splitBill: (
+    title: string,
+    amount: string,
+    payees: NewPayee[],
+    include_me: boolean,
+    source_transaction_id?: string,
+  ) =>
+    request<ChargeRequest[]>('/requests', 'POST', {
+      title,
+      amount,
+      payees,
+      include_me,
+      source_transaction_id,
+    }),
+
+  /** The payer's view. No session needed, which is the point of the link. */
+  requestByToken: (token: string) =>
+    request<ChargeRequest>(`/requests/r/${encodeURIComponent(token)}`),
+
+  asPayee: (token: string, action: 'mark-paid' | 'decline', note = '') =>
+    request<ChargeRequest>(`/requests/r/${encodeURIComponent(token)}/${action}`, 'POST', {
+      note,
+    }),
+
+  asCreator: (id: number, action: 'confirm' | 'cancel' | 'reopen', note = '') =>
+    request<ChargeRequest>(`/requests/${id}/${action}`, 'POST', { note }),
+
+  personas: () => request<Persona[]>('/demo/personas'),
+
+  demoSession: (email: string) => request<Me>('/demo/session', 'POST', { email }),
 
   transactions: (days: number) => request<History>(`/transactions?days=${days}`),
 }
