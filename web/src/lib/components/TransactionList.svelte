@@ -246,6 +246,9 @@
   .account {
     display: flex;
     align-items: center;
+    /* Pinned to the row's right edge, under the amount above it, rather than
+       drifting with the category tag's width. */
+    margin-left: auto;
     --mark-size: 1.375rem;
   }
 
@@ -378,6 +381,8 @@
       width: 4rem;
       order: 4;
       justify-content: center;
+      /* Its own column here, not the row's trailing edge. */
+      margin-left: 0;
     }
 
     .amount {
