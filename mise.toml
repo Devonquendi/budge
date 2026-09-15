@@ -68,3 +68,8 @@ run = [{ tasks = ["check:api", "check:web"] }]
 description = "Production build of the web app"
 dir = "web"
 run = "pnpm build"
+
+[tasks.screens]
+description = "Screenshot every page at phone, tablet and desktop sizes"
+dir = "web"
+run = "pnpm screens"

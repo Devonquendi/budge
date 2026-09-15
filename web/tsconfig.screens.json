@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.node.json",
+  // Playwright transpiles these with Babel, so unlike vite.config.ts they
+  // aren't held to what node can strip. api.ts, which the fixtures take
+  // their types from, uses a constructor parameter property.
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.screens.tsbuildinfo",
+    "lib": ["ES2023", "DOM"],
+    "erasableSyntaxOnly": false
+  },
+  "include": ["playwright.config.ts", "screens/**/*.ts"]
+}
