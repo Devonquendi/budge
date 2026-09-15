@@ -69,8 +69,15 @@
     const { category } = transaction
     if (!category) return 'No category'
     if (category.source !== 'genie') return 'Categorised by Akahu'
-    const confidence = Math.round((category.confidence ?? 0) * 100)
-    return `Genie's guess, ${confidence}% confident`
+    return `Genie's guess, ${confidencePercent(transaction)}% confident`
+  }
+
+  /**
+   * Only meaningful for a guess. Printed on the tag itself, not just in the
+   * title: a title is a hover tooltip, and touch has no hover to reveal it.
+   */
+  function confidencePercent(transaction: Transaction): number {
+    return Math.round((transaction.category?.confidence ?? 0) * 100)
   }
 </script>
 
@@ -99,6 +106,9 @@
           title={categoryHint(transaction)}
         >
           {categoryName(transaction)}
+          {#if transaction.category?.source === 'genie'}
+            <span class="confidence">· {confidencePercent(transaction)}%</span>
+          {/if}
         </span>
       </span>
       <span class="account" title={transaction.account_name}>
@@ -270,6 +280,13 @@
     border-radius: 999px;
     background: color-mix(in srgb, var(--accent) 15%, transparent);
     color: var(--accent);
+  }
+
+  /* Genie's confidence, printed rather than left in the title: a dashed
+     border alone doesn't say what it means, and touch has no hover to ask. */
+  .confidence {
+    font-weight: 400;
+    opacity: 0.75;
   }
 
   /* Genie matched on the description alone, so it's a guess, not a fact. */

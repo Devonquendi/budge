@@ -214,20 +214,30 @@
     color: var(--ctp-red);
   }
 
-  /* Visible rather than hover-only, which hides it outright on a touchscreen,
-     but quiet enough that a column of them doesn't read as a column of icons. */
+  /*
+   * Visible rather than hover-only, which hides it outright on a touchscreen,
+   * but quiet enough that a column of them doesn't read as a column of icons.
+   * 2.75rem (44px): the icon itself stays put below, but the button around it
+   * was a 24px target next to a big, easy-to-hit row, which is exactly the
+   * kind of small precise tap a touchscreen makes people misjudge.
+   */
   .pencil {
     display: grid;
     place-items: center;
     flex: none;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     margin-right: 0.4375rem;
     padding: 0;
     border: 0;
     border-radius: 0.375rem;
     background: transparent;
     opacity: 0.55;
+  }
+
+  .pencil:active {
+    opacity: 1;
+    background: var(--ctp-surface1);
   }
 
   .pencil:focus-visible {
@@ -255,6 +265,10 @@
   /* --ctp-text, not --pico-color: .pencil is a button, so Pico rebinds
      --pico-color to --pico-primary-inverse there, which made the hover
      stroke near-invisible against the hover background in both themes. */
+  .pencil:active svg {
+    stroke: var(--ctp-text);
+  }
+
   @media (hover: hover) {
     .pencil:hover svg {
       stroke: var(--ctp-text);

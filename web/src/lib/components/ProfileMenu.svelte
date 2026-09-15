@@ -91,14 +91,18 @@
     display: flex;
   }
 
-  /* .root .avatar, not .avatar: app.css resets every button to width:auto at a
-     higher specificity, which collapses the circle into an oval. */
+  /*
+   * .root .avatar, not .avatar: app.css resets every button to width:auto at a
+   * higher specificity, which collapses the circle into an oval. Bigger than
+   * before (1.75rem) for an easier tap target; .big below pins the panel's
+   * own header copy back down to its own size.
+   */
   .root .avatar {
     display: grid;
     place-items: center;
     flex: none;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0;
     border: 0;
     border-radius: 999px;
@@ -108,6 +112,10 @@
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
+  }
+
+  .root .avatar:active {
+    background: var(--ctp-blue-hover);
   }
 
   @media (hover: hover) {
@@ -168,7 +176,9 @@
     gap: 0.5rem;
     width: 100%;
     margin: 0;
-    padding: 0.375rem 0.4375rem;
+    /* Taller than it reads visually needs, so each line clears a comfortable
+       tap height rather than the ~30px it worked out to before. */
+    padding: 0.6875rem 0.4375rem;
     border: 0;
     border-radius: 0.4375rem;
     background: transparent;
@@ -182,6 +192,10 @@
     text-align: left;
     text-decoration: none;
     cursor: pointer;
+  }
+
+  .root :global(.row:active) {
+    background: var(--ctp-recessed);
   }
 
   @media (hover: hover) {

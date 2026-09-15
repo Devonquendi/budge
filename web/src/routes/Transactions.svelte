@@ -20,6 +20,7 @@
   // meant to help you find, so they fold away behind a button. The date range
   // stays out: it's the one you reach for without looking.
   let filtersOpen = $state(false)
+  let controls = $state.raw<HTMLElement | null>(null)
 
   const spanFormat = new Intl.DateTimeFormat('en-NZ', {
     day: 'numeric',
@@ -110,6 +111,17 @@
   }
 </script>
 
+<svelte:window
+  onkeydown={(event) => {
+    if (filtersOpen && event.key === 'Escape') filtersOpen = false
+  }}
+  onpointerdown={(event) => {
+    if (filtersOpen && controls && !controls.contains(event.target as Node)) {
+      filtersOpen = false
+    }
+  }}
+/>
+
 <div class="page">
   <div class="titles">
     <h1>Transactions</h1>
@@ -126,7 +138,7 @@
     </p>
   </div>
 
-  <div class="controls">
+  <div class="controls" bind:this={controls}>
     <div class="segmented" role="group" aria-label="Date range">
       {#each RANGES as range (range.days)}
         <button
@@ -304,6 +316,10 @@
     box-shadow: none;
   }
 
+  .segmented > button:active {
+    color: var(--ctp-text);
+  }
+
   @media (hover: hover) {
     .segmented > button:hover {
       color: var(--ctp-text);
@@ -401,11 +417,15 @@
       align-items: center;
     }
 
-    /* Tighter so the range and the Filters button share a line even once the
-       badge appears. Four pixels over and the button drops to its own row the
-       moment you apply a filter. */
+    /*
+     * Tighter horizontally so the range and the Filters button share a line
+     * even once the badge appears — four pixels over and the button drops to
+     * its own row the moment you apply a filter. Taller vertically: a plain
+     * 26px-tall pill is a small target for a thumb.
+     */
     .segmented > button {
       padding-inline: 0.5rem;
+      padding-block: 0.4375rem;
     }
 
     .filters {
