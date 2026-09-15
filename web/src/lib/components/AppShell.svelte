@@ -221,11 +221,14 @@
     }
   }
 
+  /* --ctp-text, not --pico-color: inside a button Pico rebinds --pico-color
+     to --pico-primary-inverse, which made this stroke near-invisible against
+     the background in both themes. */
   .hamburger svg {
     width: 1.125rem;
     height: 1.125rem;
     fill: none;
-    stroke: var(--pico-color);
+    stroke: var(--ctp-text);
     stroke-width: 1.8;
     stroke-linecap: round;
   }

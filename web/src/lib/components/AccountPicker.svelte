@@ -252,9 +252,12 @@
     stroke-linejoin: round;
   }
 
+  /* --ctp-text, not --pico-color: .pencil is a button, so Pico rebinds
+     --pico-color to --pico-primary-inverse there, which made the hover
+     stroke near-invisible against the hover background in both themes. */
   @media (hover: hover) {
     .pencil:hover svg {
-      stroke: var(--pico-color);
+      stroke: var(--ctp-text);
     }
   }
 
