@@ -199,8 +199,10 @@
     border-top: var(--pico-border-width) solid var(--ctp-divider);
   }
 
-  .prefs label:hover {
-    background: var(--ctp-recessed);
+  @media (hover: hover) {
+    .prefs label:hover {
+      background: var(--ctp-recessed);
+    }
   }
 
   .loading {

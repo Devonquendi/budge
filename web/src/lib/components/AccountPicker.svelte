@@ -158,8 +158,10 @@
     border-top: var(--pico-border-width) solid var(--ctp-divider);
   }
 
-  li:not(.empty):hover {
-    background: var(--ctp-recessed);
+  @media (hover: hover) {
+    li:not(.empty):hover {
+      background: var(--ctp-recessed);
+    }
   }
 
   label {
@@ -228,10 +230,16 @@
     opacity: 0.55;
   }
 
-  .pencil:hover,
   .pencil:focus-visible {
     opacity: 1;
     background: var(--ctp-surface0);
+  }
+
+  @media (hover: hover) {
+    .pencil:hover {
+      opacity: 1;
+      background: var(--ctp-surface0);
+    }
   }
 
   .pencil svg {
@@ -244,8 +252,10 @@
     stroke-linejoin: round;
   }
 
-  .pencil:hover svg {
-    stroke: var(--pico-color);
+  @media (hover: hover) {
+    .pencil:hover svg {
+      stroke: var(--pico-color);
+    }
   }
 
   /* Pico sizes tooltips for prose, which shouts over rows this tight. */

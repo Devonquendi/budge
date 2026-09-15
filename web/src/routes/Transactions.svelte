@@ -304,8 +304,10 @@
     box-shadow: none;
   }
 
-  .segmented > button:hover {
-    color: var(--ctp-text);
+  @media (hover: hover) {
+    .segmented > button:hover {
+      color: var(--ctp-text);
+    }
   }
 
   .segmented > button.on {

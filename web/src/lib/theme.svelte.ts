@@ -13,6 +13,31 @@ type Theme = 'light' | 'dark'
 const systemPrefersDark = new MediaQuery('prefers-color-scheme: dark')
 const chosen = $state<{ theme: Theme | null }>({ theme: null })
 
+const THEME_COLOR_ID = 'theme-color-choice'
+
+/**
+ * A phone tints its browser chrome from <meta name="theme-color">, and uses the
+ * first tag whose media matches. index.html declares one per system scheme; an
+ * explicit choice matches neither, so put an unscoped tag in front of them and
+ * take it away again when we go back to following the system. The colour is
+ * read off the page rather than repeated here, so it can't drift from app.css.
+ */
+function applyThemeColor(): void {
+  document.getElementById(THEME_COLOR_ID)?.remove()
+  if (!chosen.theme) return
+
+  const mantle = getComputedStyle(document.documentElement)
+    .getPropertyValue('--ctp-mantle')
+    .trim()
+  if (!mantle) return
+
+  const meta = document.createElement('meta')
+  meta.id = THEME_COLOR_ID
+  meta.name = 'theme-color'
+  meta.content = mantle
+  document.head.prepend(meta)
+}
+
 function read(): Theme | null {
   try {
     const stored = localStorage.getItem(THEME_KEY)
@@ -28,6 +53,7 @@ function read(): Theme | null {
 export function applyStoredTheme(): void {
   chosen.theme = read()
   if (chosen.theme) document.documentElement.dataset.theme = chosen.theme
+  applyThemeColor()
 }
 
 export function followsSystem(): boolean {
@@ -37,6 +63,7 @@ export function followsSystem(): boolean {
 export function followSystem(): void {
   chosen.theme = null
   delete document.documentElement.dataset.theme
+  applyThemeColor()
   try {
     localStorage.removeItem(THEME_KEY)
   } catch {
@@ -51,6 +78,7 @@ export function isDark(): boolean {
 export function setTheme(theme: Theme): void {
   chosen.theme = theme
   document.documentElement.dataset.theme = theme
+  applyThemeColor()
   try {
     localStorage.setItem(THEME_KEY, theme)
   } catch {

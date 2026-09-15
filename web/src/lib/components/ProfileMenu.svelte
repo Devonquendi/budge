@@ -110,8 +110,10 @@
     cursor: pointer;
   }
 
-  .root .avatar:hover {
-    background: var(--ctp-blue-hover);
+  @media (hover: hover) {
+    .root .avatar:hover {
+      background: var(--ctp-blue-hover);
+    }
   }
 
   .root .big {
@@ -182,8 +184,10 @@
     cursor: pointer;
   }
 
-  .root :global(.row:hover) {
-    background: var(--ctp-recessed);
+  @media (hover: hover) {
+    .root :global(.row:hover) {
+      background: var(--ctp-recessed);
+    }
   }
 
   .root :global(.row svg) {
