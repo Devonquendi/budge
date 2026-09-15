@@ -18,10 +18,15 @@ def preview(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(environment.ESCAPE_HATCH, raising=False)
 
 
+# Not one of the demo roster: a persona is handed the fixture feed, which
+# would hide the thing these tests are checking.
+REAL_USER = "someone.real@example.com"
+
+
 async def sign_up(client: AsyncClient) -> None:
     response = await client.post(
         "/api/auth/signup",
-        json={"email": "ara@example.com", "password": "hunter2hunter2"} | INVITE,
+        json={"email": REAL_USER, "password": "hunter2hunter2"} | INVITE,
     )
     assert response.status_code == 201, response.text
 

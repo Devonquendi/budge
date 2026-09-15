@@ -11,8 +11,8 @@ async def test_signing_in_as_a_persona_seeds_their_flat(client: AsyncClient) -> 
 
     assert response.status_code == 200, response.text
     assert response.json()["name"] == "Ara Whitcombe"
-    # No Akahu, so the app shows the request half and nothing else.
-    assert response.json()["onboarded"] is False
+    # The fixture feed stands in for a bank, so the dashboard works too.
+    assert response.json()["onboarded"] is True
 
     inbox = (await client.get("/api/requests")).json()
     assert inbox["sent"], "Ara is owed for the power and the internet"
