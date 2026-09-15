@@ -246,17 +246,16 @@
   .account {
     display: flex;
     align-items: center;
-    gap: 0.3125rem;
-    min-width: 0;
-    font-size: var(--text-meta);
-    color: var(--pico-muted-color);
     --mark-size: 1.375rem;
   }
 
+  /*
+   * The mark carries the account; the name (still on the span's title) only
+   * pushed the row's other content around, at every width, since it varies
+   * far more in length than a date or a category ever does.
+   */
   .account .label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .tag {
@@ -379,12 +378,6 @@
       width: 4rem;
       order: 4;
       justify-content: center;
-    }
-
-    /* Once there are columns the mark is the account and the name is on hover.
-       It stays written out on a phone, where there is no hover to reveal it. */
-    .account .label {
-      display: none;
     }
 
     .amount {
