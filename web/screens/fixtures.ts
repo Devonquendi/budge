@@ -237,6 +237,16 @@ const ROWS: Row[] = [
     category: 'Income',
     group: 'Income',
   },
+  {
+    id: 'trn_15',
+    account: 'acc_visa',
+    date: '2026-03-04T21:41:00Z',
+    description: 'MANUKA CAFE & RESTAU 524651******4438 14453 12-14:21-453',
+    amount: '-24.00',
+    merchant: 'Manuka Cafe & Restaurant',
+    category: 'Cafes & restaurants',
+    group: 'Lifestyle',
+  },
 ]
 
 const ACCOUNT_NAMES: Record<Row['account'], string> = {

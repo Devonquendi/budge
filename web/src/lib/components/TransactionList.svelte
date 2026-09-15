@@ -195,6 +195,14 @@
     gap: 0.5rem;
     min-width: 0;
     margin-right: auto;
+    /*
+     * flex-basis 0, not auto: with auto, a long nowrap description gives this
+     * item a huge hypothetical width, and flex-wrap decides line breaks on
+     * that hypothetical size before shrinking is applied. That pushed .amount
+     * onto its own line even though .who had room to shrink into. Basis 0
+     * sidesteps the hypothetical size entirely.
+     */
+    flex: 1 1 0%;
   }
 
   .text {
@@ -270,6 +278,7 @@
   }
 
   .amount {
+    flex: none;
     font-weight: 600;
     white-space: nowrap;
   }
