@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api, errorMessage, type Me } from '../lib/api'
   import AuthCard from '../lib/components/AuthCard.svelte'
+  import DemoPersonas from '../lib/components/DemoPersonas.svelte'
   import Link from '../lib/components/Link.svelte'
 
   let { onsignin }: { onsignin: (me: Me) => void } = $props()
@@ -55,6 +56,8 @@
       {busy ? 'Signing in…' : 'Sign in'}
     </button>
   </form>
+
+  <DemoPersonas {onsignin} />
 
   {#snippet below()}
     No account? <Link href="/signup">Sign up</Link>

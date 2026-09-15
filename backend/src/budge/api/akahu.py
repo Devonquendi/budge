@@ -3,12 +3,16 @@
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
-from budge import credentials
+from budge import credentials, environment
 from budge.auth import CurrentUserId, SessionDep
 
 router = APIRouter(prefix="/akahu", tags=["akahu"])
 
 BAD_TOKENS = "Akahu rejected those tokens. Check both and try again."
+NO_AKAHU_HERE = (
+    "This is a preview deployment. It can't hold bank credentials: "
+    "connect Akahu on the real site."
+)
 
 
 class Tokens(BaseModel):
@@ -32,6 +36,10 @@ async def connect(
     body: Tokens, user_id: CurrentUserId, session: SessionDep
 ) -> Connection:
     """Stores tokens, replacing any already held, but only if Akahu accepts them."""
+    # Refused here rather than deeper down so the browser gets a sentence
+    # instead of a 500. See environment.akahu_enabled.
+    if not environment.akahu_enabled():
+        raise HTTPException(status_code=403, detail=NO_AKAHU_HERE)
     saved = await credentials.verify_and_save(
         session, user_id, body.app_token.strip(), body.user_token.strip()
     )
