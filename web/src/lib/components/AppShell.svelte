@@ -167,7 +167,9 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 0.875rem;
-    padding: 0.625rem max(0.875rem, env(safe-area-inset-left)) 0.625rem
+    /* Longhand throughout: the shorthand's clockwise order had these two swapped. */
+    padding-block: calc(0.625rem + env(safe-area-inset-top)) 0.625rem;
+    padding-inline: max(0.875rem, env(safe-area-inset-left))
       max(0.875rem, env(safe-area-inset-right));
     border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
     background: color-mix(in srgb, var(--ctp-mantle) 88%, transparent);
@@ -213,8 +215,10 @@
     background: transparent;
   }
 
-  .hamburger:hover {
-    background: var(--ctp-surface0);
+  @media (hover: hover) {
+    .hamburger:hover {
+      background: var(--ctp-surface0);
+    }
   }
 
   .hamburger svg {
@@ -240,10 +244,16 @@
     border-radius: 0.4375rem;
   }
 
-  nav :global(a:hover),
   nav :global(a[aria-current='page']) {
     color: var(--pico-color);
     background: var(--ctp-surface0);
+  }
+
+  @media (hover: hover) {
+    nav :global(a:hover) {
+      color: var(--pico-color);
+      background: var(--ctp-surface0);
+    }
   }
 
   .count {
@@ -356,8 +366,9 @@
   main {
     flex: 1;
     min-width: 0;
-    padding: 0.8125rem max(0.875rem, env(safe-area-inset-right)) 2rem
-      max(0.875rem, env(safe-area-inset-left));
+    padding-block: 0.8125rem calc(2rem + env(safe-area-inset-bottom));
+    padding-inline: max(0.875rem, env(safe-area-inset-left))
+      max(0.875rem, env(safe-area-inset-right));
   }
 
   @media (min-width: 52rem) {
@@ -375,7 +386,9 @@
       gap: 0.875rem;
       width: 12.125rem;
       height: 100dvh;
-      padding: 0.8125rem 0.6875rem;
+      padding-block: calc(0.8125rem + env(safe-area-inset-top))
+        calc(0.8125rem + env(safe-area-inset-bottom));
+      padding-inline: max(0.6875rem, env(safe-area-inset-left)) 0.6875rem;
       border-bottom: 0;
       border-right: var(--pico-border-width) solid var(--pico-card-border-color);
       overflow-y: auto;
@@ -408,14 +421,16 @@
       z-index: 10;
       display: flex;
       justify-content: flex-end;
-      padding: 0.5rem 1.125rem;
+      padding-block: calc(0.5rem + env(safe-area-inset-top)) 0.5rem;
+      padding-inline: 1.125rem max(1.125rem, env(safe-area-inset-right));
       border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
       background: color-mix(in srgb, var(--ctp-mantle) 88%, transparent);
       backdrop-filter: blur(12px);
     }
 
     main {
-      padding: 0.8125rem 1.125rem 2rem;
+      padding-block: 0.8125rem calc(2rem + env(safe-area-inset-bottom));
+      padding-inline: 1.125rem max(1.125rem, env(safe-area-inset-right));
     }
   }
 </style>

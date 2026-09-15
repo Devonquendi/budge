@@ -320,17 +320,27 @@
     transition: background-color 200ms ease;
   }
 
-  .tools .tool:hover:not(:disabled),
   .tools .tool:focus-visible:not(:disabled) {
     --fill: var(--ctp-text);
+  }
+
+  @media (hover: hover) {
+    .tools .tool:hover:not(:disabled) {
+      --fill: var(--ctp-text);
+    }
   }
 
   /* Grey until you're on it, then red: this one deletes the connection. Mixing
      toward the text colour deepens the red in the light theme and lightens it
      in the dark one, which is the direction the palette's own hovers go. */
-  .tools .tool.danger:hover:not(:disabled),
   .tools .tool.danger:focus-visible:not(:disabled) {
     --fill: color-mix(in srgb, var(--ctp-red) 75%, var(--ctp-text));
+  }
+
+  @media (hover: hover) {
+    .tools .tool.danger:hover:not(:disabled) {
+      --fill: color-mix(in srgb, var(--ctp-red) 75%, var(--ctp-text));
+    }
   }
 
   .tools .tool:disabled {

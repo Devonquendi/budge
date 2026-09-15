@@ -48,7 +48,9 @@
     display: grid;
     place-items: center;
     min-height: 100dvh;
-    padding: 1.5rem max(1rem, env(safe-area-inset-left)) 3rem
+    padding-block: calc(1.5rem + env(safe-area-inset-top))
+      calc(3rem + env(safe-area-inset-bottom));
+    padding-inline: max(1rem, env(safe-area-inset-left))
       max(1rem, env(safe-area-inset-right));
     background: var(--ctp-mantle);
   }
