@@ -1,5 +1,5 @@
 /*
- * Catppuccin Latte and Mocha, remapped onto Pico's tokens.
+ * Budge's brand palette, remapped onto Pico's tokens.
  *
  * Pico styles the plain elements (buttons, inputs, tables, <article> cards),
  * so the job here is theming it rather than restyling it. Overriding Pico's own
@@ -7,31 +7,36 @@
  * supported way in. Components with no Pico equivalent (the sidebar, the
  * account list, the ledger) carry their own scoped styles and read the --ctp-*
  * values directly.
+ *
+ * Neutrals are one warm hue at fixed chroma; accents share a lightness and
+ * chroma per theme, with hue as the only variable. --ctp-blue carries the
+ * brand green rather than blue (kept for the Pico bindings that still read
+ * it); --ctp-mauve is the support accent.
  */
 
 :root {
   color-scheme: light;
 
-  --ctp-base: #eff1f5;
-  --ctp-mantle: #e6e9ef;
-  --ctp-crust: #dce0e8;
-  --ctp-surface0: #ccd0da;
-  --ctp-surface1: #bcc0cc;
-  --ctp-text: #4c4f69;
-  --ctp-subtext0: #6c6f85;
-  --ctp-overlay0: #9ca0b0;
-  --ctp-blue: #1e66f5;
-  --ctp-blue-hover: #0b57e3;
-  --ctp-on-blue: #eff1f5;
-  --ctp-green: #40a02b;
-  --ctp-red: #d20f39;
-  --ctp-mauve: #8839ef;
-  --ctp-peach: #fe640b;
-  --ctp-yellow: #df8e1d;
-  --ctp-sky: #04a5e5;
-  --ctp-pink: #ea76cb;
-  --ctp-lavender: #7287fd;
-  --ctp-teal: #179299;
+  --ctp-base: #fdfcf9;
+  --ctp-mantle: #f6f4f0;
+  --ctp-crust: #efede7;
+  --ctp-surface0: #e0ded7;
+  --ctp-surface1: #cac7bf;
+  --ctp-text: #363329;
+  --ctp-subtext0: #6c6960;
+  --ctp-overlay0: #9b9890;
+  --ctp-blue: #0f8b4b;
+  --ctp-blue-hover: #00793a;
+  --ctp-on-blue: #fdfcf9;
+  --ctp-green: #0f8b4b;
+  --ctp-red: #c73335;
+  --ctp-mauve: #7e60bc;
+  --ctp-peach: #b15900;
+  --ctp-yellow: #9a6b00;
+  --ctp-sky: #0081b6;
+  --ctp-pink: #ac4e87;
+  --ctp-lavender: #5e6bc5;
+  --ctp-teal: #008d7f;
 }
 
 /* With no explicit choice stored, follow the system. */
@@ -39,26 +44,26 @@
   :root:not([data-theme='light']) {
     color-scheme: dark;
 
-    --ctp-base: #1e1e2e;
-    --ctp-mantle: #181825;
-    --ctp-crust: #11111b;
-    --ctp-surface0: #313244;
-    --ctp-surface1: #45475a;
-    --ctp-text: #cdd6f4;
-    --ctp-subtext0: #a6adc8;
-    --ctp-overlay0: #6c7086;
-    --ctp-blue: #89b4fa;
-    --ctp-blue-hover: #a3c6fb;
-    --ctp-on-blue: #1e1e2e;
-    --ctp-green: #a6e3a1;
-    --ctp-red: #f38ba8;
-    --ctp-mauve: #cba6f7;
-    --ctp-peach: #fab387;
-    --ctp-yellow: #f9e2af;
-    --ctp-sky: #89dceb;
-    --ctp-pink: #f5c2e7;
-    --ctp-lavender: #b4befe;
-    --ctp-teal: #94e2d5;
+    --ctp-base: #26241e;
+    --ctp-mantle: #1c1a14;
+    --ctp-crust: #12100a;
+    --ctp-surface0: #38352d;
+    --ctp-surface1: #4b4840;
+    --ctp-text: #ebe8e1;
+    --ctp-subtext0: #b9b7b0;
+    --ctp-overlay0: #838078;
+    --ctp-blue: #84d39c;
+    --ctp-blue-hover: #9de5b2;
+    --ctp-on-blue: #1c1a14;
+    --ctp-green: #84d39c;
+    --ctp-red: #ff9798;
+    --ctp-mauve: #c5affc;
+    --ctp-peach: #f5ab77;
+    --ctp-yellow: #deb866;
+    --ctp-sky: #6bcbf7;
+    --ctp-pink: #f1a1ce;
+    --ctp-lavender: #a9b8ff;
+    --ctp-teal: #5cd5c7;
   }
 }
 
@@ -66,26 +71,26 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --ctp-base: #1e1e2e;
-  --ctp-mantle: #181825;
-  --ctp-crust: #11111b;
-  --ctp-surface0: #313244;
-  --ctp-surface1: #45475a;
-  --ctp-text: #cdd6f4;
-  --ctp-subtext0: #a6adc8;
-  --ctp-overlay0: #6c7086;
-  --ctp-blue: #89b4fa;
-  --ctp-blue-hover: #a3c6fb;
-  --ctp-on-blue: #1e1e2e;
-  --ctp-green: #a6e3a1;
-  --ctp-red: #f38ba8;
-  --ctp-mauve: #cba6f7;
-  --ctp-peach: #fab387;
-  --ctp-yellow: #f9e2af;
-  --ctp-sky: #89dceb;
-  --ctp-pink: #f5c2e7;
-  --ctp-lavender: #b4befe;
-  --ctp-teal: #94e2d5;
+  --ctp-base: #26241e;
+  --ctp-mantle: #1c1a14;
+  --ctp-crust: #12100a;
+  --ctp-surface0: #38352d;
+  --ctp-surface1: #4b4840;
+  --ctp-text: #ebe8e1;
+  --ctp-subtext0: #b9b7b0;
+  --ctp-overlay0: #838078;
+  --ctp-blue: #84d39c;
+  --ctp-blue-hover: #9de5b2;
+  --ctp-on-blue: #1c1a14;
+  --ctp-green: #84d39c;
+  --ctp-red: #ff9798;
+  --ctp-mauve: #c5affc;
+  --ctp-peach: #f5ab77;
+  --ctp-yellow: #deb866;
+  --ctp-sky: #6bcbf7;
+  --ctp-pink: #f1a1ce;
+  --ctp-lavender: #a9b8ff;
+  --ctp-teal: #5cd5c7;
 }
 
 /*
@@ -97,8 +102,8 @@
   --ctp-divider: color-mix(in srgb, var(--ctp-surface0) 55%, var(--ctp-base));
   --ctp-recessed: color-mix(in srgb, var(--ctp-mantle) 60%, var(--ctp-base));
 
-  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-sans: 'Onest', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /*
    * The type scale, in one place because the density is the whole point of the

@@ -7,11 +7,8 @@
 <span class="mark" style:--size={size}>
   <svg viewBox="0 0 32 32" aria-hidden="true">
     <rect class="tile" width="32" height="32" rx="8" />
-    <path
-      class="letter"
-      fill-rule="evenodd"
-      d="M10.4 4.4a2.3 2.3 0 0 0-2.3 2.3v12.9a8.4 8.4 0 1 0 4.6-7.5V6.7a2.3 2.3 0 0 0-2.3-2.3Zm6.1 11.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"
-    />
+    <rect class="letter" x="7.1" y="4.6" width="4.4" height="22.8" rx="2.2" />
+    <circle class="letter" cx="19.9" cy="20.4" r="6.6" />
   </svg>
   <span class="name">budge</span>
 </span>
@@ -33,9 +30,6 @@
     fill: var(--ctp-blue);
   }
 
-  /* One outline with the counter punched out of it, rather than a stem drawn
-     beside a circle: in a b the stem is the bowl's left wall, and two shapes
-     that merely touch read as two shapes. */
   .letter {
     fill: var(--ctp-on-blue);
   }
