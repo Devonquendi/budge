@@ -203,16 +203,22 @@
     display: flex;
   }
 
+  /* 2.75rem (44px): the icon stays its own size below, but a touch target
+     under that is a mis-tap waiting to happen. */
   .hamburger {
     display: grid;
     place-items: center;
     flex: none;
-    width: 1.875rem;
-    height: 1.875rem;
+    width: 2.75rem;
+    height: 2.75rem;
     padding: 0;
     border: 0;
     border-radius: 0.4375rem;
     background: transparent;
+  }
+
+  .hamburger:active {
+    background: var(--ctp-surface1);
   }
 
   @media (hover: hover) {
@@ -221,11 +227,14 @@
     }
   }
 
+  /* --ctp-text, not --pico-color: inside a button Pico rebinds --pico-color
+     to --pico-primary-inverse, which made this stroke near-invisible against
+     the background in both themes. */
   .hamburger svg {
     width: 1.125rem;
     height: 1.125rem;
     fill: none;
-    stroke: var(--pico-color);
+    stroke: var(--ctp-text);
     stroke-width: 1.8;
     stroke-linecap: round;
   }
@@ -235,7 +244,10 @@
     align-items: center;
     gap: 0.5rem;
     white-space: nowrap;
-    padding: 0.375rem 0.5rem;
+    /* Taller than the desktop sidebar wants (reset back down there): full
+       width already makes these easy to hit sideways, but each one was
+       barely 30px tall, below a comfortable tap height. */
+    padding: 0.8125rem 0.5rem;
     font-size: var(--text-label);
     font-weight: 500;
     line-height: 1.4;
@@ -245,6 +257,11 @@
   }
 
   nav :global(a[aria-current='page']) {
+    color: var(--pico-color);
+    background: var(--ctp-surface0);
+  }
+
+  nav :global(a:active) {
     color: var(--pico-color);
     background: var(--ctp-surface0);
   }
@@ -409,6 +426,12 @@
     nav {
       display: flex;
       order: 0;
+    }
+
+    /* Back to the sidebar's tighter rhythm: a mouse doesn't need the phone
+       dropdown's taller tap height. */
+    nav :global(a) {
+      padding-block: 0.375rem;
     }
 
     .net {

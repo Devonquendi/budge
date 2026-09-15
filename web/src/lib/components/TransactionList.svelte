@@ -69,8 +69,15 @@
     const { category } = transaction
     if (!category) return 'No category'
     if (category.source !== 'genie') return 'Categorised by Akahu'
-    const confidence = Math.round((category.confidence ?? 0) * 100)
-    return `Genie's guess, ${confidence}% confident`
+    return `Genie's guess, ${confidencePercent(transaction)}% confident`
+  }
+
+  /**
+   * Only meaningful for a guess. Printed on the tag itself, not just in the
+   * title: a title is a hover tooltip, and touch has no hover to reveal it.
+   */
+  function confidencePercent(transaction: Transaction): number {
+    return Math.round((transaction.category?.confidence ?? 0) * 100)
   }
 </script>
 
@@ -99,6 +106,9 @@
           title={categoryHint(transaction)}
         >
           {categoryName(transaction)}
+          {#if transaction.category?.source === 'genie'}
+            <span class="confidence">· {confidencePercent(transaction)}%</span>
+          {/if}
         </span>
       </span>
       <span class="account" title={transaction.account_name}>
@@ -195,6 +205,14 @@
     gap: 0.5rem;
     min-width: 0;
     margin-right: auto;
+    /*
+     * flex-basis 0, not auto: with auto, a long nowrap description gives this
+     * item a huge hypothetical width, and flex-wrap decides line breaks on
+     * that hypothetical size before shrinking is applied. That pushed .amount
+     * onto its own line even though .who had room to shrink into. Basis 0
+     * sidesteps the hypothetical size entirely.
+     */
+    flex: 1 1 0%;
   }
 
   .text {
@@ -238,17 +256,19 @@
   .account {
     display: flex;
     align-items: center;
-    gap: 0.3125rem;
-    min-width: 0;
-    font-size: var(--text-meta);
-    color: var(--pico-muted-color);
+    /* Pinned to the row's right edge, under the amount above it, rather than
+       drifting with the category tag's width. */
+    margin-left: auto;
     --mark-size: 1.375rem;
   }
 
+  /*
+   * The mark carries the account; the name (still on the span's title) only
+   * pushed the row's other content around, at every width, since it varies
+   * far more in length than a date or a category ever does.
+   */
   .account .label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .tag {
@@ -262,6 +282,13 @@
     color: var(--accent);
   }
 
+  /* Genie's confidence, printed rather than left in the title: a dashed
+     border alone doesn't say what it means, and touch has no hover to ask. */
+  .confidence {
+    font-weight: 400;
+    opacity: 0.75;
+  }
+
   /* Genie matched on the description alone, so it's a guess, not a fact. */
   .guess {
     border: var(--pico-border-width) dashed
@@ -270,6 +297,7 @@
   }
 
   .amount {
+    flex: none;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -370,12 +398,8 @@
       width: 4rem;
       order: 4;
       justify-content: center;
-    }
-
-    /* Once there are columns the mark is the account and the name is on hover.
-       It stays written out on a phone, where there is no hover to reveal it. */
-    .account .label {
-      display: none;
+      /* Its own column here, not the row's trailing edge. */
+      margin-left: 0;
     }
 
     .amount {

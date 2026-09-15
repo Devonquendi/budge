@@ -94,6 +94,8 @@ type Row = {
   merchant: string | null
   category: string | null
   group: string | null
+  /** Set only for a Genie guess, rather than an Akahu-certain category. */
+  guessConfidence?: number
 }
 
 const ROWS: Row[] = [
@@ -216,6 +218,7 @@ const ROWS: Row[] = [
     merchant: null,
     category: 'Entertainment',
     group: 'Lifestyle',
+    guessConfidence: 0.68,
   },
   {
     id: 'trn_13',
@@ -236,6 +239,16 @@ const ROWS: Row[] = [
     merchant: null,
     category: 'Income',
     group: 'Income',
+  },
+  {
+    id: 'trn_15',
+    account: 'acc_visa',
+    date: '2026-03-04T21:41:00Z',
+    description: 'MANUKA CAFE & RESTAU 524651******4438 14453 12-14:21-453',
+    amount: '-24.00',
+    merchant: 'Manuka Cafe & Restaurant',
+    category: 'Cafes & restaurants',
+    group: 'Lifestyle',
   },
 ]
 
@@ -267,7 +280,13 @@ const HISTORY: History = {
       ? { name: row.merchant, id: null, logo: null, website: null }
       : null,
     category: row.category
-      ? { name: row.category, id: null, group: row.group, source: 'akahu', confidence: 1 }
+      ? {
+          name: row.category,
+          id: null,
+          group: row.group,
+          source: row.guessConfidence === undefined ? 'akahu' : 'genie',
+          confidence: row.guessConfidence ?? 1,
+        }
       : null,
   })),
 }
