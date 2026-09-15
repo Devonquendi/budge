@@ -3,11 +3,12 @@
 Off in production and on everywhere else, decided by VERCEL_ENV. The personas
 are a fixed roster on @example.com, which RFC 2606 reserves and no one can ever
 receive mail at, and seeding is idempotent: signing in as the same persona twice
-adds nothing. None of them has Akahu credentials, so no demo session can reach
-a real bank.
+adds nothing. None of them has Akahu credentials or a password anyone knows, so
+no demo session can reach a real bank and no demo row is a way into the app.
 """
 
 import os
+import secrets
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -20,7 +21,17 @@ from budge.db.models import Bill, ChargeRequest, RequestEvent, User
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
-DEMO_PASSWORD = "demo"  # noqa: S105. These accounts hold nothing worth taking.
+
+def _unusable_password() -> str:
+    """A hash of something nobody knows, including us.
+
+    Demo rows can end up in the same database as real ones, where /auth/login
+    still serves them. A password they can be signed in with would be a way
+    into those accounts that outlives this endpoint being switched off, so
+    there isn't one: the only door is /demo/session, and that is shut in
+    production.
+    """
+    return password_hash.hash(secrets.token_urlsafe(32))
 
 
 class Persona(BaseModel):
@@ -145,7 +156,7 @@ async def _seed(session: SessionDep) -> dict[str, User]:
             user = User(
                 email=persona.email,
                 name=persona.name,
-                password_hash=password_hash.hash(DEMO_PASSWORD),
+                password_hash=_unusable_password(),
             )
             session.add(user)
             existing[persona.email] = user
