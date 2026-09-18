@@ -76,6 +76,9 @@ class RequestView(BaseModel):
     payee_name: str | None
     from_name: str
     from_email: str
+    # The transaction this was split from, when it came from the feed rather
+    # than a typed-in amount. Akahu's id, so the ledger can point back at it.
+    source_transaction_id: str | None
     state: str
     created_at: datetime
     events: list[Event]
@@ -126,6 +129,7 @@ def _view(
         bill_total_cents=bill.total_cents,
         payee_email=request.payee_email,
         payee_name=request.payee_name,
+        source_transaction_id=bill.source_transaction_id,
         from_name=creator.name or creator.email,
         from_email=creator.email,
         # The whole reason the event log exists: state is a function of it.

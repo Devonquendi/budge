@@ -1,5 +1,7 @@
 <script lang="ts">
   import TransactionList from '../lib/components/TransactionList.svelte'
+  import { navigate } from '../lib/router.svelte'
+  import { stage } from '../lib/split.svelte'
   import { formatCents, toCents } from '../lib/money'
   import { prefs } from '../lib/prefs.svelte'
   import { RANGES, getWorkspace } from '../lib/workspace.svelte'
@@ -234,6 +236,10 @@
   {:else}
     <div class={{ stale: workspace.loadingTransactions }}>
       <TransactionList
+        onsplit={(transaction) => {
+          stage(transaction)
+          navigate('/requests')
+        }}
         transactions={visible}
         accounts={workspace.dashboardAccounts}
         grouped={prefs().groupByDay}

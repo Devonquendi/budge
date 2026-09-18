@@ -10,6 +10,7 @@
     transactions,
     accounts = [],
     grouped = false,
+    onsplit,
     footer,
   }: {
     transactions: Transaction[]
@@ -17,6 +18,8 @@
     accounts?: Account[]
     /** Break the rows into a heading per day, the way a bank statement reads. */
     grouped?: boolean
+    /** Offers Split on money that went out. Left off, no row grows a button. */
+    onsplit?: (transaction: Transaction) => void
     footer?: Snippet
   } = $props()
 
@@ -126,6 +129,19 @@
     <span class={['amount', 'numeric', { incoming: cents > 0 }]}>
       {cents > 0 ? '+' : ''}{format(transaction.amount, transaction.currency)}
     </span>
+
+    <span class="act">
+      <!-- Money in is nobody's share, so only spending offers this. -->
+      {#if onsplit && cents < 0}
+        <button
+          type="button"
+          class="secondary outline"
+          onclick={() => onsplit(transaction)}
+        >
+          Split
+        </button>
+      {/if}
+    </span>
   </li>
 {/snippet}
 
@@ -150,6 +166,7 @@
         <span class="account">Account</span>
       </span>
       <span class="amount">Amount</span>
+      <span class="act"></span>
     </div>
     <ul>
       {#each transactions as transaction (transaction.id)}
@@ -302,6 +319,19 @@
     white-space: nowrap;
   }
 
+  .act {
+    flex: none;
+    /* Holds the column open whether or not this row has a button, so the
+       amounts stay in line down the page. */
+    min-width: 3.5rem;
+    text-align: right;
+  }
+
+  .act button {
+    padding: 0.125rem 0.5rem;
+    font-size: var(--text-meta);
+  }
+
   .incoming {
     color: var(--ctp-green);
   }
@@ -407,6 +437,12 @@
       width: 5.375rem;
       text-align: right;
       order: 5;
+    }
+
+    /* The row is ordered cell by cell here, so without one of its own this
+       would sit at 0 and land ahead of the date. */
+    .act {
+      order: 6;
     }
   }
 </style>

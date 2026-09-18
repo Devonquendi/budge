@@ -4,6 +4,7 @@
   import RequestRow from '../lib/components/RequestRow.svelte'
   import { formatCents } from '../lib/money'
   import { shareUrl } from '../lib/requests'
+  import { take, type Staged } from '../lib/split.svelte'
 
   let inbox = $state.raw<Inbox | null>(null)
   let error = $state('')
@@ -14,6 +15,10 @@
   let people = $state('')
   let includeMe = $state(true)
   let justCreated = $state.raw<ChargeRequest[]>([])
+
+  // Set when you arrived here from a transaction rather than an empty form. The
+  // id rides along to the bill, so a request can say what spend it came from.
+  let fromSpend = $state.raw<Staged | null>(null)
 
   // One address per line or comma, so a flat can be pasted in whole.
   const payees = $derived(
@@ -50,10 +55,12 @@
         amount,
         payees.map((email) => ({ email })),
         includeMe,
+        fromSpend?.transactionId,
       )
       title = ''
       amount = ''
       people = ''
+      fromSpend = null
       await load()
     } catch (failure) {
       error = errorMessage(failure)
@@ -77,6 +84,16 @@
     busy = false
   }
 
+  /** Fills the form from a transaction, when the ledger sent one over. */
+  function adopt() {
+    const staged = take()
+    if (!staged) return
+    fromSpend = staged
+    title = staged.title
+    amount = staged.amount
+  }
+
+  adopt()
   load()
 </script>
 
@@ -105,6 +122,27 @@
   </div>
 
   <Panel title="Ask for money" padded>
+    {#if fromSpend}
+      <p class="from">
+        Splitting <strong>{fromSpend.title}</strong> from
+        {new Date(fromSpend.date).toLocaleDateString('en-NZ', {
+          day: 'numeric',
+          month: 'short',
+        })}.
+        <button
+          type="button"
+          class="secondary outline"
+          onclick={() => {
+            fromSpend = null
+            title = ''
+            amount = ''
+          }}
+        >
+          Start fresh
+        </button>
+      </p>
+    {/if}
+
     <form onsubmit={submit}>
       <label>
         <span>What for</span>
@@ -258,6 +296,22 @@
 
   .preview {
     margin: 0;
+    font-size: var(--text-meta);
+  }
+
+  .from {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.625rem;
+    border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
+    font-size: var(--text-meta);
+  }
+
+  .from button {
+    padding: 0.125rem 0.5rem;
     font-size: var(--text-meta);
   }
 
