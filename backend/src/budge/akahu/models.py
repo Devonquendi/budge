@@ -67,3 +67,7 @@ class Transaction(BaseModel):
     type: str
     merchant: Merchant | None = None
     category: Category | None = None
+    # You moving your own money between your own accounts. Both legs are marked,
+    # so neither counts as spending or as income. Worked out over the whole
+    # window by charges.feed.find_internal_transfers, never from one row.
+    internal: bool = False

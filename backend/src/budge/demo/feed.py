@@ -13,8 +13,10 @@ time rather than a new past on every page load.
 
 import hashlib
 import random
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import NamedTuple
 
 from budge.akahu.models import Account, Category, Merchant, Transaction
 
@@ -251,6 +253,40 @@ def transactions_for(
     return keep
 
 
+class Settlement(NamedTuple):
+    """Money a persona says they have sent, as it would land in the feed."""
+
+    amount_cents: int
+    payer_name: str
+
+
+def settlement_credits(
+    email: str, settlements: Sequence[Settlement]
+) -> list[Transaction]:
+    """Credits for what people have claimed to pay, so a match is findable.
+
+    This is what makes the demo's reconciliation real rather than staged: a
+    persona marks a request paid, the money turns up in the feed of whoever is
+    owed, and the matcher finds it the same way it would find a real one.
+    """
+    everyday = accounts_for(email)[0]
+    today = datetime.now(UTC).replace(hour=11, minute=0, second=0, microsecond=0)
+    return [
+        _transaction(
+            10_000 + index,
+            everyday,
+            BANKS[0][0],
+            today - timedelta(days=index + 1),
+            # How a person-to-person credit actually reads on a statement,
+            # which is also what lets the matcher break a tie on the name.
+            settlement.payer_name.upper(),
+            settlement.amount_cents,
+            kind="CREDIT",
+        )
+        for index, settlement in enumerate(settlements)
+    ]
+
+
 class FixtureClient:
     """Stands in for AkahuClient, with the same two methods and no network.
 
@@ -258,8 +294,9 @@ class FixtureClient:
     demo session ends up one missing override away from a real HTTP call.
     """
 
-    def __init__(self, email: str) -> None:
+    def __init__(self, email: str, settlements: Sequence[Settlement] = ()) -> None:
         self._email = email
+        self._settlements = settlements
 
     async def get_accounts(self) -> list[Account]:
         return accounts_for(self._email)
@@ -269,6 +306,8 @@ class FixtureClient:
     ) -> list[Transaction]:
         wanted = {account.id for account in accounts}
         every = transactions_for(self._email, accounts_for(self._email), start, end)
+        every += settlement_credits(self._email, self._settlements)
+        every.sort(key=lambda transaction: transaction.date, reverse=True)
         return [
             transaction for transaction in every if transaction.account_id in wanted
         ]

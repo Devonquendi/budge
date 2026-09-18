@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from budge import credentials, demo
+from budge import credentials, demo, reconcile
 from budge.akahu import AkahuClient, genie
 from budge.akahu.models import Transaction
 from budge.auth import CurrentUserId, SessionDep
@@ -54,4 +54,11 @@ async def get_transactions(
     transactions = await client.get_transactions(
         accounts, start=end - timedelta(days=days), end=end
     )
+
+    # Marked over the whole window rather than per row: a transfer is only
+    # recognisable as the pair of legs it is, and the pair has to be in view.
+    internal = reconcile.internal_ids(transactions)
+    for transaction in transactions:
+        transaction.internal = transaction.id in internal
+
     return History(transactions=await genie.classify(transactions), days=days)

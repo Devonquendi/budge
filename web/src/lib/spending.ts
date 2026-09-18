@@ -27,6 +27,11 @@ export function monthlySpend(
   for (const transaction of transactions) {
     if (transaction.currency !== currency) continue
 
+    // Moving your own money between your own accounts is not spending, and
+    // counting it is what made a transfer to savings the biggest category of
+    // the month.
+    if (transaction.internal) continue
+
     // Money in isn't spending, and neither is a zero.
     const cents = toCents(transaction.amount)
     if (cents >= 0) continue
