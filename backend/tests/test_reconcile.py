@@ -60,7 +60,7 @@ async def test_a_credit_matching_one_request_is_offered(
     await ask(client, "60", "neve@example.com")
 
     async with db() as session:
-        found = await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])
+        found = (await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])).asked
     assert found == 1
 
     suggestions = (await client.get("/api/requests/suggestions")).json()
@@ -119,7 +119,7 @@ async def test_a_dismissed_credit_is_not_offered_again(
 
     async with db() as session:
         again = await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])
-    assert again == 0
+    assert again.asked == 0 and again.settled == 0
     assert (await client.get("/api/requests/suggestions")).json() == []
 
 
@@ -131,7 +131,9 @@ async def test_an_ambiguous_amount_is_left_to_a_human(
     await ask(client, "60", "neve@example.com", "tipene@example.com")
 
     async with db() as session:
-        found = await reconcile.scan(session, 1, [credit("30.00", "ONLINE PAYMENT")])
+        found = (
+            await reconcile.scan(session, 1, [credit("30.00", "ONLINE PAYMENT")])
+        ).asked
 
     assert found == 0, "guessing here would tell someone they had paid when they hadn't"
 
@@ -143,7 +145,7 @@ async def test_a_name_in_the_description_breaks_the_tie(
     await ask(client, "60", "neve@example.com", "tipene@example.com")
 
     async with db() as session:
-        found = await reconcile.scan(session, 1, [credit("30.00", "FROM NEVE")])
+        found = (await reconcile.scan(session, 1, [credit("30.00", "FROM NEVE")])).asked
 
     assert found == 1
     assert (await client.get("/api/requests/suggestions")).json()[0]["request"][
@@ -158,7 +160,7 @@ async def test_money_going_out_is_never_a_payment_to_you(
     await ask(client, "60", "neve@example.com")
 
     async with db() as session:
-        found = await reconcile.scan(session, 1, [credit("-60.00", "NEVE C")])
+        found = (await reconcile.scan(session, 1, [credit("-60.00", "NEVE C")])).asked
 
     assert found == 0
 
@@ -171,7 +173,7 @@ async def test_a_settled_request_is_not_matched_again(
     await client.post(f"/api/requests/{requests[0]['id']}/confirm", json={})
 
     async with db() as session:
-        found = await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])
+        found = (await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])).asked
 
     assert found == 0
 
@@ -189,7 +191,7 @@ async def test_a_transfer_between_your_own_accounts_is_not_a_payment(
     incoming.account_id = "acc_2"
 
     async with db() as session:
-        found = await reconcile.scan(session, 1, [out, incoming])
+        found = (await reconcile.scan(session, 1, [out, incoming])).asked
 
     assert found == 0
 
@@ -208,7 +210,7 @@ async def test_scanning_without_a_bank_is_not_an_error(client: AsyncClient) -> N
     response = await client.post("/api/requests/suggestions/scan")
 
     assert response.status_code == 200, response.text
-    assert response.json() == {"found": 0}
+    assert response.json() == {"settled": 0, "asked": 0}
 
 
 async def test_nobody_answers_someone_elses_suggestion(
@@ -237,28 +239,31 @@ async def test_the_demo_has_something_real_to_reconcile(client: AsyncClient) -> 
 
     scanned = await client.post("/api/requests/suggestions/scan")
     assert scanned.status_code == 200, scanned.text
-    assert scanned.json()["found"] >= 1
 
-    suggestions = (await client.get("/api/requests/suggestions")).json()
-    match = next(
-        s for s in suggestions if s["request"]["payee_email"] == "neve@example.com"
+    # Neve said she paid and the money is there, so nobody is asked about it.
+    assert scanned.json()["settled"] >= 1
+
+    inbox = (await client.get("/api/requests")).json()
+    neve = next(
+        r
+        for r in inbox["sent"]
+        if r["payee_email"] == "neve@example.com" and r["title"] == "Power, August"
     )
-    assert match["request"]["state"] == "marked_paid"
-    assert match["amount_cents"] == match["request"]["amount_cents"]
-
-    settled = await client.post(f"/api/requests/suggestions/{match['id']}/accept")
-    assert settled.json()["state"] == "confirmed"
+    assert neve["state"] == "confirmed"
+    assert any(
+        e["type"] == "confirmed" and e["actor"] == "creator" for e in neve["events"]
+    )
 
 
 async def test_scanning_the_demo_twice_offers_nothing_new(
     client: AsyncClient,
 ) -> None:
     await client.post("/api/demo/session", json={"email": "ara@example.com"})
-    first = (await client.post("/api/requests/suggestions/scan")).json()["found"]
-    second = (await client.post("/api/requests/suggestions/scan")).json()["found"]
+    first = (await client.post("/api/requests/suggestions/scan")).json()
+    second = (await client.post("/api/requests/suggestions/scan")).json()
 
-    assert first >= 1
-    assert second == 0
+    assert first["settled"] + first["asked"] >= 1
+    assert second == {"settled": 0, "asked": 0}
 
 
 async def test_a_personas_own_transfer_to_savings_is_not_spending(
@@ -278,3 +283,93 @@ async def test_a_personas_own_transfer_to_savings_is_not_spending(
     # And a credit from a flatmate is emphatically not internal.
     paid = [t for t in history["transactions"] if t["description"] == "NEVE CALLAGHAN"]
     assert paid and not any(t["internal"] for t in paid)
+
+
+async def test_a_claimed_payment_settles_itself(
+    client: AsyncClient, db: Sessions
+) -> None:
+    """Two independent signals: they said they paid, and the money is there."""
+    await sign_up(client)
+    requests = await ask(client, "60", "neve@example.com")
+    await client.post(f"/api/requests/r/{requests[0]['token']}/mark-paid", json={})
+
+    async with db() as session:
+        scan = await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])
+
+    assert scan == (1, 0), "settled without asking"
+    assert (await client.get("/api/requests/suggestions")).json() == []
+    inbox = (await client.get("/api/requests")).json()
+    assert inbox["sent"][0]["state"] == "confirmed"
+
+
+async def test_an_unclaimed_credit_is_only_a_question(
+    client: AsyncClient, db: Sessions
+) -> None:
+    """One signal is not enough. Somebody else may owe you sixty dollars."""
+    await sign_up(client)
+    await ask(client, "60", "neve@example.com")
+
+    async with db() as session:
+        scan = await reconcile.scan(session, 1, [credit("60.00", "NEVE C")])
+
+    assert scan == (0, 1), "asked rather than settled"
+    assert len((await client.get("/api/requests/suggestions")).json()) == 1
+    assert (await client.get("/api/requests")).json()["sent"][0]["state"] == "open"
+
+
+async def test_the_reference_coming_back_is_the_second_signal(
+    client: AsyncClient, db: Sessions
+) -> None:
+    """A bank carrying the reference is the payer telling you, via the bank."""
+    await sign_up(client)
+    await client.post(
+        "/api/requests",
+        json={
+            "title": "Flat dinner at the Thai place",
+            "amount": "60",
+            "payees": [{"email": "neve@example.com", "name": "Neve"}],
+            "include_me": False,
+        },
+    )
+
+    async with db() as session:
+        scan = await reconcile.scan(session, 1, [credit("60.00", "TFR Flat dinner")])
+
+    assert scan == (1, 0)
+    assert (await client.get("/api/requests")).json()["sent"][0]["state"] == "confirmed"
+
+
+async def test_a_short_reference_is_not_trusted_on_its_own(
+    client: AsyncClient, db: Sessions
+) -> None:
+    """ "Rent" would fire on any credit that mentions rent at all."""
+    await sign_up(client)
+    await client.post(
+        "/api/requests",
+        json={
+            "title": "Rent",
+            "amount": "60",
+            "payees": [{"email": "neve@example.com", "name": "Neve"}],
+            "include_me": False,
+        },
+    )
+
+    async with db() as session:
+        scan = await reconcile.scan(session, 1, [credit("60.00", "RENT FROM SOMEONE")])
+
+    assert scan == (0, 1), "asked, because Rent is too short to mean anything"
+
+
+async def test_an_ambiguous_credit_never_settles_itself(
+    client: AsyncClient, db: Sessions
+) -> None:
+    """Both claimed they paid, both owe the same, and the credit names neither."""
+    await sign_up(client)
+    requests = await ask(client, "60", "neve@example.com", "tipene@example.com")
+    for request in requests:
+        await client.post(f"/api/requests/r/{request['token']}/mark-paid", json={})
+
+    async with db() as session:
+        scan = await reconcile.scan(session, 1, [credit("30.00", "ONLINE PAYMENT")])
+
+    assert scan == (0, 0), "match_credit refuses first, so nothing reaches the rule"

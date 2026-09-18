@@ -24,6 +24,11 @@
   // id rides along to the bill, so a request can say what spend it came from.
   let fromSpend = $state.raw<Staged | null>(null)
 
+  // Closed by default. Most visits here are to see where money has got to, not
+  // to ask for more, and a form nobody is using should not push the answer off
+  // the screen. Splitting from the ledger is the usual way in anyway.
+  let asking = $state(false)
+
   const share = $derived(
     amount && chosen.length
       ? Math.round(
@@ -90,6 +95,8 @@
     fromSpend = staged
     title = staged.title
     amount = staged.amount
+    // Arriving from a transaction is asking, so do not make them open it.
+    asking = true
   }
 
   adopt()
@@ -121,59 +128,71 @@
   </div>
 
   <Panel title="Ask for money" padded>
-    {#if fromSpend}
-      <p class="from">
-        Splitting <strong>{fromSpend.title}</strong> from
-        {new Date(fromSpend.date).toLocaleDateString('en-NZ', {
-          day: 'numeric',
-          month: 'short',
-        })}.
-        <button
-          type="button"
-          class="secondary outline"
-          onclick={() => {
-            fromSpend = null
-            title = ''
-            amount = ''
-          }}
-        >
-          Start fresh
-        </button>
-      </p>
-    {/if}
-
-    <form onsubmit={submit}>
-      <label>
-        <span>What for</span>
-        <input bind:value={title} placeholder="Power, August" required maxlength="80" />
-      </label>
-      <label>
-        <span>Total</span>
-        <input bind:value={amount} placeholder="$186.40" required inputmode="decimal" />
-      </label>
-      <div class="wide">
-        <span class="field">Who owes a share</span>
-        <PeoplePicker bind:chosen />
-      </div>
-      <label class="check">
-        <input type="checkbox" bind:checked={includeMe} />
-        <span>Count me as one of the shares</span>
-      </label>
-
-      <p class="preview muted">
-        {#if share > 0}
-          {chosen.length}
-          {chosen.length === 1 ? 'person' : 'people'} at about {formatCents(share, 'NZD')} each.
-          Any odd cent stays with you.
-        {:else}
-          Split to the exact cent, with the remainder rounded onto your own share.
-        {/if}
-      </p>
-
-      <button type="submit" disabled={busy || !chosen.length}>
-        {busy ? 'Sending…' : 'Send requests'}
+    {#snippet action()}
+      <button type="button" class="secondary outline" onclick={() => (asking = !asking)}>
+        {asking ? 'Close' : 'New request'}
       </button>
-    </form>
+    {/snippet}
+
+    {#if !asking}
+      <p class="muted shut">Split a transaction from the ledger, or start one here.</p>
+    {:else}
+      {#if fromSpend}
+        <p class="from">
+          Splitting <strong>{fromSpend.title}</strong> from
+          {new Date(fromSpend.date).toLocaleDateString('en-NZ', {
+            day: 'numeric',
+            month: 'short',
+          })}.
+          <button
+            type="button"
+            class="secondary outline"
+            onclick={() => {
+              fromSpend = null
+              title = ''
+              amount = ''
+            }}
+          >
+            Start fresh
+          </button>
+        </p>
+      {/if}
+
+      <form onsubmit={submit}>
+        <label>
+          <span>What for</span>
+          <input bind:value={title} placeholder="Power, August" required maxlength="80" />
+        </label>
+        <label>
+          <span>Total</span>
+          <input bind:value={amount} placeholder="$186.40" required inputmode="decimal" />
+        </label>
+        <div class="wide">
+          <span class="field">Who owes a share</span>
+          <PeoplePicker bind:chosen />
+        </div>
+        <label class="check">
+          <input type="checkbox" bind:checked={includeMe} />
+          <span>Count me as one of the shares</span>
+        </label>
+
+        <p class="preview muted">
+          {#if share > 0}
+            {chosen.length}
+            {chosen.length === 1 ? 'person' : 'people'} at about {formatCents(
+              share,
+              'NZD',
+            )} each. Any odd cent stays with you.
+          {:else}
+            Split to the exact cent, with the remainder rounded onto your own share.
+          {/if}
+        </p>
+
+        <button type="submit" disabled={busy || !chosen.length}>
+          {busy ? 'Sending…' : 'Send requests'}
+        </button>
+      </form>
+    {/if}
 
     {#if justCreated.length}
       <div class="fresh">
@@ -334,6 +353,11 @@
     width: auto;
     justify-self: start;
     margin: 0;
+  }
+
+  .shut {
+    margin: 0;
+    font-size: var(--text-meta);
   }
 
   .fresh {

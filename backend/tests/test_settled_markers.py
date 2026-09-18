@@ -121,13 +121,8 @@ async def test_confirming_a_payment_does_not_make_it_vanish(
     history = (await client.get("/api/transactions?days=45")).json()
     assert credits(), "the claim should put money in the feed"
 
-    await client.post("/api/requests/suggestions/scan")
-    suggestion = next(
-        s
-        for s in (await client.get("/api/requests/suggestions")).json()
-        if s["request"]["token"] == open_request["token"]
-    )
-    await client.post(f"/api/requests/suggestions/{suggestion['id']}/accept")
+    # They said they paid and the money is there, so it settles on its own.
+    assert (await client.post("/api/requests/suggestions/scan")).json()["settled"] >= 1
 
     history = (await client.get("/api/transactions?days=45")).json()
     assert credits(), "and it should still be there after it is confirmed"

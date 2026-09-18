@@ -2,15 +2,17 @@
   import { api, errorMessage, type Suggestion } from '../api'
   import { formatCents } from '../money'
 
-  // Money that has arrived and looks like it settles something. Always a
-  // question: the matcher declines to guess when a credit is ambiguous, and
-  // even a confident match is somebody's word about their own money.
+  // Only what the app could not settle on its own. A credit that could only be
+  // one thing closes its request without asking, so anything here is genuinely
+  // uncertain and worth a person's attention.
   let { onanswered }: { onanswered: () => void } = $props()
 
   let items = $state.raw<Suggestion[]>([])
   let busy = $state(0)
   let scanning = $state(false)
   let error = $state('')
+
+  let settledJustNow = $state(0)
 
   async function load() {
     try {
@@ -20,11 +22,25 @@
     }
   }
 
+  /** Reads the feed on the way in, so settling is something that just happens. */
+  async function sweep() {
+    try {
+      const scan = await api.scanForPayments()
+      settledJustNow = scan.settled
+      if (scan.settled) onanswered()
+    } catch {
+      // A bank that will not answer should not stop the page loading.
+    }
+    await load()
+  }
+
   async function scan() {
     scanning = true
     error = ''
     try {
-      await api.scanForPayments()
+      const result = await api.scanForPayments()
+      settledJustNow = result.settled
+      if (result.settled) onanswered()
       await load()
     } catch (failure) {
       error = errorMessage(failure)
@@ -48,13 +64,14 @@
   const dateOf = (when: string) =>
     new Date(when).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })
 
-  load()
+  sweep()
 </script>
 
 {#if items.length}
   <section>
     <p class="eyebrow">
-      Money in that looks like {items.length === 1 ? 'a payment' : 'payments'}
+      {items.length === 1 ? 'One payment' : `${items.length} payments`} we couldn't be sure
+      about
     </p>
 
     {#each items as suggestion (suggestion.id)}
@@ -90,9 +107,15 @@
   </section>
 {:else}
   <p class="quiet muted">
-    Nothing has turned up that matches an open request.
+    {#if settledJustNow}
+      Settled {settledJustNow}
+      {settledJustNow === 1 ? 'request' : 'requests'} from money that arrived. Nothing left
+      to check.
+    {:else}
+      Nothing needs your say-so. Payments that can only be one thing settle themselves.
+    {/if}
     <button type="button" class="link" disabled={scanning} onclick={scan}>
-      {scanning ? 'Checking…' : 'Check my account'}
+      {scanning ? 'Checking…' : 'Check again'}
     </button>
   </p>
   {#if error}<p class="error">{error}</p>{/if}

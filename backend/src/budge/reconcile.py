@@ -7,8 +7,9 @@ somebody they have been paid when they have not is the worst thing this
 application could do, and no amount of matching makes that acceptable.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
+from typing import Any, NamedTuple
 
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -16,7 +17,14 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from budge.akahu.models import Transaction
 from budge.charges.feed import find_internal_transfers, match_credit
 from budge.charges.ledger import derive_state
-from budge.db.models import Bill, ChargeRequest, MatchSuggestion, RequestEvent
+from budge.charges.money import make_reference
+from budge.db.models import (
+    NOTE_MAX,
+    Bill,
+    ChargeRequest,
+    MatchSuggestion,
+    RequestEvent,
+)
 
 # Credits older than this are not worth offering: a request open that long is
 # being chased by other means, and an ancient match reads as noise.
@@ -69,8 +77,10 @@ async def _open_requests(
     for event in sorted(events, key=lambda e: e.id or 0):
         by_request.setdefault(event.request_id, []).append({"type": event.type})
 
+    titles = {bill.id: bill.title for _, bill in rows}
+
     out = []
-    for request, _bill in rows:
+    for request, bill in rows:
         state = derive_state(by_request.get(request.id or 0, []))
         # A confirmed or cancelled request is finished; a declined one is still
         # open as far as the money is concerned, and a credit may yet settle it.
@@ -83,23 +93,53 @@ async def _open_requests(
                     "amount_cents": request.amount_cents,
                     "debtor_name": request.payee_name or request.payee_email,
                     "id": request.id,
+                    # Carried so the decision to settle without asking can be
+                    # made from the same row the match was made from.
+                    "claimed": state == "marked_paid",
+                    "reference": make_reference(titles.get(bill.id, "")),
                 },
             )
         )
     return out
 
 
+class Scan(NamedTuple):
+    """What reading the feed turned up: what settled, and what needs a person."""
+
+    settled: int
+    asked: int
+
+
+def _certain(credit: Mapping[str, Any], request: Mapping[str, Any]) -> bool:
+    """Whether this match is safe to act on without asking.
+
+    The amount already matched, and already matched only this person. This is
+    the second reason, which has to come from somewhere the app did not choose:
+    the payer saying they sent it, or the bank carrying the reference back.
+    """
+    if request["claimed"]:
+        return True
+    reference = str(request["reference"]).strip().lower()
+    haystack = " ".join(
+        str(credit.get(field) or "")
+        for field in ("description", "particulars", "reference", "counterparty")
+    ).lower()
+    # Short references match too much: "Rent" would fire on any credit
+    # mentioning rent at all.
+    return len(reference) >= 6 and reference in haystack
+
+
 async def scan(
     session: AsyncSession, user_id: int, transactions: Sequence[Transaction]
-) -> int:
-    """Looks for credits that settle open requests. Returns how many are new.
+) -> Scan:
+    """Settles what it can, asks about the rest.
 
-    Idempotent: a suggestion already raised for a credit, accepted or dismissed,
-    is never raised again. Reading the feed twice must not pester anybody twice.
+    Idempotent: a credit already settled, raised or dismissed is never raised
+    again. Reading the feed twice must not pester anybody twice.
     """
     open_requests = await _open_requests(session, user_id)
     if not open_requests:
-        return 0
+        return Scan(settled=0, asked=0)
 
     by_id = {row["id"]: request for request, row in open_requests}
     candidates = [row for _, row in open_requests]
@@ -113,7 +153,7 @@ async def scan(
     }
 
     cutoff = _days_ago(transactions, CONSIDER_DAYS)
-    made = 0
+    settled = asked = 0
     for transaction in transactions:
         cents = int(transaction.amount * 100)
         # Money out is not somebody paying you, and a transfer between your own
@@ -138,6 +178,7 @@ async def scan(
         seen.add(key)
 
         request = by_id[hit["id"]]
+        certain = _certain(credit, hit)
         session.add(
             MatchSuggestion(
                 user_id=user_id,
@@ -146,13 +187,27 @@ async def scan(
                 amount_cents=cents,
                 description=transaction.description,
                 occurred_at=transaction.date.replace(tzinfo=None),
+                state="accepted" if certain else "pending",
             )
         )
-        made += 1
+        if certain:
+            # Recorded as the creator confirming, because that is what it is:
+            # their own account showing the money, under a rule they set up.
+            session.add(
+                RequestEvent(
+                    request_id=request.id or 0,
+                    type="confirmed",
+                    actor="creator",
+                    note=f"Matched {transaction.description}"[:NOTE_MAX],
+                )
+            )
+            settled += 1
+        else:
+            asked += 1
 
-    if made:
+    if settled or asked:
         await session.commit()
-    return made
+    return Scan(settled=settled, asked=asked)
 
 
 def _days_ago(transactions: Sequence[Transaction], days: int) -> datetime | None:

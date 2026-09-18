@@ -2,6 +2,7 @@
   import AccountList from '../lib/components/AccountList.svelte'
   import Link from '../lib/components/Link.svelte'
   import MerchantBadge from '../lib/components/MerchantBadge.svelte'
+  import OpenRequests from '../lib/components/OpenRequests.svelte'
   import Panel from '../lib/components/Panel.svelte'
   import QuickSplit from '../lib/components/QuickSplit.svelte'
   import SettledMark from '../lib/components/SettledMark.svelte'
@@ -120,6 +121,13 @@
       </div>
 
       <div class="stack">
+        <Panel title="Money in flight">
+          {#snippet action()}
+            <Link href="/requests" class="more">All requests</Link>
+          {/snippet}
+          <OpenRequests />
+        </Panel>
+
         <Panel title="Recent activity">
           {#snippet action()}
             <Link href="/transactions" class="more">All transactions</Link>

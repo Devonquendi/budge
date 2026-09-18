@@ -317,7 +317,8 @@ export const api = {
   suggestions: () => request<Suggestion[]>('/requests/suggestions'),
 
   /** Reads the bank feed looking for credits that settle open requests. */
-  scanForPayments: () => request<{ found: number }>('/requests/suggestions/scan', 'POST'),
+  scanForPayments: () =>
+    request<{ settled: number; asked: number }>('/requests/suggestions/scan', 'POST'),
 
   answerSuggestion: (id: number, answer: 'accept' | 'dismiss') =>
     request<ChargeRequest>(`/requests/suggestions/${id}/${answer}`, 'POST'),
