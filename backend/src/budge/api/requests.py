@@ -541,7 +541,10 @@ async def get_suggestions(
 
 
 class Scanned(BaseModel):
-    found: int
+    """What reading the feed did: what it settled, and what it wants asked."""
+
+    settled: int
+    asked: int
 
 
 @router.post("/suggestions/scan")
@@ -550,14 +553,15 @@ async def scan_feed(user_id: CurrentUserId, session: SessionDep) -> Scanned:
     client = await credentials.client_for(session, user_id)
     if client is None:
         # Nothing to read. Not an error: plenty of accounts have no bank yet.
-        return Scanned(found=0)
+        return Scanned(settled=0, asked=0)
 
     accounts = await client.get_accounts()
     end = datetime.now(UTC)
     transactions = await client.get_transactions(
         accounts, end - timedelta(days=reconcile.CONSIDER_DAYS), end
     )
-    return Scanned(found=await reconcile.scan(session, user_id, transactions))
+    scan = await reconcile.scan(session, user_id, transactions)
+    return Scanned(settled=scan.settled, asked=scan.asked)
 
 
 async def _my_suggestion(
