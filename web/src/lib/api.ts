@@ -131,6 +131,16 @@ export type Totals = {
   outstanding: number
 }
 
+/** A credit that closed a request, so the ledger can point back at it. */
+export type Settled = {
+  transaction_id: string
+  /** Addresses the request itself: /r/<token>. */
+  token: string
+  who: string
+  title: string
+  amount_cents: number
+}
+
 /** A credit that looks like it settles a request. Never applied on its own. */
 export type Suggestion = {
   id: number
@@ -300,6 +310,9 @@ export const api = {
 
   /** One call for the whole ledger: a row knows its id and nothing else. */
   splitsByTransaction: () => request<SplitSummary[]>('/requests/by-transaction'),
+
+  /** Which credits closed which requests, for the ledger to link back. */
+  settlements: () => request<Settled[]>('/requests/settlements'),
 
   suggestions: () => request<Suggestion[]>('/requests/suggestions'),
 

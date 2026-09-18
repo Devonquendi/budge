@@ -108,6 +108,20 @@ class RequestView(BaseModel):
     events: list[Event]
 
 
+class Settled(BaseModel):
+    """A credit that closed a request, so the ledger can point back at it.
+
+    The other direction from SplitSummary: that says what a transaction asked
+    for, this says what a transaction answered.
+    """
+
+    transaction_id: str
+    token: str
+    who: str
+    title: str
+    amount_cents: int
+
+
 class Suggestion(BaseModel):
     """A credit that looks like it settles a request, put as a question."""
 
@@ -476,6 +490,38 @@ async def splits_by_transaction(
         )
 
     return list(summaries.values())
+
+
+@router.get("/settlements")
+async def settlements(user_id: CurrentUserId, session: SessionDep) -> list[Settled]:
+    """Credits that settled a request, keyed by the transaction they arrived in.
+
+    Only accepted matches: a dismissed one was somebody saying that credit was
+    something else, and marking it on the ledger would contradict them.
+    """
+    rows = list(
+        await session.exec(
+            select(MatchSuggestion, ChargeRequest, Bill)
+            .join(
+                ChargeRequest, col(MatchSuggestion.request_id) == col(ChargeRequest.id)
+            )
+            .join(Bill, col(ChargeRequest.bill_id) == col(Bill.id))
+            .where(
+                MatchSuggestion.user_id == user_id,
+                MatchSuggestion.state == "accepted",
+            )
+        )
+    )
+    return [
+        Settled(
+            transaction_id=suggestion.transaction_id,
+            token=request.token,
+            who=request.payee_name or request.payee_email,
+            title=bill.title,
+            amount_cents=request.amount_cents,
+        )
+        for suggestion, request, bill in rows
+    ]
 
 
 @router.get("/suggestions")

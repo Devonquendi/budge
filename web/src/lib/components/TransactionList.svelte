@@ -3,10 +3,11 @@
   import type { Account, Transaction } from '../api'
   import { categoryColor } from '../categories'
   import { format, toCents } from '../money'
-  import { load, loaded, splitOf } from '../splits.svelte'
+  import { load, loaded, settledBy, splitOf } from '../splits.svelte'
   import BankBadge from './BankBadge.svelte'
   import MerchantBadge from './MerchantBadge.svelte'
   import QuickSplit from './QuickSplit.svelte'
+  import SettledMark from './SettledMark.svelte'
   import SplitMark from './SplitMark.svelte'
 
   let {
@@ -111,6 +112,9 @@
         {/if}
         {#if splitOf(transaction.id)}
           <SplitMark summary={splitOf(transaction.id)!} />
+        {/if}
+        {#if settledBy(transaction.id)}
+          <SettledMark settled={settledBy(transaction.id)!} />
         {/if}
       </span>
     </span>

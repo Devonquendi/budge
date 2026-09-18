@@ -6,15 +6,22 @@
  * Loaded once, refreshed whenever something is sent or answered.
  */
 
-import { api, type SplitSummary } from './api'
+import { api, type Settled, type SplitSummary } from './api'
 
-const state = $state<{ byId: Record<string, SplitSummary>; loaded: boolean }>({
-  byId: {},
-  loaded: false,
-})
+const state = $state<{
+  byId: Record<string, SplitSummary>
+  settledBy: Record<string, Settled>
+  loaded: boolean
+}>({ byId: {}, settledBy: {}, loaded: false })
 
+/** What this transaction asked for, if it was split. */
 export function splitOf(transactionId: string): SplitSummary | undefined {
   return state.byId[transactionId]
+}
+
+/** What this transaction answered, if it settled a request. */
+export function settledBy(transactionId: string): Settled | undefined {
+  return state.settledBy[transactionId]
 }
 
 export function loaded(): boolean {
@@ -22,13 +29,20 @@ export function loaded(): boolean {
 }
 
 export async function load(): Promise<void> {
+  // Both directions in one go: what a transaction asked for, and what it
+  // answered. The ledger draws them on the same rows.
   try {
-    const summaries = await api.splitsByTransaction()
+    const [summaries, settled] = await Promise.all([
+      api.splitsByTransaction(),
+      api.settlements(),
+    ])
     state.byId = Object.fromEntries(summaries.map((one) => [one.transaction_id, one]))
+    state.settledBy = Object.fromEntries(settled.map((one) => [one.transaction_id, one]))
   } catch {
     // A missing marker is a survivable outcome. The ledger still reads, and the
     // split still happened; losing a badge should not take a page down.
     state.byId = {}
+    state.settledBy = {}
   }
   state.loaded = true
 }

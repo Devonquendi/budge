@@ -4,6 +4,7 @@
   import MerchantBadge from '../lib/components/MerchantBadge.svelte'
   import Panel from '../lib/components/Panel.svelte'
   import QuickSplit from '../lib/components/QuickSplit.svelte'
+  import SettledMark from '../lib/components/SettledMark.svelte'
   import SplitMark from '../lib/components/SplitMark.svelte'
   import SpendingBreakdown from '../lib/components/SpendingBreakdown.svelte'
   import Summary from '../lib/components/Summary.svelte'
@@ -12,7 +13,7 @@
   import { navigate } from '../lib/router.svelte'
   import { monthlySpend, totalSpend } from '../lib/spending'
   import { stage } from '../lib/split.svelte'
-  import { load, loaded, splitOf } from '../lib/splits.svelte'
+  import { load, loaded, settledBy, splitOf } from '../lib/splits.svelte'
   import { getWorkspace } from '../lib/workspace.svelte'
 
   const workspace = getWorkspace()
@@ -134,6 +135,9 @@
                 </span>
                 {#if splitOf(transaction.id)}
                   <SplitMark summary={splitOf(transaction.id)!} compact />
+                {/if}
+                {#if settledBy(transaction.id)}
+                  <SettledMark settled={settledBy(transaction.id)!} compact />
                 {/if}
                 <span class="when numeric">
                   {shortDate.format(new Date(transaction.date))}

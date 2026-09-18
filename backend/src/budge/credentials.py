@@ -7,7 +7,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from budge import demo, environment
 from budge.akahu import AkahuClient
 from budge.akahu.models import Account
-from budge.charges.ledger import derive_state
 from budge.db import crypto
 from budge.db.models import (
     AkahuAccountSetting,
@@ -137,19 +136,25 @@ async def _claimed_payments(
     )
     settlements = []
     for request, _bill in rows:
-        events = await session.exec(
-            select(RequestEvent)
-            .where(RequestEvent.request_id == request.id)
-            .order_by(col(RequestEvent.id))
-        )
-        state = derive_state([{"type": event.type} for event in events])
-        if state == "marked_paid":
-            settlements.append(
-                demo.Settlement(
-                    amount_cents=request.amount_cents,
-                    payer_name=request.payee_name or request.payee_email,
-                )
+        events = list(
+            await session.exec(
+                select(RequestEvent)
+                .where(RequestEvent.request_id == request.id)
+                .order_by(col(RequestEvent.id))
             )
+        )
+        # Whether they ever said they paid, not where the request stands now.
+        # Confirming a payment must not make the money vanish from the feed:
+        # the credit is the evidence the confirmation was based on.
+        if not any(event.type == "marked_paid" for event in events):
+            continue
+        settlements.append(
+            demo.Settlement(
+                amount_cents=request.amount_cents,
+                payer_name=request.payee_name or request.payee_email,
+                key=request.token,
+            )
+        )
     return settlements
 
 
