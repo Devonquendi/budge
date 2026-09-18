@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { ChargeRequest } from '../api'
   import { formatCents } from '../money'
+  import { navigate } from '../router.svelte'
+  import { check, hasBank } from '../bank.svelte'
   import { look, shareUrl } from '../requests'
   import PayDetails from './PayDetails.svelte'
 
@@ -26,6 +28,10 @@
 
   let copied = $state(false)
   let showing = $state(false)
+
+  // Being asked for money while signed in should be as payable as opening the
+  // link: the link is just how somebody without an account gets here.
+  check()
 
   async function copy() {
     await navigator.clipboard.writeText(shareUrl(request.token))
@@ -76,6 +82,11 @@
         </button>
       {/if}
     {:else}
+      {#if hasBank() && request.pay_to && request.state === 'open'}
+        <button type="button" onclick={() => navigate(`/bank/${request.token}`)}>
+          Pay now
+        </button>
+      {/if}
       {#if request.pay_to}
         <button
           type="button"
@@ -87,8 +98,13 @@
         </button>
       {/if}
       {#if request.state === 'open' || request.state === 'declined'}
-        <button type="button" disabled={busy} onclick={() => onact('mark-paid')}>
-          I've paid this
+        <button
+          type="button"
+          class="secondary outline"
+          disabled={busy}
+          onclick={() => onact('mark-paid')}
+        >
+          {hasBank() ? 'Paid another way' : "I've paid this"}
         </button>
       {/if}
       {#if request.state === 'open' || request.state === 'marked_paid'}

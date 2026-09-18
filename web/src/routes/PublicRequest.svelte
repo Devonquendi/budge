@@ -4,6 +4,7 @@
   import Link from '../lib/components/Link.svelte'
   import PayDetails from '../lib/components/PayDetails.svelte'
   import { formatCents } from '../lib/money'
+  import { check, hasBank } from '../lib/bank.svelte'
   import { look, payeeCanAct } from '../lib/requests'
   import { navigate } from '../lib/router.svelte'
 
@@ -16,9 +17,6 @@
   let error = $state('')
   let busy = $state(true)
   let note = $state('')
-  // One-tap only exists where the stand-in bank does, which is the demo. A real
-  // deployment has no bank to send anyone to yet.
-  let hasBank = $state(false)
 
   const badge = $derived(charge && look(charge.state))
 
@@ -28,11 +26,7 @@
     } catch (failure) {
       error = errorMessage(failure)
     }
-    try {
-      hasBank = (await api.personas()).length > 0
-    } catch {
-      hasBank = false
-    }
+    await check()
     busy = false
   }
 
@@ -84,7 +78,7 @@
         <span>Anything to add?</span>
         <input bind:value={note} maxlength="200" placeholder="Paid it this morning" />
       </label>
-      {#if hasBank && charge.pay_to && charge.state === 'open'}
+      {#if hasBank() && charge.pay_to && charge.state === 'open'}
         <div class="one-tap">
           <button
             type="button"
@@ -105,7 +99,7 @@
             disabled={busy}
             onclick={() => act('mark-paid')}
           >
-            {hasBank ? 'I paid another way' : "I've paid this"}
+            {hasBank() ? 'I paid another way' : "I've paid this"}
           </button>
         {/if}
         <button
