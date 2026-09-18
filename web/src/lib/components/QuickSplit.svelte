@@ -2,6 +2,7 @@
   import { api, errorMessage, type ChargeRequest, type Transaction } from '../api'
   import { formatCents, toCents } from '../money'
   import { refresh } from '../people.svelte'
+  import { refresh as refreshSplits } from '../splits.svelte'
   import { shareUrl } from '../requests'
   import PeoplePicker from './PeoplePicker.svelte'
 
@@ -45,8 +46,10 @@
         includeMe,
         transaction.id,
       )
-      // Anyone new is a contact now, so the next split offers them as a chip.
+      // Anyone new is a contact now, so the next split offers them as a chip,
+      // and the row this came from should say it has been split.
       await refresh()
+      await refreshSplits()
     } catch (failure) {
       error = errorMessage(failure)
     }

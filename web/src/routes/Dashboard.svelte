@@ -4,6 +4,7 @@
   import MerchantBadge from '../lib/components/MerchantBadge.svelte'
   import Panel from '../lib/components/Panel.svelte'
   import QuickSplit from '../lib/components/QuickSplit.svelte'
+  import SplitMark from '../lib/components/SplitMark.svelte'
   import SpendingBreakdown from '../lib/components/SpendingBreakdown.svelte'
   import Summary from '../lib/components/Summary.svelte'
   import { categoryColor } from '../lib/categories'
@@ -11,6 +12,7 @@
   import { navigate } from '../lib/router.svelte'
   import { monthlySpend, totalSpend } from '../lib/spending'
   import { stage } from '../lib/split.svelte'
+  import { load, loaded, splitOf } from '../lib/splits.svelte'
   import { getWorkspace } from '../lib/workspace.svelte'
 
   const workspace = getWorkspace()
@@ -20,6 +22,8 @@
   // Most bills get noticed here rather than on the ledger, so the same one-row
   // split lives on this card. One at a time, as on the ledger.
   let splitting = $state('')
+
+  if (!loaded()) load()
 
   const asAt = new Intl.DateTimeFormat('en-NZ', {
     weekday: 'short',
@@ -127,6 +131,9 @@
                 <MerchantBadge {transaction} />
                 <span class="what">
                   {transaction.merchant?.name ?? transaction.description}
+                  {#if splitOf(transaction.id)}
+                    <SplitMark summary={splitOf(transaction.id)!} />
+                  {/if}
                 </span>
                 <span class="when numeric">
                   {shortDate.format(new Date(transaction.date))}
@@ -149,7 +156,7 @@
                       onclick={() =>
                         (splitting = splitting === transaction.id ? '' : transaction.id)}
                     >
-                      Split
+                      {splitOf(transaction.id) ? 'Again' : 'Split'}
                     </button>
                   {/if}
                 </span>

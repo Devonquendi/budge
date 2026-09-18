@@ -14,7 +14,13 @@ from sqlmodel import col, select
 from budge import credentials, reconcile
 from budge.api import people
 from budge.auth import CurrentUserId, SessionDep
-from budge.charges.ledger import derive_state, make_token, tally_bill
+from budge.charges.ledger import (
+    CANCELLED,
+    CONFIRMED,
+    derive_state,
+    make_token,
+    tally_bill,
+)
 from budge.charges.money import make_reference, parse_amount, split_evenly
 from budge.db.models import (
     NAME_MAX,
@@ -111,6 +117,20 @@ class Suggestion(BaseModel):
     amount_cents: int
     description: str
     occurred_at: datetime
+
+
+class SplitSummary(BaseModel):
+    """What came of splitting one transaction, for the ledger to show.
+
+    Keyed by Akahu's transaction id, because that is all a row on the ledger
+    knows about itself.
+    """
+
+    transaction_id: str
+    people: int
+    asked_cents: int
+    outstanding_cents: int
+    settled_cents: int
 
 
 class Totals(BaseModel):
@@ -373,6 +393,67 @@ async def _suggestion_views(
             )
         )
     return out
+
+
+@router.get("/by-transaction")
+async def splits_by_transaction(
+    user_id: CurrentUserId, session: SessionDep
+) -> list[SplitSummary]:
+    """Every transaction this user has split, and how those requests are going.
+
+    One call for the whole ledger rather than one per row: a row knows its own
+    id and nothing else, and a request per visible transaction would be a
+    hundred requests for one page.
+    """
+    bills = list(
+        await session.exec(
+            select(Bill).where(
+                Bill.creator_id == user_id,
+                col(Bill.source_transaction_id).is_not(None),
+            )
+        )
+    )
+    if not bills:
+        return []
+
+    by_bill = {bill.id: bill for bill in bills}
+    requests = list(
+        await session.exec(
+            select(ChargeRequest).where(col(ChargeRequest.bill_id).in_(list(by_bill)))
+        )
+    )
+    events = await _events(session, [r.id or 0 for r in requests])
+
+    summaries: dict[str, SplitSummary] = {}
+    for request in requests:
+        bill = by_bill[request.bill_id]
+        transaction_id = bill.source_transaction_id
+        if transaction_id is None:
+            continue
+        state = derive_state([e.model_dump() for e in events.get(request.id or 0, [])])
+        # A cancelled request was withdrawn, so it should not still be counted
+        # against the transaction it came from.
+        if state == CANCELLED:
+            continue
+
+        summary = summaries.setdefault(
+            transaction_id,
+            SplitSummary(
+                transaction_id=transaction_id,
+                people=0,
+                asked_cents=0,
+                outstanding_cents=0,
+                settled_cents=0,
+            ),
+        )
+        summary.people += 1
+        summary.asked_cents += request.amount_cents
+        if state == CONFIRMED:
+            summary.settled_cents += request.amount_cents
+        else:
+            summary.outstanding_cents += request.amount_cents
+
+    return list(summaries.values())
 
 
 @router.get("/suggestions")
