@@ -5,11 +5,14 @@
   import { format, toCents } from '../money'
   import BankBadge from './BankBadge.svelte'
   import MerchantBadge from './MerchantBadge.svelte'
+  import QuickSplit from './QuickSplit.svelte'
 
   let {
     transactions,
     accounts = [],
     grouped = false,
+    splittable = false,
+    onfull,
     footer,
   }: {
     transactions: Transaction[]
@@ -17,8 +20,16 @@
     accounts?: Account[]
     /** Break the rows into a heading per day, the way a bank statement reads. */
     grouped?: boolean
+    /** Offers Split on money that went out. Left off, no row grows a button. */
+    splittable?: boolean
+    /** Where "More options" goes: the full request form, with this staged. */
+    onfull?: (transaction: Transaction) => void
     footer?: Snippet
   } = $props()
+
+  // One row open at a time. Splitting is a decision about one transaction, and
+  // several half-filled forms down the page would be nothing but noise.
+  let splitting = $state('')
 
   const byId = $derived(new Map(accounts.map((account) => [account.id, account])))
 
@@ -126,7 +137,34 @@
     <span class={['amount', 'numeric', { incoming: cents > 0 }]}>
       {cents > 0 ? '+' : ''}{format(transaction.amount, transaction.currency)}
     </span>
+
+    <span class="act">
+      <!-- Money in is nobody's share, so only spending offers this. -->
+      {#if splittable && cents < 0}
+        <button
+          type="button"
+          class="secondary outline"
+          aria-expanded={splitting === transaction.id}
+          onclick={() => (splitting = splitting === transaction.id ? '' : transaction.id)}
+        >
+          Split
+        </button>
+      {/if}
+    </span>
   </li>
+
+  {#if splitting === transaction.id}
+    <li class="opened">
+      <QuickSplit
+        {transaction}
+        onclose={() => (splitting = '')}
+        onfull={(picked) => {
+          splitting = ''
+          onfull?.(picked)
+        }}
+      />
+    </li>
+  {/if}
 {/snippet}
 
 <section>
@@ -150,6 +188,7 @@
         <span class="account">Account</span>
       </span>
       <span class="amount">Amount</span>
+      <span class="act"></span>
     </div>
     <ul>
       {#each transactions as transaction (transaction.id)}
@@ -302,6 +341,26 @@
     white-space: nowrap;
   }
 
+  /* The form is its own row, so it spans the lot rather than sitting in a
+     column. Resetting the flex layout is cheaper than a second list shape. */
+  .opened {
+    display: block;
+    padding: 0;
+  }
+
+  .act {
+    flex: none;
+    /* Holds the column open whether or not this row has a button, so the
+       amounts stay in line down the page. */
+    min-width: 3.5rem;
+    text-align: right;
+  }
+
+  .act button {
+    padding: 0.125rem 0.5rem;
+    font-size: var(--text-meta);
+  }
+
   .incoming {
     color: var(--ctp-green);
   }
@@ -407,6 +466,12 @@
       width: 5.375rem;
       text-align: right;
       order: 5;
+    }
+
+    /* The row is ordered cell by cell here, so without one of its own this
+       would sit at 0 and land ahead of the date. */
+    .act {
+      order: 6;
     }
   }
 </style>

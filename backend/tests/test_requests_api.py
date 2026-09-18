@@ -189,3 +189,42 @@ async def test_a_bad_amount_is_refused(client: AsyncClient) -> None:
 
 async def test_an_unknown_token_is_not_found(client: AsyncClient) -> None:
     assert (await client.get("/api/requests/r/nosuchtoken")).status_code == 404
+
+
+async def test_a_bill_remembers_the_spend_it_came_from(client: AsyncClient) -> None:
+    """Splitting from the ledger, rather than typing an amount in."""
+    await sign_up(client, "ara@example.com")
+    created = await client.post(
+        "/api/requests",
+        json={
+            "title": "Fern & Fig Grocers",
+            "amount": "93.02",
+            "payees": [{"email": "neve@example.com"}],
+            "source_transaction_id": "txn_demo_acc_ara_everyday_4",
+        },
+    )
+
+    assert created.status_code == 201, created.text
+    request = created.json()[0]
+    assert request["source_transaction_id"] == "txn_demo_acc_ara_everyday_4"
+
+    # It survives to both ends of the request, not just the reply to creating it.
+    inbox = (await client.get("/api/requests")).json()
+    assert inbox["sent"][0]["source_transaction_id"] == request["source_transaction_id"]
+
+    seen = await client.get(f"/api/requests/r/{request['token']}")
+    assert seen.json()["source_transaction_id"] == request["source_transaction_id"]
+
+
+async def test_a_typed_in_bill_has_no_spend_behind_it(client: AsyncClient) -> None:
+    await sign_up(client, "ara@example.com")
+    created = await client.post(
+        "/api/requests",
+        json={
+            "title": "Power, August",
+            "amount": "60",
+            "payees": [{"email": "neve@example.com"}],
+        },
+    )
+
+    assert created.json()[0]["source_transaction_id"] is None

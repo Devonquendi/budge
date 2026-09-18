@@ -94,6 +94,8 @@ export type ChargeRequest = {
   payee_name: string | null
   from_name: string
   from_email: string
+  /** The transaction it was split from, or null if the amount was typed in. */
+  source_transaction_id: string | null
   state: RequestState
   created_at: string
   events: RequestEvent[]
