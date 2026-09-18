@@ -236,7 +236,8 @@
   {:else}
     <div class={{ stale: workspace.loadingTransactions }}>
       <TransactionList
-        onsplit={(transaction) => {
+        splittable
+        onfull={(transaction) => {
           stage(transaction)
           navigate('/requests')
         }}

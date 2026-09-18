@@ -5,12 +5,14 @@
   import { format, toCents } from '../money'
   import BankBadge from './BankBadge.svelte'
   import MerchantBadge from './MerchantBadge.svelte'
+  import QuickSplit from './QuickSplit.svelte'
 
   let {
     transactions,
     accounts = [],
     grouped = false,
-    onsplit,
+    splittable = false,
+    onfull,
     footer,
   }: {
     transactions: Transaction[]
@@ -19,9 +21,15 @@
     /** Break the rows into a heading per day, the way a bank statement reads. */
     grouped?: boolean
     /** Offers Split on money that went out. Left off, no row grows a button. */
-    onsplit?: (transaction: Transaction) => void
+    splittable?: boolean
+    /** Where "More options" goes: the full request form, with this staged. */
+    onfull?: (transaction: Transaction) => void
     footer?: Snippet
   } = $props()
+
+  // One row open at a time. Splitting is a decision about one transaction, and
+  // several half-filled forms down the page would be nothing but noise.
+  let splitting = $state('')
 
   const byId = $derived(new Map(accounts.map((account) => [account.id, account])))
 
@@ -132,17 +140,31 @@
 
     <span class="act">
       <!-- Money in is nobody's share, so only spending offers this. -->
-      {#if onsplit && cents < 0}
+      {#if splittable && cents < 0}
         <button
           type="button"
           class="secondary outline"
-          onclick={() => onsplit(transaction)}
+          aria-expanded={splitting === transaction.id}
+          onclick={() => (splitting = splitting === transaction.id ? '' : transaction.id)}
         >
           Split
         </button>
       {/if}
     </span>
   </li>
+
+  {#if splitting === transaction.id}
+    <li class="opened">
+      <QuickSplit
+        {transaction}
+        onclose={() => (splitting = '')}
+        onfull={(picked) => {
+          splitting = ''
+          onfull?.(picked)
+        }}
+      />
+    </li>
+  {/if}
 {/snippet}
 
 <section>
@@ -317,6 +339,13 @@
     flex: none;
     font-weight: 600;
     white-space: nowrap;
+  }
+
+  /* The form is its own row, so it spans the lot rather than sitting in a
+     column. Resetting the flex layout is cheaper than a second list shape. */
+  .opened {
+    display: block;
+    padding: 0;
   }
 
   .act {
