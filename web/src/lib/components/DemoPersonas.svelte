@@ -4,7 +4,14 @@
   // Only rendered where the backend says demo is on, which is anywhere but
   // production. In production /demo/personas answers with an empty list and
   // this draws nothing.
-  let { onsignin }: { onsignin: (me: Me) => void } = $props()
+  let {
+    onsignin,
+    lead = false,
+  }: {
+    onsignin: (me: Me) => void
+    /** Top of the page rather than an afterthought under the password box. */
+    lead?: boolean
+  } = $props()
 
   let personas = $state.raw<Persona[]>([])
   let error = $state('')
@@ -34,8 +41,10 @@
 </script>
 
 {#if personas.length}
-  <div class="demo">
-    <p class="eyebrow">Or look around as someone made up</p>
+  <div class={['demo', { lead }]}>
+    {#if !lead}
+      <p class="eyebrow">Or look around as someone made up</p>
+    {/if}
     <ul>
       {#each personas as persona (persona.email)}
         <li>
@@ -60,6 +69,17 @@
     margin-top: 0.875rem;
     padding-top: 0.75rem;
     border-top: var(--pico-border-width) solid var(--pico-card-border-color);
+  }
+
+  /* Nothing above it to be separated from. */
+  .lead {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .lead ul {
+    margin-top: 0;
   }
 
   ul,

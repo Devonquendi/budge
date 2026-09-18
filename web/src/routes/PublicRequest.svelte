@@ -4,7 +4,7 @@
   import Link from '../lib/components/Link.svelte'
   import PayDetails from '../lib/components/PayDetails.svelte'
   import { formatCents } from '../lib/money'
-  import { check, hasBank } from '../lib/bank.svelte'
+  import { check, hasBank } from '../lib/demo.svelte'
   import { look, payeeCanAct } from '../lib/requests'
   import { navigate } from '../lib/router.svelte'
 

@@ -2,7 +2,7 @@
   import type { ChargeRequest } from '../api'
   import { formatCents } from '../money'
   import { navigate } from '../router.svelte'
-  import { check, hasBank } from '../bank.svelte'
+  import { check, hasBank } from '../demo.svelte'
   import { look, shareUrl } from '../requests'
   import PayDetails from './PayDetails.svelte'
 
