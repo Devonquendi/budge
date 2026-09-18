@@ -1,8 +1,10 @@
 <script lang="ts">
   import { api, errorMessage, type ChargeRequest, type Inbox } from '../lib/api'
   import Panel from '../lib/components/Panel.svelte'
+  import PeoplePicker from '../lib/components/PeoplePicker.svelte'
   import RequestRow from '../lib/components/RequestRow.svelte'
   import { formatCents } from '../lib/money'
+  import { refresh } from '../lib/people.svelte'
   import { shareUrl } from '../lib/requests'
   import { take, type Staged } from '../lib/split.svelte'
 
@@ -12,7 +14,7 @@
 
   let title = $state('')
   let amount = $state('')
-  let people = $state('')
+  let chosen = $state<string[]>([])
   let includeMe = $state(true)
   let justCreated = $state.raw<ChargeRequest[]>([])
 
@@ -20,19 +22,11 @@
   // id rides along to the bill, so a request can say what spend it came from.
   let fromSpend = $state.raw<Staged | null>(null)
 
-  // One address per line or comma, so a flat can be pasted in whole.
-  const payees = $derived(
-    people
-      .split(/[\n,]/)
-      .map((entry) => entry.trim())
-      .filter(Boolean),
-  )
-
   const share = $derived(
-    amount && payees.length
+    amount && chosen.length
       ? Math.round(
           (Number(amount.replace(/[^0-9.]/g, '')) * 100) /
-            (payees.length + (includeMe ? 1 : 0)),
+            (chosen.length + (includeMe ? 1 : 0)),
         )
       : 0,
   )
@@ -53,14 +47,15 @@
       justCreated = await api.splitBill(
         title,
         amount,
-        payees.map((email) => ({ email })),
+        chosen.map((email) => ({ email })),
         includeMe,
         fromSpend?.transactionId,
       )
       title = ''
       amount = ''
-      people = ''
+      chosen = []
       fromSpend = null
+      await refresh()
       await load()
     } catch (failure) {
       error = errorMessage(failure)
@@ -152,14 +147,10 @@
         <span>Total</span>
         <input bind:value={amount} placeholder="$186.40" required inputmode="decimal" />
       </label>
-      <label class="wide">
-        <span>Who owes a share</span>
-        <textarea
-          bind:value={people}
-          rows="2"
-          placeholder="neve@example.com, tipene@example.com"
-          required></textarea>
-      </label>
+      <div class="wide">
+        <span class="field">Who owes a share</span>
+        <PeoplePicker bind:chosen />
+      </div>
       <label class="check">
         <input type="checkbox" bind:checked={includeMe} />
         <span>Count me as one of the shares</span>
@@ -167,15 +158,15 @@
 
       <p class="preview muted">
         {#if share > 0}
-          {payees.length}
-          {payees.length === 1 ? 'person' : 'people'} at about {formatCents(share, 'NZD')} each.
+          {chosen.length}
+          {chosen.length === 1 ? 'person' : 'people'} at about {formatCents(share, 'NZD')} each.
           Any odd cent stays with you.
         {:else}
           Split to the exact cent, with the remainder rounded onto your own share.
         {/if}
       </p>
 
-      <button type="submit" disabled={busy || !payees.length}>
+      <button type="submit" disabled={busy || !chosen.length}>
         {busy ? 'Sending…' : 'Send requests'}
       </button>
     </form>
@@ -289,9 +280,20 @@
     margin: 0;
   }
 
-  input,
-  textarea {
+  input {
     margin: 0;
+  }
+
+  .wide {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+  }
+
+  .field {
+    font-size: var(--text-meta);
+    font-weight: 500;
+    color: var(--pico-muted-color);
   }
 
   .preview {

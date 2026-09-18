@@ -101,3 +101,50 @@ class RequestEvent(SQLModel, table=True):
     actor: str
     note: str | None = Field(default=None, max_length=NOTE_MAX)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class Contact(SQLModel, table=True):
+    """Someone you have asked for money, or expect to.
+
+    Held by email rather than by a foreign key to users: the whole point of a
+    request is that it can be sent to somebody who has not signed up, and they
+    should still be in your list while that is true.
+    """
+
+    __tablename__ = "contacts"
+    __table_args__ = (UniqueConstraint("user_id", "email"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    email: str
+    name: str | None = Field(default=None, max_length=NAME_MAX)
+    # Favourites lead the picker. Everything else is ordered by recency.
+    favourite: bool = Field(default=False)
+    # Bumped every time they are asked for something, so the picker can put the
+    # people you actually split with first without you curating anything.
+    last_asked_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class Group(SQLModel, table=True):
+    """A flat, a trip, a household: people who get asked together."""
+
+    __tablename__ = "groups"
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    name: str = Field(max_length=TITLE_MAX)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class GroupMember(SQLModel, table=True):
+    """One person in a group, by email for the same reason contacts are."""
+
+    __tablename__ = "group_members"
+    __table_args__ = (UniqueConstraint("group_id", "email"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    group_id: int = Field(foreign_key="groups.id", index=True)
+    email: str
+    name: str | None = Field(default=None, max_length=NAME_MAX)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

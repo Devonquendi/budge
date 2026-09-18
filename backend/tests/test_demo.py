@@ -2,8 +2,12 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlmodel import select
 
 from budge import environment
+from budge.db.models import Contact, Group, GroupMember
+
+from .conftest import Sessions
 
 
 async def test_signing_in_as_a_persona_seeds_their_flat(client: AsyncClient) -> None:
@@ -74,3 +78,35 @@ async def test_an_invented_persona_is_refused(client: AsyncClient) -> None:
 
 def test_the_switch_is_what_turns_the_demo_on() -> None:
     assert environment.demo_enabled()
+
+
+async def test_a_demo_seeded_before_a_feature_existed_catches_up(
+    client: AsyncClient, db: Sessions
+) -> None:
+    """The bug this guards: one "already seeded" flag for several things.
+
+    A demo database outlives the deploy that made it. Contacts arrived after
+    bills did, and a single flag meant they never appeared on any demo that had
+    already been used.
+    """
+    await client.post("/api/demo/session", json={"email": "ara@example.com"})
+
+    # Wind it back to what an older deploy would have left: bills, no contacts.
+    async with db() as session:
+        for contact in await session.exec(select(Contact)):
+            await session.delete(contact)
+        for member in await session.exec(select(GroupMember)):
+            await session.delete(member)
+        for group in await session.exec(select(Group)):
+            await session.delete(group)
+        await session.commit()
+
+    assert (await client.get("/api/people")).json()["contacts"] == []
+
+    await client.post("/api/demo/session", json={"email": "ara@example.com"})
+
+    people = (await client.get("/api/people")).json()
+    assert len(people["contacts"]) == 4, "signing in again should fill them in"
+    assert len(people["groups"]) == 1
+    # And it must not have duplicated the bills while it was at it.
+    assert len((await client.get("/api/requests")).json()["sent"]) == 7

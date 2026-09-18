@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
-from budge.api import accounts, akahu, auth, demo, requests, transactions
+from budge.api import accounts, akahu, auth, demo, people, requests, transactions
 
 load_dotenv()
 
@@ -27,6 +27,7 @@ for router in (
     accounts.router,
     transactions.router,
     requests.router,
+    people.router,
     demo.router,
 ):
     app.include_router(router, prefix="/api")

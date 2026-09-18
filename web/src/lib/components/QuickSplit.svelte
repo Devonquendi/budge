@@ -1,7 +1,9 @@
 <script lang="ts">
   import { api, errorMessage, type ChargeRequest, type Transaction } from '../api'
   import { formatCents, toCents } from '../money'
+  import { refresh } from '../people.svelte'
   import { shareUrl } from '../requests'
+  import PeoplePicker from './PeoplePicker.svelte'
 
   // Splitting where you spotted the spend, without losing your place in the
   // ledger. The full form is one click away for anything this can't do:
@@ -17,7 +19,7 @@
     onfull: (transaction: Transaction) => void
   } = $props()
 
-  let people = $state('')
+  let chosen = $state<string[]>([])
   let includeMe = $state(true)
   let busy = $state(false)
   let error = $state('')
@@ -27,16 +29,8 @@
   const title = $derived(transaction.merchant?.name ?? transaction.description)
   const total = $derived(Math.abs(toCents(transaction.amount)))
 
-  // One address per line or comma, so a flat pastes in whole.
-  const payees = $derived(
-    people
-      .split(/[\n,]/)
-      .map((entry) => entry.trim())
-      .filter(Boolean),
-  )
-
   const share = $derived(
-    payees.length ? Math.round(total / (payees.length + (includeMe ? 1 : 0))) : 0,
+    chosen.length ? Math.round(total / (chosen.length + (includeMe ? 1 : 0))) : 0,
   )
 
   async function send(event: SubmitEvent) {
@@ -47,10 +41,12 @@
       sent = await api.splitBill(
         title,
         String(total / 100),
-        payees.map((email) => ({ email })),
+        chosen.map((email) => ({ email })),
         includeMe,
         transaction.id,
       )
+      // Anyone new is a contact now, so the next split offers them as a chip.
+      await refresh()
     } catch (failure) {
       error = errorMessage(failure)
     }
@@ -80,23 +76,18 @@
     </p>
   {:else}
     <form onsubmit={send}>
-      <label class="who">
+      <div class="who">
         <span class="eyebrow">Who owes a share of {title}</span>
-        <input
-          bind:value={people}
-          placeholder="neve@example.com, tipene@example.com"
-          required
-          {@attach (node) => node.focus()}
-        />
-      </label>
+        <PeoplePicker bind:chosen autofocus />
+      </div>
 
       <label class="me">
         <input type="checkbox" bind:checked={includeMe} />
         <span>Count me</span>
       </label>
 
-      <button type="submit" disabled={busy || !payees.length}>
-        {busy ? 'Sending…' : 'Send'}
+      <button type="submit" disabled={busy || !chosen.length}>
+        {busy ? 'Sending…' : `Send${chosen.length ? ` to ${chosen.length}` : ''}`}
       </button>
 
       <p class="sum muted">
@@ -137,10 +128,6 @@
     gap: 0.25rem;
     margin: 0;
     min-width: 0;
-  }
-
-  .who input {
-    margin: 0;
   }
 
   .me {
