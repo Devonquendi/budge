@@ -157,3 +157,29 @@ class GroupMember(SQLModel, table=True):
     email: str
     name: str | None = Field(default=None, max_length=NAME_MAX)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class MatchSuggestion(SQLModel, table=True):
+    """A credit that looks like it settles an open request.
+
+    Never applied on its own. Telling somebody they have been paid when they
+    have not is the worst thing this application could do, so a match is a
+    question put to the person owed, and their answer is what moves the request.
+    """
+
+    __tablename__ = "match_suggestions"
+    __table_args__ = (UniqueConstraint("request_id", "transaction_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    request_id: int = Field(foreign_key="charge_requests.id", index=True)
+    # Akahu's id for the credit. Not a foreign key: transactions are read from
+    # the bank on demand and never stored.
+    transaction_id: str
+    amount_cents: int
+    description: str
+    occurred_at: datetime
+    # "pending", "accepted" or "dismissed". A dismissed one is remembered so the
+    # same credit is not offered again every time the feed is read.
+    state: str = Field(default="pending")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

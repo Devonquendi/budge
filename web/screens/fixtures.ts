@@ -272,6 +272,7 @@ const HISTORY: History = {
     account_name: ACCOUNT_NAMES[row.account],
     currency: 'NZD',
     connection_id: CONNECTIONS[row.account],
+    internal: false,
     date: row.date,
     description: row.description,
     amount: row.amount,

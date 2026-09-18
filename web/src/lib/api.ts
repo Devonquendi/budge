@@ -76,6 +76,8 @@ export type Transaction = {
   type: string
   merchant: Merchant | null
   category: Category | null
+  /** You moving your own money between accounts. Not spending, not income. */
+  internal: boolean
 }
 
 export type History = {
@@ -127,6 +129,16 @@ export type Totals = {
   settled: number
   /** owed + claimed: money asked for that hasn't been confirmed as arrived. */
   outstanding: number
+}
+
+/** A credit that looks like it settles a request. Never applied on its own. */
+export type Suggestion = {
+  id: number
+  request: ChargeRequest
+  transaction_id: string
+  amount_cents: number
+  description: string
+  occurred_at: string
 }
 
 export type Inbox = {
@@ -265,6 +277,14 @@ export const api = {
     request<ChargeRequest>(`/requests/r/${encodeURIComponent(token)}/${action}`, 'POST', {
       note,
     }),
+
+  suggestions: () => request<Suggestion[]>('/requests/suggestions'),
+
+  /** Reads the bank feed looking for credits that settle open requests. */
+  scanForPayments: () => request<{ found: number }>('/requests/suggestions/scan', 'POST'),
+
+  answerSuggestion: (id: number, answer: 'accept' | 'dismiss') =>
+    request<ChargeRequest>(`/requests/suggestions/${id}/${answer}`, 'POST'),
 
   asCreator: (id: number, action: 'confirm' | 'cancel' | 'reopen', note = '') =>
     request<ChargeRequest>(`/requests/${id}/${action}`, 'POST', { note }),

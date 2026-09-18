@@ -1,14 +1,22 @@
 """A user's stored Akahu tokens and their dashboard account selection."""
 
 import httpx2
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from budge import demo, environment
 from budge.akahu import AkahuClient
 from budge.akahu.models import Account
+from budge.charges.ledger import derive_state
 from budge.db import crypto
-from budge.db.models import AkahuAccountSetting, AkahuCredential, User
+from budge.db.models import (
+    AkahuAccountSetting,
+    AkahuCredential,
+    Bill,
+    ChargeRequest,
+    RequestEvent,
+    User,
+)
 
 
 async def _row(session: AsyncSession, user_id: int) -> AkahuCredential | None:
@@ -101,10 +109,8 @@ async def client_for(
     AkahuClient. Callers only ever use get_accounts and get_transactions.
     """
     user = await session.get(User, user_id)
-    if user is not None:
-        stand_in = demo.client_for(user.email)
-        if stand_in is not None:
-            return stand_in
+    if user is not None and demo.client_for(user.email) is not None:
+        return demo.client_for(user.email, await _claimed_payments(session, user_id))
 
     credential = await get(session, user_id)
     if credential is None:
@@ -113,6 +119,38 @@ async def client_for(
         app_token=crypto.decrypt(credential.app_token_encrypted),
         user_token=crypto.decrypt(credential.user_token_encrypted),
     )
+
+
+async def _claimed_payments(
+    session: AsyncSession, user_id: int
+) -> list[demo.Settlement]:
+    """What people have told this persona they paid, as money to look for.
+
+    Only for the demo: a real feed gets its credits from a real bank. Here the
+    claim is the only thing that could have produced one, so it is what the
+    fixture feed is built from.
+    """
+    rows = await session.exec(
+        select(ChargeRequest, Bill)
+        .join(Bill, col(ChargeRequest.bill_id) == col(Bill.id))
+        .where(Bill.creator_id == user_id)
+    )
+    settlements = []
+    for request, _bill in rows:
+        events = await session.exec(
+            select(RequestEvent)
+            .where(RequestEvent.request_id == request.id)
+            .order_by(col(RequestEvent.id))
+        )
+        state = derive_state([{"type": event.type} for event in events])
+        if state == "marked_paid":
+            settlements.append(
+                demo.Settlement(
+                    amount_cents=request.amount_cents,
+                    payer_name=request.payee_name or request.payee_email,
+                )
+            )
+    return settlements
 
 
 async def _settings(session: AsyncSession, user_id: int) -> list[AkahuAccountSetting]:

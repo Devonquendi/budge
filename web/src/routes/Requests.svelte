@@ -3,6 +3,7 @@
   import Panel from '../lib/components/Panel.svelte'
   import PeoplePicker from '../lib/components/PeoplePicker.svelte'
   import RequestRow from '../lib/components/RequestRow.svelte'
+  import Suggestions from '../lib/components/Suggestions.svelte'
   import { formatCents } from '../lib/money'
   import { refresh } from '../lib/people.svelte'
   import { shareUrl } from '../lib/requests'
@@ -185,6 +186,10 @@
   </Panel>
 
   {#if error}<p class="error">{error}</p>{/if}
+
+  <Panel title="Has anyone paid?">
+    <Suggestions onanswered={load} />
+  </Panel>
 
   <div class="columns">
     <Panel title="Owed to you">

@@ -5,12 +5,13 @@ event log with `charges.ledger.derive_state`, so what the app shows and what
 actually happened cannot drift apart.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import col, select
 
+from budge import credentials, reconcile
 from budge.api import people
 from budge.auth import CurrentUserId, SessionDep
 from budge.charges.ledger import derive_state, make_token, tally_bill
@@ -21,6 +22,7 @@ from budge.db.models import (
     TITLE_MAX,
     Bill,
     ChargeRequest,
+    MatchSuggestion,
     RequestEvent,
     User,
 )
@@ -98,6 +100,17 @@ class RequestView(BaseModel):
     state: str
     created_at: datetime
     events: list[Event]
+
+
+class Suggestion(BaseModel):
+    """A credit that looks like it settles a request, put as a question."""
+
+    id: int
+    request: RequestView
+    transaction_id: str
+    amount_cents: int
+    description: str
+    occurred_at: datetime
 
 
 class Totals(BaseModel):
@@ -326,6 +339,119 @@ async def act_as_payee(
     view = await _by_token(session, token)
     await _record(session, view.id, type, "payee", body.note)
     return await _by_token(session, token)
+
+
+async def _suggestion_views(
+    session: SessionDep, user_id: int, rows: list[MatchSuggestion]
+) -> list[Suggestion]:
+    if not rows:
+        return []
+    detail = {
+        request.id: (request, bill, creator)
+        for request, bill, creator in await session.exec(
+            select(ChargeRequest, Bill, User)
+            .join(Bill, col(ChargeRequest.bill_id) == col(Bill.id))
+            .join(User, col(Bill.creator_id) == col(User.id))
+            .where(col(ChargeRequest.id).in_([row.request_id for row in rows]))
+        )
+    }
+    events = await _events(session, [row.request_id for row in rows])
+    out = []
+    for row in rows:
+        found = detail.get(row.request_id)
+        if found is None:
+            continue
+        request, bill, creator = found
+        out.append(
+            Suggestion(
+                id=row.id or 0,
+                request=_view(request, bill, creator, events.get(row.request_id, [])),
+                transaction_id=row.transaction_id,
+                amount_cents=row.amount_cents,
+                description=row.description,
+                occurred_at=row.occurred_at,
+            )
+        )
+    return out
+
+
+@router.get("/suggestions")
+async def get_suggestions(
+    user_id: CurrentUserId, session: SessionDep
+) -> list[Suggestion]:
+    """Credits that look like they settle an open request, still unanswered."""
+    rows = list(
+        await session.exec(
+            select(MatchSuggestion).where(
+                MatchSuggestion.user_id == user_id,
+                MatchSuggestion.state == "pending",
+            )
+        )
+    )
+    return await _suggestion_views(session, user_id, rows)
+
+
+class Scanned(BaseModel):
+    found: int
+
+
+@router.post("/suggestions/scan")
+async def scan_feed(user_id: CurrentUserId, session: SessionDep) -> Scanned:
+    """Reads the bank feed and looks for credits settling open requests."""
+    client = await credentials.client_for(session, user_id)
+    if client is None:
+        # Nothing to read. Not an error: plenty of accounts have no bank yet.
+        return Scanned(found=0)
+
+    accounts = await client.get_accounts()
+    end = datetime.now(UTC)
+    transactions = await client.get_transactions(
+        accounts, end - timedelta(days=reconcile.CONSIDER_DAYS), end
+    )
+    return Scanned(found=await reconcile.scan(session, user_id, transactions))
+
+
+async def _my_suggestion(
+    session: SessionDep, user_id: int, suggestion_id: int
+) -> MatchSuggestion:
+    row = await session.get(MatchSuggestion, suggestion_id)
+    if row is None or row.user_id != user_id or row.state != "pending":
+        raise HTTPException(status_code=NOT_FOUND, detail="No such suggestion")
+    return row
+
+
+@router.post("/suggestions/{suggestion_id}/{answer}")
+async def answer_suggestion(
+    suggestion_id: int, answer: str, user_id: CurrentUserId, session: SessionDep
+) -> RequestView:
+    """Confirms the money arrived, or says this credit was something else.
+
+    Accepting is what closes the request, and it is recorded as the creator
+    confirming it, because that is exactly what happened: a human looked at a
+    credit and said yes.
+    """
+    if answer not in ("accept", "dismiss"):
+        raise HTTPException(status_code=NOT_FOUND, detail="No such answer")
+
+    row = await _my_suggestion(session, user_id, suggestion_id)
+    row.state = "accepted" if answer == "accept" else "dismissed"
+    session.add(row)
+    await session.commit()
+
+    if answer == "accept":
+        await _record(
+            session, row.request_id, "confirmed", "creator", row.description[:NOTE_MAX]
+        )
+
+    request = await session.get(ChargeRequest, row.request_id)
+    if request is None:
+        raise HTTPException(status_code=NOT_FOUND, detail="No such request")
+    return await _by_token(session, request.token)
+
+
+# Last on purpose. This matches two segments of anything, so every literal
+# path under /requests has to be declared above it or it swallows them:
+# "/suggestions/scan" would arrive here as request_id="suggestions".
 
 
 @router.post("/{request_id}/{action}")
