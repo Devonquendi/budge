@@ -291,7 +291,17 @@ const HISTORY: History = {
   })),
 }
 
-const SIGNED_IN: Me = { email: 'sam@example.com', name: 'Sam', onboarded: true }
+const SIGNED_IN: Me = {
+  email: 'sam@example.com',
+  name: 'Sam',
+  onboarded: true,
+  payout: {
+    account: '12-3400-4339250-00',
+    name: 'Sam',
+    verified: true,
+    revoked: false,
+  },
+}
 const MID_ONBOARDING: Me = { ...SIGNED_IN, onboarded: false }
 
 export type Screen = {

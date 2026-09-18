@@ -2,6 +2,7 @@
   import type { ChargeRequest } from '../api'
   import { formatCents } from '../money'
   import { look, shareUrl } from '../requests'
+  import PayDetails from './PayDetails.svelte'
 
   let {
     request,
@@ -24,6 +25,7 @@
   )
 
   let copied = $state(false)
+  let showing = $state(false)
 
   async function copy() {
     await navigator.clipboard.writeText(shareUrl(request.token))
@@ -74,6 +76,16 @@
         </button>
       {/if}
     {:else}
+      {#if request.pay_to}
+        <button
+          type="button"
+          class="secondary outline"
+          aria-expanded={showing}
+          onclick={() => (showing = !showing)}
+        >
+          {showing ? 'Hide' : 'How to pay'}
+        </button>
+      {/if}
       {#if request.state === 'open' || request.state === 'declined'}
         <button type="button" disabled={busy} onclick={() => onact('mark-paid')}>
           I've paid this
@@ -91,6 +103,10 @@
       {/if}
     {/if}
   </div>
+
+  {#if showing && request.pay_to}
+    <PayDetails payTo={request.pay_to} cents={request.amount_cents} compact />
+  {/if}
 </article>
 
 <style>

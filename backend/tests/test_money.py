@@ -110,5 +110,9 @@ def test_rejects_wrong_length_accounts():
 def test_reference_fits_a_bank_field_and_survives_truncation():
     assert make_reference("Power — March") == "Power March"
     assert len(make_reference("A very long description indeed")) <= 12
+    # No trailing space when the cut lands mid-word: a payer should not have to
+    # notice and delete one.
+    assert make_reference("Flat dinner at the Thai place") == "Flat dinner"
+    assert make_reference("Groceries Sunday") == "Groceries Su"
     assert make_reference("") == REFERENCE_FALLBACK
     assert make_reference(None) == REFERENCE_FALLBACK

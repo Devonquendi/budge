@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from budge import credentials
+from budge import credentials, payout
 from budge.auth import CurrentUser, SessionDep, password_hash, user_id
 from budge.db.models import NAME_MAX, User
 
@@ -26,12 +26,24 @@ class SignUp(Login):
     invite_code: str
 
 
+class Payout(BaseModel):
+    """Where this user is paid, and whether the bank still agrees it is theirs."""
+
+    account: str | None = None
+    name: str | None = None
+    verified: bool = False
+    # True when a verified account has stopped appearing among the connected
+    # ones. Worth saying out loud: requests are pointing at it.
+    revoked: bool = False
+
+
 class Me(BaseModel):
     """What the browser app knows about whoever is signed in."""
 
     email: str
     name: str | None = None
     onboarded: bool
+    payout: Payout = Payout()
 
 
 class ProfileUpdate(BaseModel):
@@ -40,9 +52,31 @@ class ProfileUpdate(BaseModel):
     name: str = Field(default="", max_length=NAME_MAX)
 
 
+class PayoutUpdate(BaseModel):
+    """Blank clears it, which puts the account back to having nowhere to pay."""
+
+    account: str = Field(default="", max_length=40)
+    name: str = Field(default="", max_length=NAME_MAX)
+
+
+async def _payout(session: AsyncSession, user: User) -> Payout:
+    verified = user.payout_verified_at is not None
+    return Payout(
+        account=user.payout_account,
+        name=user.payout_name,
+        verified=verified,
+        revoked=verified and not await payout.still_verified(session, user),
+    )
+
+
 async def _me(session: AsyncSession, user: User) -> Me:
     onboarded = await credentials.has_bank(session, user_id(user))
-    return Me(email=user.email, name=user.name, onboarded=onboarded)
+    return Me(
+        email=user.email,
+        name=user.name,
+        onboarded=onboarded,
+        payout=await _payout(session, user),
+    )
 
 
 async def _by_email(session: AsyncSession, email: str) -> User | None:
@@ -103,4 +137,14 @@ async def update_me(body: ProfileUpdate, user: CurrentUser, session: SessionDep)
     session.add(user)
     await session.commit()
     await session.refresh(user)
+    return await _me(session, user)
+
+
+@router.put("/me/payout")
+async def set_payout(body: PayoutUpdate, user: CurrentUser, session: SessionDep) -> Me:
+    """Sets where this user is paid, checking it against their bank if it can."""
+    try:
+        await payout.save(session, user, body.account.strip() or None, body.name)
+    except ValueError as wrong:
+        raise HTTPException(status_code=400, detail=str(wrong)) from wrong
     return await _me(session, user)

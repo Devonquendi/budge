@@ -21,6 +21,15 @@ class User(SQLModel, table=True):
     password_hash: str
     # What the user asked to be called. Null until they say.
     name: str | None = Field(default=None, max_length=NAME_MAX)
+    # Where money should actually go, normalised to bank-branch-account-suffix.
+    # Null until they say, and a request without one can only be claimed paid
+    # rather than paid.
+    payout_account: str | None = Field(default=None)
+    # The name on that account, which Confirmation of Payee checks against.
+    payout_name: str | None = Field(default=None, max_length=NAME_MAX)
+    # When it was last seen among their connected accounts. Null means it was
+    # never checked; a stale one means it may have been disconnected since.
+    payout_verified_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
