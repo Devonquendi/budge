@@ -16,7 +16,11 @@
 
 set -euo pipefail
 
-NEON="npx -y neon@latest"
+# --org-id on every call: without it the CLI stops to ask which organization,
+# which is a prompt nothing here can answer.
+ORG_ID="${NEON_ORG_ID:-}"
+NEON_BIN="npx -y neon@latest"
+NEON() { $NEON_BIN "$@" ${ORG_ID:+--org-id "$ORG_ID"}; }
 DEMO_DB="budge_demo"
 PREVIEW_DB="budge_preview"
 
@@ -26,8 +30,22 @@ say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 
 # ---------------------------------------------------------------- Neon side
 
+if [[ -z "$ORG_ID" ]]; then
+  # One organization is the normal case; more than one and it has to be said.
+  ORG_ID=$($NEON_BIN orgs list -o json 2>/dev/null | python3 -c '
+import json, sys
+try:
+    rows = json.load(sys.stdin)
+except Exception:
+    raise SystemExit(0)
+rows = rows.get("organizations", rows) if isinstance(rows, dict) else rows
+if len(rows) == 1:
+    print(rows[0]["id"])
+' || true)
+fi
+
 say "Checking the Neon login"
-if ! $NEON projects list -o json >/dev/null 2>&1; then
+if ! NEON projects list -o json >/dev/null 2>&1; then
   cat <<'MSG'
 Not signed in to Neon. Either works:
 
@@ -43,7 +61,7 @@ MSG
   exit 1
 fi
 
-PROJECT_ID=$($NEON projects list -o json | python3 -c '
+PROJECT_ID=$(NEON projects list -o json | python3 -c '
 import json, sys
 projects = json.load(sys.stdin)
 rows = projects.get("projects", projects) if isinstance(projects, dict) else projects
@@ -56,7 +74,7 @@ else:
 ')
 say "Neon project: $PROJECT_ID"
 
-existing=$($NEON databases list --project-id "$PROJECT_ID" -o json | python3 -c '
+existing=$(NEON databases list --project-id "$PROJECT_ID" -o json | python3 -c '
 import json, sys
 print(" ".join(d["name"] for d in json.load(sys.stdin)))
 ')
@@ -67,12 +85,12 @@ for db in "$DEMO_DB" "$PREVIEW_DB"; do
     echo "  $db already there, leaving it alone"
   else
     say "Creating $db"
-    $NEON databases create --project-id "$PROJECT_ID" --name "$db"
+    NEON databases create --project-id "$PROJECT_ID" --name "$db"
   fi
 done
 
-url_for() { $NEON connection-string --project-id "$PROJECT_ID" --database-name "$1" --pooled; }
-direct_for() { $NEON connection-string --project-id "$PROJECT_ID" --database-name "$1"; }
+url_for() { NEON connection-string --project-id "$PROJECT_ID" --database-name "$1" --pooled; }
+direct_for() { NEON connection-string --project-id "$PROJECT_ID" --database-name "$1"; }
 
 DEMO_URL=$(url_for "$DEMO_DB")
 DEMO_DIRECT=$(direct_for "$DEMO_DB")
