@@ -3,8 +3,12 @@
 # Give the public demo and branch previews a database each, so neither of them
 # writes into the one holding real rows.
 #
-# Run `npx neon@latest auth` first: this needs a Neon login, and that is a
-# browser round trip nobody can script for you.
+# Needs a Neon login. Two ways, and the second is the reliable one:
+#
+#   npx neon@latest auth        browser sign in, times out after 60 seconds
+#   export NEON_API_KEY=...     from Neon Console > Account settings > API keys
+#
+# The API key skips the browser entirely and does not expire mid-command.
 #
 # Safe to re-run. It skips a database that already exists, and it only touches
 # DATABASE_URL and DATABASE_URL_UNPOOLED on the Vercel project this repo is
@@ -24,9 +28,18 @@ say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 
 say "Checking the Neon login"
 if ! $NEON projects list -o json >/dev/null 2>&1; then
-  echo "Not signed in. Run this first, then run me again:"
-  echo
-  echo "    npx neon@latest auth"
+  cat <<'MSG'
+Not signed in to Neon. Either works:
+
+  1. An API key, which does not time out:
+       Neon Console > Account settings > API keys > Create new API key
+       export NEON_API_KEY=<the key>
+
+  2. The browser flow, which gives you 60 seconds to finish signing in:
+       npx neon@latest auth
+
+Then run me again.
+MSG
   exit 1
 fi
 
