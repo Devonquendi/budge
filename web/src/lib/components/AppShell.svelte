@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import { formatCents } from '../money'
+  import { contacts, loaded, load } from '../people.svelte'
   import { prefs } from '../prefs.svelte'
   import { isDark, toggleTheme } from '../theme.svelte'
   import { getWorkspace } from '../workspace.svelte'
@@ -25,6 +26,10 @@
 
   const workspace = getWorkspace()
 
+  // The sidebar shows how many people are in the list, and every picker
+  // reads the same module, so one load here serves the whole app.
+  if (!loaded()) load()
+
   // Blank rather than zero until the first load answers. "No transactions"
   // and "not loaded yet" shouldn't look the same.
   const counts = $derived({
@@ -32,6 +37,7 @@
     transactions: workspace.transactions.length
       ? String(workspace.transactions.length)
       : '',
+    people: contacts().length ? String(contacts().length) : '',
   })
 
   // Narrow screens get a hamburger. Past the breakpoint the same <nav> is the
@@ -121,6 +127,10 @@
       <Link href="/requests" onclick={() => (navOpen = false)}>
         Requests
         <span class="count"></span>
+      </Link>
+      <Link href="/people" onclick={() => (navOpen = false)}>
+        People
+        <span class="count numeric">{counts.people}</span>
       </Link>
       <Link href="/settings" onclick={() => (navOpen = false)}>
         Settings

@@ -9,6 +9,7 @@
   import ConnectAkahu from './routes/ConnectAkahu.svelte'
   import Dashboard from './routes/Dashboard.svelte'
   import Login from './routes/Login.svelte'
+  import People from './routes/People.svelte'
   import Profile from './routes/Profile.svelte'
   import PublicRequest from './routes/PublicRequest.svelte'
   import Requests from './routes/Requests.svelte'
@@ -19,11 +20,18 @@
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
-  const SIGNED_IN = ['/', '/transactions', '/requests', '/profile', '/settings']
+  const SIGNED_IN = [
+    '/',
+    '/transactions',
+    '/requests',
+    '/people',
+    '/profile',
+    '/settings',
+  ]
 
   // Asking someone for money needs no bank connection, so this page sits
   // outside the onboarding gate that every other signed-in page is behind.
-  const WITHOUT_A_BANK = ['/requests', '/profile']
+  const WITHOUT_A_BANK = ['/requests', '/people', '/profile']
 
   /** The payer's page. Public, and the only route with a variable in it. */
   const SHARED_REQUEST = /^\/r\/([0-9a-z]+)$/
@@ -145,6 +153,8 @@
   >
     {#if path() === '/requests'}
       <Requests />
+    {:else if path() === '/people'}
+      <People />
     {:else if path() === '/transactions'}
       <Transactions />
     {:else if path() === '/profile'}

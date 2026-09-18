@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import col, select
 
+from budge.api import people
 from budge.auth import CurrentUserId, SessionDep
 from budge.charges.ledger import derive_state, make_token, tally_bill
 from budge.charges.money import parse_amount, split_evenly
@@ -187,6 +188,12 @@ async def create_bill(
     ]
     session.add_all(requests)
     await session.commit()
+
+    # Asking someone is what puts them in your people list. A contact list you
+    # have to curate by hand is a contact list nobody curates.
+    await people.remember(
+        session, user_id, [(r.payee_email, r.payee_name) for r in requests]
+    )
 
     return [_view(r, bill, creator, []) for r in requests]
 

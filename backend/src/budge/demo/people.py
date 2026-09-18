@@ -17,7 +17,15 @@ from budge import environment
 from budge.auth import password_hash
 from budge.charges.ledger import make_token
 from budge.charges.money import split_evenly
-from budge.db.models import Bill, ChargeRequest, RequestEvent, User
+from budge.db.models import (
+    Bill,
+    ChargeRequest,
+    Contact,
+    Group,
+    GroupMember,
+    RequestEvent,
+    User,
+)
 
 
 def _unusable_password() -> str:
@@ -141,6 +149,37 @@ def is_persona(email: str) -> bool:
     return email.lower() in BY_EMAIL
 
 
+async def _seed_people(session: AsyncSession, users: dict[str, User]) -> None:
+    """Every persona knows the others, and they all share a flat.
+
+    Without this the picker is empty on a fresh demo and the first thing anyone
+    sees is a blank contact list, which says nothing about what the app does.
+    """
+    for persona in ROSTER:
+        me = users[persona.email]
+        others = [p for p in ROSTER if p.email != persona.email]
+        for index, other in enumerate(others):
+            session.add(
+                Contact(
+                    user_id=me.id or 0,
+                    email=other.email,
+                    name=other.name,
+                    # Two favourites each, so the picker shows both states.
+                    favourite=index < 2,
+                )
+            )
+
+        group = Group(user_id=me.id or 0, name="The flat")
+        session.add(group)
+        await session.commit()
+        await session.refresh(group)
+        for other in others:
+            session.add(
+                GroupMember(group_id=group.id or 0, email=other.email, name=other.name)
+            )
+    await session.commit()
+
+
 async def seed(session: AsyncSession) -> dict[str, User]:
     """Creates the roster and its bills once, then leaves them alone."""
     existing = {
@@ -172,6 +211,8 @@ async def seed(session: AsyncSession) -> dict[str, User]:
     ).first()
     if already is not None:
         return existing
+
+    await _seed_people(session, existing)
 
     for title, creator_email, total, payees in SCRIPT:
         bill = Bill(

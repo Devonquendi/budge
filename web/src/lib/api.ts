@@ -118,6 +118,23 @@ export type Inbox = {
 
 export type NewPayee = { email: string; name?: string }
 
+export type Contact = {
+  id: number
+  email: string
+  name: string | null
+  /** Favourites lead the picker; the rest follow by who you asked most recently. */
+  favourite: boolean
+  last_asked_at: string | null
+}
+
+export type Group = {
+  id: number
+  name: string
+  members: NewPayee[]
+}
+
+export type People = { contacts: Contact[]; groups: Group[] }
+
 /** An invented person to sign in as. Empty in production, where demo is off. */
 export type Persona = { email: string; name: string; blurb: string }
 
@@ -227,6 +244,24 @@ export const api = {
 
   asCreator: (id: number, action: 'confirm' | 'cancel' | 'reopen', note = '') =>
     request<ChargeRequest>(`/requests/${id}/${action}`, 'POST', { note }),
+
+  people: () => request<People>('/people'),
+
+  addContact: (email: string, name = '') =>
+    request<Contact>('/people/contacts', 'POST', { email, name }),
+
+  favourite: (id: number, favourite: boolean) =>
+    request<Contact>(`/people/contacts/${id}/favourite`, 'POST', { favourite }),
+
+  removeContact: (id: number) => request<void>(`/people/contacts/${id}`, 'DELETE'),
+
+  createGroup: (name: string, members: NewPayee[]) =>
+    request<Group>('/people/groups', 'POST', { name, members }),
+
+  updateGroup: (id: number, name: string, members: NewPayee[]) =>
+    request<Group>(`/people/groups/${id}`, 'PUT', { name, members }),
+
+  deleteGroup: (id: number) => request<void>(`/people/groups/${id}`, 'DELETE'),
 
   personas: () => request<Persona[]>('/demo/personas'),
 
