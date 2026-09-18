@@ -5,18 +5,27 @@
   // The lasting answer to "did I already ask anyone for this?". Without it a
   // split leaves no trace on the ledger, and the only way to find out is to go
   // looking through requests.
-  let { summary }: { summary: SplitSummary } = $props()
+  let {
+    summary,
+    compact = false,
+  }: {
+    summary: SplitSummary
+    /** For rows too narrow to carry the figure. The tooltip still has it. */
+    compact?: boolean
+  } = $props()
 
   const settled = $derived(summary.outstanding_cents === 0)
 </script>
 
 <span
-  class={['split-mark', { settled }]}
+  class={['split-mark', { settled, compact }]}
   title={settled
-    ? `All ${summary.people} paid up`
-    : `${formatCents(summary.outstanding_cents, 'NZD')} still owed by ${summary.people}`}
+    ? `Split ${summary.people} ways, all paid up`
+    : `Split ${summary.people} ways, ${formatCents(summary.outstanding_cents, 'NZD')} still owed`}
 >
-  {#if settled}
+  {#if compact}
+    Split
+  {:else if settled}
     Split · paid
   {:else}
     Split · {formatCents(summary.outstanding_cents, 'NZD')} owed
@@ -38,5 +47,15 @@
   .settled {
     background: color-mix(in oklab, var(--ctp-green) 20%, transparent);
     color: var(--ctp-green);
+  }
+
+  /* Its own column rather than inside the merchant name, which truncates: the
+     badge was being clipped away entirely on the dashboard. */
+  .compact {
+    flex: none;
+    padding: 0.0625rem 0.25rem;
+    font-size: 0.5625rem;
+    line-height: 1.5;
+    text-transform: uppercase;
   }
 </style>

@@ -131,10 +131,10 @@
                 <MerchantBadge {transaction} />
                 <span class="what">
                   {transaction.merchant?.name ?? transaction.description}
-                  {#if splitOf(transaction.id)}
-                    <SplitMark summary={splitOf(transaction.id)!} />
-                  {/if}
                 </span>
+                {#if splitOf(transaction.id)}
+                  <SplitMark summary={splitOf(transaction.id)!} compact />
+                {/if}
                 <span class="when numeric">
                   {shortDate.format(new Date(transaction.date))}
                 </span>
