@@ -155,8 +155,19 @@ async def _seed_people(session: AsyncSession, users: dict[str, User]) -> None:
     Without this the picker is empty on a fresh demo and the first thing anyone
     sees is a blank contact list, which says nothing about what the app does.
     """
+    seeded = {
+        contact.user_id
+        for contact in await session.exec(
+            select(Contact).where(
+                col(Contact.user_id).in_([u.id or 0 for u in users.values()])
+            )
+        )
+    }
+
     for persona in ROSTER:
         me = users[persona.email]
+        if me.id in seeded:
+            continue
         others = [p for p in ROSTER if p.email != persona.email]
         for index, other in enumerate(others):
             session.add(
@@ -181,7 +192,14 @@ async def _seed_people(session: AsyncSession, users: dict[str, User]) -> None:
 
 
 async def seed(session: AsyncSession) -> dict[str, User]:
-    """Creates the roster and its bills once, then leaves them alone."""
+    """Creates whatever the demo is missing, and leaves alone whatever it has.
+
+    Each part checks for itself rather than hiding behind one "already seeded"
+    flag. A demo database outlives the deploy that created it, so anything added
+    to the script later has to be able to land on a database that was seeded
+    before it existed. One flag meant contacts and groups never appeared on a
+    demo that already had bills.
+    """
     existing = {
         user.email: user
         for user in await session.exec(
@@ -201,22 +219,29 @@ async def seed(session: AsyncSession) -> dict[str, User]:
     for user in existing.values():
         await session.refresh(user)
 
-    # One bill standing in for the lot: if it survived a previous sign-in, so
-    # did the rest, and seeding again would just duplicate them.
     creator_ids = [u.id or 0 for u in existing.values()]
+    await _seed_people(session, existing)
+    await _seed_bills(session, existing, creator_ids)
+    return existing
+
+
+async def _seed_bills(
+    session: AsyncSession, users: dict[str, User], creator_ids: list[int]
+) -> None:
+    """The script of bills, once. One standing in for the lot is enough here:
+    they are written in a single pass, so either all of them are there or none.
+    """
     already = (
         await session.exec(
             select(Bill).where(col(Bill.creator_id).in_(creator_ids)).limit(1)
         )
     ).first()
     if already is not None:
-        return existing
-
-    await _seed_people(session, existing)
+        return
 
     for title, creator_email, total, payees in SCRIPT:
         bill = Bill(
-            creator_id=existing[creator_email].id or 0, title=title, total_cents=total
+            creator_id=users[creator_email].id or 0, title=title, total_cents=total
         )
         session.add(bill)
         await session.commit()
@@ -240,5 +265,3 @@ async def seed(session: AsyncSession) -> dict[str, User]:
                     RequestEvent(request_id=request.id or 0, type=type, actor=actor)
                 )
         await session.commit()
-
-    return existing
