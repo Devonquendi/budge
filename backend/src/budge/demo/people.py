@@ -8,6 +8,7 @@ no demo session can reach a real bank and no demo row is a way into the app.
 """
 
 import secrets
+from datetime import UTC, datetime
 
 from pydantic import BaseModel
 from sqlmodel import col, select
@@ -16,7 +17,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from budge import environment
 from budge.auth import password_hash
 from budge.charges.ledger import make_token
-from budge.charges.money import split_evenly
+from budge.charges.money import normalise_account, split_evenly
 from budge.db.models import (
     Bill,
     ChargeRequest,
@@ -26,6 +27,7 @@ from budge.db.models import (
     RequestEvent,
     User,
 )
+from budge.demo import feed
 
 
 def _unusable_password() -> str:
@@ -215,6 +217,18 @@ async def seed(session: AsyncSession) -> dict[str, User]:
             )
             session.add(user)
             existing[persona.email] = user
+
+    # Their everyday account, so a demo request can say where to pay. Verified
+    # by construction: the fixture feed is the bank, and it returns this number.
+    for persona in ROSTER:
+        user = existing[persona.email]
+        if user.payout_account:
+            continue
+        everyday = feed.accounts_for(persona.email)[0]
+        user.payout_account = normalise_account(everyday.formatted_account)
+        user.payout_name = persona.name
+        user.payout_verified_at = datetime.now(UTC)
+        session.add(user)
     await session.commit()
     for user in existing.values():
         await session.refresh(user)

@@ -44,6 +44,34 @@
   const trimmed = $derived(name.trim())
   const nameDirty = $derived(trimmed !== (me.name ?? ''))
 
+  let accountDraft = $state.raw<string | null>(null)
+  let payoutNameDraft = $state.raw<string | null>(null)
+  let savingPayout = $state(false)
+
+  const payoutAccount = $derived(accountDraft ?? me.payout.account ?? '')
+  const payoutName = $derived(payoutNameDraft ?? me.payout.name ?? '')
+
+  async function savePayout(event: SubmitEvent) {
+    event.preventDefault()
+    savingPayout = true
+    error = ''
+    notice = ''
+    try {
+      const updated = await api.savePayout(payoutAccount.trim(), payoutName.trim())
+      onupdate(updated)
+      accountDraft = null
+      payoutNameDraft = null
+      notice = updated.payout.account
+        ? updated.payout.verified
+          ? 'Saved, and your bank confirms that account is yours.'
+          : "Saved. We couldn't match it to a connected account, so nobody has checked it."
+        : 'Cleared. Requests will have nowhere to point.'
+    } catch (failure) {
+      error = errorMessage(failure)
+    }
+    savingPayout = false
+  }
+
   async function saveName(event: SubmitEvent) {
     event.preventDefault()
     savingName = true
@@ -134,6 +162,55 @@
             </button>
           </div>
         </div>
+      </Panel>
+    </form>
+
+    <form onsubmit={savePayout}>
+      <Panel title="Getting paid" padded>
+        {#if me.payout.revoked}
+          <p class="error">
+            This account no longer shows up among your connected accounts. Every request
+            you send points at it, so check it before asking anyone else for money.
+          </p>
+        {/if}
+
+        <div class="field">
+          <label class="eyebrow" for="payout-account">Account number</label>
+          <div class="row">
+            <input
+              id="payout-account"
+              type="text"
+              inputmode="numeric"
+              placeholder="12-3400-4339250-00"
+              value={payoutAccount}
+              oninput={(event) => (accountDraft = event.currentTarget.value)}
+            />
+            <button type="submit" disabled={savingPayout}>
+              {savingPayout ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="payout-name">Name on the account</label>
+          <input
+            id="payout-name"
+            type="text"
+            maxlength={NAME_MAX}
+            placeholder="As your bank has it"
+            value={payoutName}
+            oninput={(event) => (payoutNameDraft = event.currentTarget.value)}
+          />
+        </div>
+
+        <p class="muted hint">
+          {#if me.payout.verified && !me.payout.revoked}
+            Your bank lists this account, so requests say it's been checked.
+          {:else}
+            Goes on every request you send, with a reference, so people can pay you
+            without asking how.
+          {/if}
+        </p>
       </Panel>
     </form>
 
@@ -238,6 +315,12 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+
+  .hint {
+    margin: 0.5rem 0 0;
+    font-size: var(--text-meta);
+    line-height: 1.45;
   }
 
   .field {

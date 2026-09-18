@@ -81,4 +81,7 @@ def make_reference(title: object) -> str:
     """Build a bank reference that still means something after truncation."""
     clean = _NOT_REFERENCE.sub(" ", "" if title is None else str(title))
     clean = _RUNS_OF_SPACE.sub(" ", clean).strip()
-    return (clean or REFERENCE_FALLBACK)[:REFERENCE_LENGTH]
+    # Stripped again after the cut: truncating mid-title leaves a trailing
+    # space, which is a thing a payer has to notice and delete by hand, and
+    # some banks quietly drop it anyway so two references stop matching.
+    return (clean or REFERENCE_FALLBACK)[:REFERENCE_LENGTH].strip()

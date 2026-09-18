@@ -14,7 +14,7 @@ from sqlmodel import col, select
 from budge.api import people
 from budge.auth import CurrentUserId, SessionDep
 from budge.charges.ledger import derive_state, make_token, tally_bill
-from budge.charges.money import parse_amount, split_evenly
+from budge.charges.money import make_reference, parse_amount, split_evenly
 from budge.db.models import (
     NAME_MAX,
     NOTE_MAX,
@@ -65,6 +65,20 @@ class Event(BaseModel):
     created_at: datetime
 
 
+class PayTo(BaseModel):
+    """Everything a payer needs to type into their banking app.
+
+    Absent when the person owed has not said where to pay. The request still
+    works: it can be marked paid, because people settle up in cash and by
+    other means. It just cannot tell you where the money goes.
+    """
+
+    account: str
+    name: str | None
+    reference: str
+    verified: bool
+
+
 class RequestView(BaseModel):
     """One request, from either end of it."""
 
@@ -80,6 +94,7 @@ class RequestView(BaseModel):
     # The transaction this was split from, when it came from the feed rather
     # than a typed-in amount. Akahu's id, so the ledger can point back at it.
     source_transaction_id: str | None
+    pay_to: PayTo | None
     state: str
     created_at: datetime
     events: list[Event]
@@ -119,6 +134,19 @@ async def _events(
     return by_request
 
 
+def _pay_to(creator: User, bill: Bill) -> PayTo | None:
+    if not creator.payout_account:
+        return None
+    return PayTo(
+        account=creator.payout_account,
+        name=creator.payout_name or creator.name,
+        # Twelve characters, because bank reference fields truncate silently
+        # and a reference nobody can read back is worse than none.
+        reference=make_reference(bill.title),
+        verified=creator.payout_verified_at is not None,
+    )
+
+
 def _view(
     request: ChargeRequest, bill: Bill, creator: User, events: list[Event]
 ) -> RequestView:
@@ -131,6 +159,7 @@ def _view(
         payee_email=request.payee_email,
         payee_name=request.payee_name,
         source_transaction_id=bill.source_transaction_id,
+        pay_to=_pay_to(creator, bill),
         from_name=creator.name or creator.email,
         from_email=creator.email,
         # The whole reason the event log exists: state is a function of it.

@@ -23,12 +23,23 @@ export type Account = {
   nickname: string | null
 }
 
+export type Payout = {
+  /** Normalised bank-branch-account-suffix, or null if they never said. */
+  account: string | null
+  name: string | null
+  /** The bank returned this account among the connected ones. */
+  verified: boolean
+  /** It was verified once and has since stopped appearing. Requests point at it. */
+  revoked: boolean
+}
+
 export type Me = {
   email: string
   /** What the user asked to be called, or null if they never said. */
   name: string | null
   /** False until Akahu tokens are stored, which gates every account endpoint. */
   onboarded: boolean
+  payout: Payout
 }
 
 export type Connection = { connected: boolean }
@@ -83,6 +94,14 @@ export type RequestEvent = {
   created_at: string
 }
 
+/** Everything a payer types into their banking app. Null if nowhere was set. */
+export type PayTo = {
+  account: string
+  name: string | null
+  reference: string
+  verified: boolean
+}
+
 export type ChargeRequest = {
   id: number
   /** The whole address of the request: /r/<token> opens it without an account. */
@@ -96,6 +115,7 @@ export type ChargeRequest = {
   from_email: string
   /** The transaction it was split from, or null if the amount was typed in. */
   source_transaction_id: string | null
+  pay_to: PayTo | null
   state: RequestState
   created_at: string
   events: RequestEvent[]
@@ -199,6 +219,10 @@ export const api = {
 
   /** Blank clears the name. Answers with the whole profile. */
   saveName: (name: string) => request<Me>('/auth/me', 'PATCH', { name }),
+
+  /** Blank clears it, leaving requests with nowhere to point. */
+  savePayout: (account: string, name: string) =>
+    request<Me>('/auth/me/payout', 'PUT', { account, name }),
 
   connect: (app_token: string, user_token: string) =>
     request<Connection>('/akahu', 'PUT', { app_token, user_token }),

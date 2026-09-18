@@ -2,6 +2,7 @@
   import { api, errorMessage, type ChargeRequest } from '../lib/api'
   import AuthCard from '../lib/components/AuthCard.svelte'
   import Link from '../lib/components/Link.svelte'
+  import PayDetails from '../lib/components/PayDetails.svelte'
   import { formatCents } from '../lib/money'
   import { look, payeeCanAct } from '../lib/requests'
 
@@ -57,6 +58,17 @@
     </p>
 
     <p class={['pill', badge?.tone]}>{badge?.label}</p>
+
+    {#if charge.pay_to && payeeCanAct(charge.state)}
+      <div class="how">
+        <PayDetails payTo={charge.pay_to} cents={charge.amount_cents} />
+      </div>
+    {:else if payeeCanAct(charge.state)}
+      <p class="muted small">
+        {charge.from_name} hasn't said where to pay yet. Settle it however you usually do, then
+        say so below.
+      </p>
+    {/if}
 
     {#if payeeCanAct(charge.state)}
       <label>
@@ -138,6 +150,10 @@
   .bad {
     background: color-mix(in oklab, var(--ctp-red) 20%, transparent);
     color: var(--ctp-red);
+  }
+
+  .how {
+    margin-top: 0.75rem;
   }
 
   label {
