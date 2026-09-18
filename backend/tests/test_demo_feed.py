@@ -86,9 +86,9 @@ def test_only_the_roster_gets_a_feed() -> None:
     assert demo.client_for("someone.real@example.com") is None
 
 
-def test_production_has_no_fixture_feed(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Belt and braces: a persona row in production still reaches no bank."""
-    monkeypatch.setenv("VERCEL_ENV", "production")
+def test_no_demo_switch_means_no_fixture_feed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Belt and braces: a persona row on a real deployment gets nothing."""
+    monkeypatch.delenv("BUDGE_DEMO", raising=False)
     assert demo.client_for(ARA) is None
 
 

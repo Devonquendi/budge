@@ -1,19 +1,19 @@
 """Invented people with invented bills, so the request loop can be played with.
 
-Off in production and on everywhere else, decided by VERCEL_ENV. The personas
+On only where BUDGE_DEMO=1 says so, and off by default. The personas
 are a fixed roster on @example.com, which RFC 2606 reserves and no one can ever
 receive mail at, and seeding is idempotent: signing in as the same persona twice
 adds nothing. None of them has Akahu credentials or a password anyone knows, so
 no demo session can reach a real bank and no demo row is a way into the app.
 """
 
-import os
 import secrets
 
 from pydantic import BaseModel
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from budge import environment
 from budge.auth import password_hash
 from budge.charges.ledger import make_token
 from budge.charges.money import split_evenly
@@ -132,8 +132,8 @@ PATHS = {
 
 
 def enabled() -> bool:
-    """Anywhere but production. Vercel sets VERCEL_ENV on every deployment."""
-    return os.environ.get("VERCEL_ENV") != "production"
+    """Whether this deployment has the invented people on it."""
+    return environment.demo_enabled()
 
 
 def is_persona(email: str) -> bool:

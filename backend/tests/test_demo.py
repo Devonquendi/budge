@@ -43,14 +43,28 @@ async def test_a_persona_has_no_password_that_works(client: AsyncClient) -> None
         assert response.status_code == 401
 
 
-async def test_production_has_no_demo_at_all(
+async def test_a_deployment_without_the_switch_has_no_demo(
     client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("VERCEL_ENV", "production")
+    """Off by default, wherever it is running."""
+    monkeypatch.delenv(environment.DEMO_SWITCH, raising=False)
 
     assert (await client.get("/api/demo/personas")).json() == []
     response = await client.post("/api/demo/session", json={"email": "ara@example.com"})
     assert response.status_code == 404
+
+
+async def test_the_demo_and_a_real_bank_are_never_both_on(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Invented people and live bank tokens do not share a deployment."""
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv(environment.DEMO_SWITCH, "1")
+    assert not environment.akahu_enabled()
+
+    # Even the preview escape hatch does not lift it.
+    monkeypatch.setenv(environment.ESCAPE_HATCH, "1")
+    assert not environment.akahu_enabled()
 
 
 async def test_an_invented_persona_is_refused(client: AsyncClient) -> None:
@@ -58,5 +72,5 @@ async def test_an_invented_persona_is_refused(client: AsyncClient) -> None:
     assert response.status_code == 404
 
 
-def test_demo_is_on_outside_production() -> None:
-    assert environment.vercel_env() == "development"
+def test_the_switch_is_what_turns_the_demo_on() -> None:
+    assert environment.demo_enabled()
