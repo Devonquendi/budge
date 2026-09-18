@@ -13,6 +13,7 @@
   import Profile from './routes/Profile.svelte'
   import PublicRequest from './routes/PublicRequest.svelte'
   import Requests from './routes/Requests.svelte'
+  import StandInBank from './routes/StandInBank.svelte'
   import Settings from './routes/Settings.svelte'
   import Signup from './routes/Signup.svelte'
   import Transactions from './routes/Transactions.svelte'
@@ -36,6 +37,9 @@
   /** The payer's page. Public, and the only route with a variable in it. */
   const SHARED_REQUEST = /^\/r\/([0-9a-z]+)$/
 
+  /** The stand-in bank, which only answers while the demo is switched on. */
+  const STAND_IN_BANK = /^\/bank\/([0-9a-z]+)$/
+
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
   let unreachable = $state('')
@@ -58,7 +62,7 @@
    * business, not ours.
    */
   function land() {
-    if (SHARED_REQUEST.test(path())) return
+    if (SHARED_REQUEST.test(path()) || STAND_IN_BANK.test(path())) return
     if (!me) {
       if (!SIGNED_OUT.includes(path())) navigate('/login', { replace: true })
     } else if (!me.onboarded && !WITHOUT_A_BANK.includes(path())) {
@@ -128,6 +132,8 @@
   </AuthCard>
 {:else if SHARED_REQUEST.test(path())}
   <PublicRequest token={SHARED_REQUEST.exec(path())?.[1] ?? ''} />
+{:else if STAND_IN_BANK.test(path())}
+  <StandInBank token={STAND_IN_BANK.exec(path())?.[1] ?? ''} />
 {:else if !me}
   {#if path() === '/signup'}
     <Signup onsignin={signedIn} />

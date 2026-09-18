@@ -5,6 +5,7 @@
   import PayDetails from '../lib/components/PayDetails.svelte'
   import { formatCents } from '../lib/money'
   import { look, payeeCanAct } from '../lib/requests'
+  import { navigate } from '../lib/router.svelte'
 
   // The one page in the app that works with no account at all. Whoever holds
   // the link is the payer: that is the whole authentication story here, and it
@@ -15,6 +16,9 @@
   let error = $state('')
   let busy = $state(true)
   let note = $state('')
+  // One-tap only exists where the stand-in bank does, which is the demo. A real
+  // deployment has no bank to send anyone to yet.
+  let hasBank = $state(false)
 
   const badge = $derived(charge && look(charge.state))
 
@@ -23,6 +27,11 @@
       charge = await api.requestByToken(token)
     } catch (failure) {
       error = errorMessage(failure)
+    }
+    try {
+      hasBank = (await api.personas()).length > 0
+    } catch {
+      hasBank = false
     }
     busy = false
   }
@@ -75,10 +84,28 @@
         <span>Anything to add?</span>
         <input bind:value={note} maxlength="200" placeholder="Paid it this morning" />
       </label>
+      {#if hasBank && charge.pay_to && charge.state === 'open'}
+        <div class="one-tap">
+          <button
+            type="button"
+            disabled={busy}
+            onclick={() => navigate(`/bank/${token}`)}
+          >
+            Pay {formatCents(charge.amount_cents, 'NZD')} now
+          </button>
+        </div>
+        <p class="muted small">Approve it in your bank. Takes one tap.</p>
+      {/if}
+
       <div class="actions">
         {#if charge.state === 'open'}
-          <button type="button" disabled={busy} onclick={() => act('mark-paid')}>
-            I've paid this
+          <button
+            type="button"
+            class="secondary outline"
+            disabled={busy}
+            onclick={() => act('mark-paid')}
+          >
+            {hasBank ? 'I paid another way' : "I've paid this"}
           </button>
         {/if}
         <button
@@ -168,6 +195,20 @@
 
   label input {
     margin: 0;
+  }
+
+  /* app.css pins every button to width: auto at a specificity this cannot
+     reach, so the row stretches the button rather than the button itself. */
+  .one-tap {
+    display: flex;
+    margin-top: 0.875rem;
+  }
+
+  .one-tap button {
+    flex: 1;
+    margin: 0;
+    font-size: var(--text-body);
+    font-weight: 600;
   }
 
   .actions {
