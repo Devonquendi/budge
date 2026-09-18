@@ -40,13 +40,19 @@ async def test_a_split_transaction_reports_what_came_of_it(
 
     summaries = (await client.get("/api/requests/by-transaction")).json()
     assert len(summaries) == 1
-    assert summaries[0] == {
-        "transaction_id": TXN,
-        "people": 2,
-        "asked_cents": 9000,
-        "outstanding_cents": 9000,
-        "settled_cents": 0,
+    assert summaries[0]["transaction_id"] == TXN
+    assert summaries[0]["people"] == 2
+    assert summaries[0]["asked_cents"] == 9000
+    assert summaries[0]["outstanding_cents"] == 9000
+    assert summaries[0]["settled_cents"] == 0
+
+    # The shares ride along, so asking again can show what was already asked.
+    assert {s["who"] for s in summaries[0]["shares"]} == {
+        "neve@example.com",
+        "tipene@example.com",
     }
+    assert all(s["state"] == "open" for s in summaries[0]["shares"])
+    assert all(s["token"] for s in summaries[0]["shares"])
 
 
 async def test_confirming_moves_it_from_outstanding_to_settled(
@@ -60,6 +66,7 @@ async def test_confirming_moves_it_from_outstanding_to_settled(
     assert summary["settled_cents"] == 4500
     assert summary["outstanding_cents"] == 4500
     assert summary["people"] == 2
+    assert sorted(s["state"] for s in summary["shares"]) == ["confirmed", "open"]
 
 
 async def test_a_cancelled_request_stops_counting(client: AsyncClient) -> None:
@@ -71,6 +78,7 @@ async def test_a_cancelled_request_stops_counting(client: AsyncClient) -> None:
     summary = (await client.get("/api/requests/by-transaction")).json()[0]
     assert summary["people"] == 1
     assert summary["asked_cents"] == 4500
+    assert len(summary["shares"]) == 1, "a withdrawn request is not still listed"
 
 
 async def test_splitting_the_same_transaction_twice_adds_up(

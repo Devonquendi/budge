@@ -1,9 +1,9 @@
 <script lang="ts">
   import { api, errorMessage, type ChargeRequest, type Transaction } from '../api'
   import { formatCents, toCents } from '../money'
-  import { refresh } from '../people.svelte'
-  import { refresh as refreshSplits } from '../splits.svelte'
-  import { shareUrl } from '../requests'
+  import { named, refresh } from '../people.svelte'
+  import { refresh as refreshSplits, splitOf } from '../splits.svelte'
+  import { look, shareUrl } from '../requests'
   import PeoplePicker from './PeoplePicker.svelte'
 
   // Splitting where you spotted the spend, without losing your place in the
@@ -28,6 +28,19 @@
   let copied = $state(false)
 
   const title = $derived(transaction.merchant?.name ?? transaction.description)
+
+  // What was already asked for this transaction, so asking again is a decision
+  // rather than a guess. Opening a blank form over the top of four outstanding
+  // requests is how somebody ends up owing for one coffee twice.
+  const already = $derived(splitOf(transaction.id))
+
+  let copiedShare = $state(0)
+
+  async function copyShare(share: { id: number; token: string }) {
+    await navigator.clipboard.writeText(shareUrl(share.token))
+    copiedShare = share.id
+    setTimeout(() => (copiedShare = 0), 1500)
+  }
   const total = $derived(Math.abs(toCents(transaction.amount)))
 
   const share = $derived(
@@ -42,7 +55,7 @@
       sent = await api.splitBill(
         title,
         String(total / 100),
-        chosen.map((email) => ({ email })),
+        named(chosen),
         includeMe,
         transaction.id,
       )
@@ -78,9 +91,39 @@
       <button type="button" class="secondary outline" onclick={onclose}>Done</button>
     </p>
   {:else}
+    {#if already}
+      <div class="already">
+        <p class="eyebrow">
+          Already asked · {formatCents(already.outstanding_cents, 'NZD')} of
+          {formatCents(already.asked_cents, 'NZD')} still owed
+        </p>
+        <ul>
+          {#each already.shares as share (share.id)}
+            <li>
+              <span class="name">{share.who}</span>
+              <span class="numeric">{formatCents(share.amount_cents, 'NZD')}</span>
+              <span class={['pill', look(share.state).tone]}
+                >{look(share.state).label}</span
+              >
+              <button
+                type="button"
+                class="secondary outline"
+                onclick={() => copyShare(share)}
+              >
+                {copiedShare === share.id ? 'Copied' : 'Link'}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
     <form onsubmit={send}>
       <div class="who">
-        <span class="eyebrow">Who owes a share of {title}</span>
+        <span class="eyebrow">
+          {already ? 'Ask someone else for' : 'Who owes a share of'}
+          {title}
+        </span>
         <PeoplePicker bind:chosen autofocus />
       </div>
 
@@ -122,6 +165,62 @@
     flex-wrap: wrap;
     align-items: end;
     gap: 0.5rem;
+  }
+
+  .already {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: var(--pico-border-width) solid var(--pico-card-border-color);
+  }
+
+  .already ul {
+    margin: 0.3125rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .already li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4375rem;
+    padding: 0.125rem 0;
+    font-size: var(--text-meta);
+  }
+
+  .already .name {
+    font-weight: 600;
+  }
+
+  .already button {
+    width: auto;
+    margin: 0 0 0 auto;
+    padding: 0.0625rem 0.4375rem;
+    font-size: var(--text-micro);
+  }
+
+  .pill {
+    padding: 0.0625rem 0.375rem;
+    border-radius: 999px;
+    font-size: var(--text-micro);
+    font-weight: 500;
+    background: var(--ctp-surface0);
+    color: var(--pico-muted-color);
+  }
+
+  .claimed {
+    background: color-mix(in oklab, var(--ctp-yellow) 22%, transparent);
+    color: var(--ctp-yellow);
+  }
+
+  .good {
+    background: color-mix(in oklab, var(--ctp-green) 22%, transparent);
+    color: var(--ctp-green);
+  }
+
+  .bad {
+    background: color-mix(in oklab, var(--ctp-red) 20%, transparent);
+    color: var(--ctp-red);
   }
 
   .who {

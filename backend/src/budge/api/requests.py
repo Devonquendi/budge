@@ -119,11 +119,22 @@ class Suggestion(BaseModel):
     occurred_at: datetime
 
 
+class SplitShare(BaseModel):
+    """One person's share of a transaction that was split, and how it is going."""
+
+    id: int
+    token: str
+    who: str
+    amount_cents: int
+    state: str
+
+
 class SplitSummary(BaseModel):
     """What came of splitting one transaction, for the ledger to show.
 
     Keyed by Akahu's transaction id, because that is all a row on the ledger
-    knows about itself.
+    knows about itself. The shares come with it so that asking again can show
+    what was already asked, rather than opening a blank form over the top.
     """
 
     transaction_id: str
@@ -131,6 +142,7 @@ class SplitSummary(BaseModel):
     asked_cents: int
     outstanding_cents: int
     settled_cents: int
+    shares: list[SplitShare]
 
 
 class Totals(BaseModel):
@@ -444,6 +456,7 @@ async def splits_by_transaction(
                 asked_cents=0,
                 outstanding_cents=0,
                 settled_cents=0,
+                shares=[],
             ),
         )
         summary.people += 1
@@ -452,6 +465,15 @@ async def splits_by_transaction(
             summary.settled_cents += request.amount_cents
         else:
             summary.outstanding_cents += request.amount_cents
+        summary.shares.append(
+            SplitShare(
+                id=request.id or 0,
+                token=request.token,
+                who=request.payee_name or request.payee_email,
+                amount_cents=request.amount_cents,
+                state=state,
+            )
+        )
 
     return list(summaries.values())
 

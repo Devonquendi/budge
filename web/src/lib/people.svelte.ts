@@ -49,3 +49,15 @@ export function refresh(): Promise<void> {
 export function label(person: { email: string; name?: string | null }): string {
   return person.name || person.email.split('@')[0]
 }
+
+/**
+ * Addresses turned into payees, named wherever we know the name.
+ *
+ * The picker knows what everyone is called, so a request should carry it: it
+ * is what the payee list reads back, and what lets a credit be matched to the
+ * right person when two of them owe the same amount.
+ */
+export function named(emails: string[]): { email: string; name: string }[] {
+  const byEmail = new Map(state.contacts.map((one) => [one.email, one]))
+  return emails.map((email) => ({ email, name: byEmail.get(email)?.name ?? '' }))
+}

@@ -141,6 +141,16 @@ export type Suggestion = {
   occurred_at: string
 }
 
+/** One person's share of a transaction that was split. */
+export type SplitShare = {
+  id: number
+  token: string
+  /** Their name if we have one, otherwise their email. */
+  who: string
+  amount_cents: number
+  state: RequestState
+}
+
 /** What came of splitting one transaction, keyed by Akahu's transaction id. */
 export type SplitSummary = {
   transaction_id: string
@@ -148,6 +158,7 @@ export type SplitSummary = {
   asked_cents: number
   outstanding_cents: number
   settled_cents: number
+  shares: SplitShare[]
 }
 
 export type Inbox = {
