@@ -30,6 +30,7 @@ say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 
 # ---------------------------------------------------------------- Neon side
 
+say "Finding your Neon organization"
 if [[ -z "$ORG_ID" ]]; then
   # One organization is the normal case; more than one and it has to be said.
   ORG_ID=$($NEON_BIN orgs list -o json 2>/dev/null | python3 -c '
@@ -43,6 +44,19 @@ if len(rows) == 1:
     print(rows[0]["id"])
 ' || true)
 fi
+
+# Bail rather than carry on without one. Every Neon call below would otherwise
+# stop to ask which organization to use, and with output redirected that prompt
+# is invisible: the script just appears to hang.
+if [[ -z "$ORG_ID" ]]; then
+  echo "Could not work out which Neon organization to use. Yours:"
+  $NEON_BIN orgs list || true
+  echo
+  echo "Then run me again with it set:"
+  echo "    NEON_ORG_ID=<the id> $0"
+  exit 1
+fi
+echo "  $ORG_ID"
 
 say "Checking the Neon login"
 if ! NEON projects list -o json >/dev/null 2>&1; then
