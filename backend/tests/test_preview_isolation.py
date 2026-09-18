@@ -16,6 +16,8 @@ INVITE = {"invite_code": INVITE_CODE}
 def preview(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VERCEL_ENV", environment.PREVIEW)
     monkeypatch.delenv(environment.ESCAPE_HATCH, raising=False)
+    # Otherwise the demo switch would be doing the blocking, not the preview.
+    monkeypatch.delenv(environment.DEMO_SWITCH, raising=False)
 
 
 # Not one of the demo roster: a persona is handed the fixture feed, which
@@ -44,6 +46,7 @@ def test_the_escape_hatch_turns_it_back_on(
 
 def test_production_is_unaffected(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.delenv(environment.DEMO_SWITCH, raising=False)
     assert environment.akahu_enabled()
 
 

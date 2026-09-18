@@ -20,8 +20,9 @@ os.environ["DATABASE_URL_UNPOOLED"] = "sqlite://"
 os.environ["AUTH_SECRET"] = "test-secret"
 os.environ["CREDENTIALS_ENCRYPTION_KEY"] = Fernet.generate_key().decode()
 os.environ["SIGNUP_INVITE_CODE"] = INVITE_CODE
-# The demo routes switch themselves off in production and nowhere else.
 os.environ.pop("VERCEL_ENV", None)
+# The demo is off unless a deployment says otherwise, and its tests say so.
+os.environ["BUDGE_DEMO"] = "1"
 
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
