@@ -5,7 +5,8 @@
   import RequestRow from '../lib/components/RequestRow.svelte'
   import Suggestions from '../lib/components/Suggestions.svelte'
   import { formatCents } from '../lib/money'
-  import { refresh } from '../lib/people.svelte'
+  import { named, refresh } from '../lib/people.svelte'
+  import { refresh as refreshSplits } from '../lib/splits.svelte'
   import { shareUrl } from '../lib/requests'
   import { take, type Staged } from '../lib/split.svelte'
 
@@ -48,7 +49,7 @@
       justCreated = await api.splitBill(
         title,
         amount,
-        chosen.map((email) => ({ email })),
+        named(chosen),
         includeMe,
         fromSpend?.transactionId,
       )
@@ -57,6 +58,7 @@
       chosen = []
       fromSpend = null
       await refresh()
+      await refreshSplits()
       await load()
     } catch (failure) {
       error = errorMessage(failure)
@@ -74,6 +76,7 @@
         await api.asPayee(request.token, action as 'mark-paid' | 'decline')
       }
       await load()
+      await refreshSplits()
     } catch (failure) {
       error = errorMessage(failure)
     }
@@ -188,7 +191,12 @@
   {#if error}<p class="error">{error}</p>{/if}
 
   <Panel title="Has anyone paid?">
-    <Suggestions onanswered={load} />
+    <Suggestions
+      onanswered={() => {
+        load()
+        refreshSplits()
+      }}
+    />
   </Panel>
 
   <div class="columns">

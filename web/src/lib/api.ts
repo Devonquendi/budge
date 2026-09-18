@@ -141,6 +141,26 @@ export type Suggestion = {
   occurred_at: string
 }
 
+/** One person's share of a transaction that was split. */
+export type SplitShare = {
+  id: number
+  token: string
+  /** Their name if we have one, otherwise their email. */
+  who: string
+  amount_cents: number
+  state: RequestState
+}
+
+/** What came of splitting one transaction, keyed by Akahu's transaction id. */
+export type SplitSummary = {
+  transaction_id: string
+  people: number
+  asked_cents: number
+  outstanding_cents: number
+  settled_cents: number
+  shares: SplitShare[]
+}
+
 export type Inbox = {
   sent: ChargeRequest[]
   received: ChargeRequest[]
@@ -277,6 +297,9 @@ export const api = {
     request<ChargeRequest>(`/requests/r/${encodeURIComponent(token)}/${action}`, 'POST', {
       note,
     }),
+
+  /** One call for the whole ledger: a row knows its id and nothing else. */
+  splitsByTransaction: () => request<SplitSummary[]>('/requests/by-transaction'),
 
   suggestions: () => request<Suggestion[]>('/requests/suggestions'),
 

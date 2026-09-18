@@ -3,9 +3,11 @@
   import type { Account, Transaction } from '../api'
   import { categoryColor } from '../categories'
   import { format, toCents } from '../money'
+  import { load, loaded, splitOf } from '../splits.svelte'
   import BankBadge from './BankBadge.svelte'
   import MerchantBadge from './MerchantBadge.svelte'
   import QuickSplit from './QuickSplit.svelte'
+  import SplitMark from './SplitMark.svelte'
 
   let {
     transactions,
@@ -30,6 +32,10 @@
   // One row open at a time. Splitting is a decision about one transaction, and
   // several half-filled forms down the page would be nothing but noise.
   let splitting = $state('')
+
+  // Every screen that lists transactions wants the same marker, and they all
+  // read this one module rather than asking per row.
+  if (!loaded()) load()
 
   const byId = $derived(new Map(accounts.map((account) => [account.id, account])))
 
@@ -103,6 +109,9 @@
         {#if subtitle(transaction)}
           <span class="desc">{subtitle(transaction)}</span>
         {/if}
+        {#if splitOf(transaction.id)}
+          <SplitMark summary={splitOf(transaction.id)!} />
+        {/if}
       </span>
     </span>
 
@@ -147,7 +156,7 @@
           aria-expanded={splitting === transaction.id}
           onclick={() => (splitting = splitting === transaction.id ? '' : transaction.id)}
         >
-          Split
+          {splitOf(transaction.id) ? 'Again' : 'Split'}
         </button>
       {/if}
     </span>
