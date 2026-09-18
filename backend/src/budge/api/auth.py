@@ -41,8 +41,8 @@ class ProfileUpdate(BaseModel):
 
 
 async def _me(session: AsyncSession, user: User) -> Me:
-    credential = await credentials.get(session, user_id(user))
-    return Me(email=user.email, name=user.name, onboarded=credential is not None)
+    onboarded = await credentials.has_bank(session, user_id(user))
+    return Me(email=user.email, name=user.name, onboarded=onboarded)
 
 
 async def _by_email(session: AsyncSession, email: str) -> User | None:

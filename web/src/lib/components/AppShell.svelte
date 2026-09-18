@@ -11,11 +11,14 @@
   let {
     email,
     name,
+    onboarded = true,
     onsignout,
     children,
   }: {
     email: string
     name: string | null
+    /** Without a bank there is nothing on the dashboard, so it isn't offered. */
+    onboarded?: boolean
     onsignout: () => void
     children: Snippet
   } = $props()
@@ -105,13 +108,19 @@
     <div class="beside-brand">{@render actions()}</div>
 
     <nav id="main-nav" class={{ open: navOpen }}>
-      <Link href="/" onclick={() => (navOpen = false)}>
-        Dashboard
-        <span class="count numeric">{counts.dashboard}</span>
-      </Link>
-      <Link href="/transactions" onclick={() => (navOpen = false)}>
-        Transactions
-        <span class="count numeric">{counts.transactions}</span>
+      {#if onboarded}
+        <Link href="/" onclick={() => (navOpen = false)}>
+          Dashboard
+          <span class="count numeric">{counts.dashboard}</span>
+        </Link>
+        <Link href="/transactions" onclick={() => (navOpen = false)}>
+          Transactions
+          <span class="count numeric">{counts.transactions}</span>
+        </Link>
+      {/if}
+      <Link href="/requests" onclick={() => (navOpen = false)}>
+        Requests
+        <span class="count"></span>
       </Link>
       <Link href="/settings" onclick={() => (navOpen = false)}>
         Settings

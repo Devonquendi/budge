@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from budge import credentials
+from budge import credentials, demo
 from budge.akahu import AkahuClient, genie
 from budge.akahu.models import Transaction
 from budge.auth import CurrentUserId, SessionDep
@@ -25,7 +25,9 @@ class History(BaseModel):
     days: int
 
 
-async def _client(session: SessionDep, user_id: int) -> AkahuClient:
+async def _client(
+    session: SessionDep, user_id: int
+) -> AkahuClient | demo.FixtureClient:
     client = await credentials.client_for(session, user_id)
     if client is None:
         raise HTTPException(status_code=NOT_ONBOARDED, detail="Akahu not connected")
