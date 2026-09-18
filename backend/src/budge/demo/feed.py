@@ -108,7 +108,7 @@ def accounts_for(email: str) -> list[Account]:
 
 
 def _transaction(
-    index: int,
+    index: int | str,
     account: Account,
     connection_id: str,
     when: datetime,
@@ -258,6 +258,10 @@ class Settlement(NamedTuple):
 
     amount_cents: int
     payer_name: str
+    # The request it answers. The transaction id is derived from this so it
+    # stays the same credit across reads: a ledger row that changed identity
+    # every time it was fetched could never be pointed at.
+    key: str
 
 
 def settlement_credits(
@@ -273,7 +277,7 @@ def settlement_credits(
     today = datetime.now(UTC).replace(hour=11, minute=0, second=0, microsecond=0)
     return [
         _transaction(
-            10_000 + index,
+            settlement.key,
             everyday,
             BANKS[0][0],
             today - timedelta(days=index + 1),
