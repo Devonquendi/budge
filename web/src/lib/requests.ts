@@ -16,8 +16,17 @@ export function look(state: RequestState): Look {
   return LOOKS[state]
 }
 
-export function payeeCanAct(state: RequestState): boolean {
+/** A payer who declined can still change their mind and pay. */
+export function payeeCanPay(state: RequestState): boolean {
+  return state === 'open' || state === 'declined'
+}
+
+export function payeeCanDecline(state: RequestState): boolean {
   return state === 'open' || state === 'marked_paid'
+}
+
+export function payeeCanAct(state: RequestState): boolean {
+  return payeeCanPay(state) || payeeCanDecline(state)
 }
 
 /** The link to hand someone, absolute so it survives being copied anywhere. */

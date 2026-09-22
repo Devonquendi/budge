@@ -3,7 +3,7 @@
   import AuthCard from '../lib/components/AuthCard.svelte'
   import Link from '../lib/components/Link.svelte'
   import { formatCents } from '../lib/money'
-  import { look, payeeCanAct } from '../lib/requests'
+  import { look, payeeCanAct, payeeCanDecline, payeeCanPay } from '../lib/requests'
 
   // The one page in the app that works with no account at all. Whoever holds
   // the link is the payer: that is the whole authentication story here, and it
@@ -64,19 +64,21 @@
         <input bind:value={note} maxlength="200" placeholder="Paid it this morning" />
       </label>
       <div class="actions">
-        {#if charge.state === 'open'}
+        {#if payeeCanPay(charge.state)}
           <button type="button" disabled={busy} onclick={() => act('mark-paid')}>
             I've paid this
           </button>
         {/if}
-        <button
-          type="button"
-          class="secondary outline"
-          disabled={busy}
-          onclick={() => act('decline')}
-        >
-          This isn't mine
-        </button>
+        {#if payeeCanDecline(charge.state)}
+          <button
+            type="button"
+            class="secondary outline"
+            disabled={busy}
+            onclick={() => act('decline')}
+          >
+            This isn't mine
+          </button>
+        {/if}
       </div>
       <p class="muted small">
         {charge.from_name} still has to confirm the money arrived. Nothing here moves it.

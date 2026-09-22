@@ -52,7 +52,7 @@ def derive_state(events: Iterable[Row]) -> str:
         kind = event["type"]
         if kind in CREATOR_ACTIONS:
             state = CREATOR_ACTIONS[kind]
-        elif kind == "marked_paid" and state == OPEN:
+        elif kind == MARKED_PAID and state in (OPEN, DECLINED):
             state = MARKED_PAID
         # Declining is the payer pushing back, so it can override their own
         # earlier claim — but never a confirmation, because money that arrived,

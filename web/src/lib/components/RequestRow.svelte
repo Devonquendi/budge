@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ChargeRequest } from '../api'
   import { formatCents } from '../money'
-  import { look, shareUrl } from '../requests'
+  import { look, payeeCanDecline, payeeCanPay, shareUrl } from '../requests'
 
   let {
     request,
@@ -74,12 +74,12 @@
         </button>
       {/if}
     {:else}
-      {#if request.state === 'open' || request.state === 'declined'}
+      {#if payeeCanPay(request.state)}
         <button type="button" disabled={busy} onclick={() => onact('mark-paid')}>
           I've paid this
         </button>
       {/if}
-      {#if request.state === 'open' || request.state === 'marked_paid'}
+      {#if payeeCanDecline(request.state)}
         <button
           type="button"
           class="secondary outline"
