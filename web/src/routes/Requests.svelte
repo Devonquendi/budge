@@ -2,7 +2,7 @@
   import { api, errorMessage, type ChargeRequest, type Inbox } from '../lib/api'
   import Panel from '../lib/components/Panel.svelte'
   import RequestRow from '../lib/components/RequestRow.svelte'
-  import { formatCents } from '../lib/money'
+  import { format, formatCents, parseCents, splitCents } from '../lib/money'
   import { shareUrl } from '../lib/requests'
 
   let inbox = $state.raw<Inbox | null>(null)
@@ -23,14 +23,15 @@
       .filter(Boolean),
   )
 
-  const share = $derived(
-    amount && payees.length
-      ? Math.round(
-          (Number(amount.replace(/[^0-9.]/g, '')) * 100) /
-            (payees.length + (includeMe ? 1 : 0)),
-        )
-      : 0,
-  )
+  // The creator's share comes first, so it takes the odd cent, as on the server.
+  const asked = $derived.by(() => {
+    const total = parseCents(amount)
+    if (total === null || !payees.length) return []
+    const shares = splitCents(total, payees.length + (includeMe ? 1 : 0))
+    return includeMe ? shares.slice(1) : shares
+  })
+  const lowest = $derived(Math.min(...asked))
+  const highest = $derived(Math.max(...asked))
 
   async function load() {
     try {
@@ -84,20 +85,17 @@
   <div class="totals">
     <Panel title="To collect" padded>
       <p class="figure numeric">
-        {formatCents(inbox?.to_collect.outstanding ?? 0, 'NZD')}
+        {format(inbox?.to_collect.outstanding ?? '0', 'NZD')}
       </p>
       <p class="muted meta">
-        {inbox?.sent.length ?? 0} sent · {formatCents(
-          inbox?.to_collect.settled ?? 0,
-          'NZD',
-        )} settled
+        {inbox?.sent.length ?? 0} sent · {format(inbox?.to_collect.settled ?? '0', 'NZD')} settled
       </p>
     </Panel>
     <Panel title="To pay" padded>
-      <p class="figure numeric">{formatCents(inbox?.to_pay.outstanding ?? 0, 'NZD')}</p>
+      <p class="figure numeric">{format(inbox?.to_pay.outstanding ?? '0', 'NZD')}</p>
       <p class="muted meta">
-        {inbox?.received.length ?? 0} received · {formatCents(
-          inbox?.to_pay.settled ?? 0,
+        {inbox?.received.length ?? 0} received · {format(
+          inbox?.to_pay.settled ?? '0',
           'NZD',
         )} settled
       </p>
@@ -128,10 +126,11 @@
       </label>
 
       <p class="preview muted">
-        {#if share > 0}
-          {payees.length}
-          {payees.length === 1 ? 'person' : 'people'} at about {formatCents(share, 'NZD')} each.
-          Any odd cent stays with you.
+        {#if asked.length}
+          {asked.length}
+          {asked.length === 1 ? 'person' : 'people'} at {formatCents(highest, 'NZD')}
+          {#if lowest !== highest}or {formatCents(lowest, 'NZD')}{/if} each.
+          {#if includeMe}Any odd cent stays with you.{/if}
         {:else}
           Split to the exact cent, with the remainder rounded onto your own share.
         {/if}

@@ -5,6 +5,7 @@ split that is a cent out is a bug somebody will notice and never trust again.
 """
 
 import re
+from decimal import Decimal
 
 MAX_SAFE_CENTS = 2**53 - 1
 
@@ -18,6 +19,15 @@ _NOT_DIGIT = re.compile(r"\D")
 # fallback has to be shorter than that too.
 REFERENCE_LENGTH = 12
 REFERENCE_FALLBACK = "Budge"
+
+
+def from_cents(cents: int) -> Decimal:
+    """For the wire, where money travels as a decimal string."""
+    return Decimal(cents).scaleb(-2)
+
+
+def to_cents(amount: Decimal) -> int:
+    return int(amount.scaleb(2))
 
 
 def split_evenly(total_cents: int, n: int) -> list[int]:

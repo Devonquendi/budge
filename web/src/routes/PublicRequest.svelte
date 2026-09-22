@@ -2,7 +2,7 @@
   import { api, errorMessage, type ChargeRequest } from '../lib/api'
   import AuthCard from '../lib/components/AuthCard.svelte'
   import Link from '../lib/components/Link.svelte'
-  import { formatCents } from '../lib/money'
+  import { format } from '../lib/money'
   import { look, payeeCanAct, payeeCanDecline, payeeCanPay } from '../lib/requests'
 
   // The one page in the app that works with no account at all. Whoever holds
@@ -50,10 +50,10 @@
     {#if error}<p class="error">{error}</p>{/if}
   {:else}
     <p class="eyebrow">{charge.from_name} is asking for</p>
-    <p class="amount numeric">{formatCents(charge.amount_cents, 'NZD')}</p>
+    <p class="amount numeric">{format(charge.amount, 'NZD')}</p>
     <p class="what">
       Your share of <strong>{charge.title}</strong>, which came to
-      {formatCents(charge.bill_total_cents, 'NZD')}.
+      {format(charge.bill_total, 'NZD')}.
     </p>
 
     <p class={['pill', badge?.tone]}>{badge?.label}</p>

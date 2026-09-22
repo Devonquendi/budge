@@ -6,6 +6,7 @@ actually happened cannot drift apart.
 """
 
 from datetime import datetime
+from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, Field
@@ -13,7 +14,7 @@ from sqlmodel import col, select
 
 from budge.auth import CurrentUserId, SessionDep
 from budge.charges.ledger import derive_state, make_token, tally_bill
-from budge.charges.money import parse_amount, split_evenly
+from budge.charges.money import from_cents, parse_amount, split_evenly, to_cents
 from budge.db.models import (
     NAME_MAX,
     NOTE_MAX,
@@ -70,8 +71,8 @@ class RequestView(BaseModel):
     id: int
     token: str
     title: str
-    amount_cents: int
-    bill_total_cents: int
+    amount: Decimal
+    bill_total: Decimal
     payee_email: str
     payee_name: str | None
     from_name: str
@@ -82,10 +83,10 @@ class RequestView(BaseModel):
 
 
 class Totals(BaseModel):
-    owed: int
-    claimed: int
-    settled: int
-    outstanding: int
+    owed: Decimal
+    claimed: Decimal
+    settled: Decimal
+    outstanding: Decimal
 
 
 class Inbox(BaseModel):
@@ -122,8 +123,8 @@ def _view(
         id=request.id or 0,
         token=request.token,
         title=bill.title,
-        amount_cents=request.amount_cents,
-        bill_total_cents=bill.total_cents,
+        amount=from_cents(request.amount_cents),
+        bill_total=from_cents(bill.total_cents),
         payee_email=request.payee_email,
         payee_name=request.payee_name,
         from_name=creator.name or creator.email,
@@ -137,9 +138,9 @@ def _view(
 
 def _totals(views: list[RequestView]) -> Totals:
     tally = tally_bill(
-        [{"state": v.state, "amount_cents": v.amount_cents} for v in views]
+        [{"state": v.state, "amount_cents": to_cents(v.amount)} for v in views]
     )
-    return Totals(**tally._asdict())
+    return Totals(**{k: from_cents(v) for k, v in tally._asdict().items()})
 
 
 @router.post("", status_code=201)

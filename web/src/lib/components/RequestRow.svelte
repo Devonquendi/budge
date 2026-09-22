@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ChargeRequest } from '../api'
-  import { formatCents } from '../money'
+  import { format } from '../money'
   import { look, payeeCanDecline, payeeCanPay, shareUrl } from '../requests'
 
   let {
@@ -38,7 +38,7 @@
       <p class="title">{request.title}</p>
       <p class="who muted">{who}</p>
     </div>
-    <p class="amount numeric">{formatCents(request.amount_cents, 'NZD')}</p>
+    <p class="amount numeric">{format(request.amount, 'NZD')}</p>
   </div>
 
   <div class="foot">

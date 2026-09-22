@@ -88,8 +88,8 @@ export type ChargeRequest = {
   /** The whole address of the request: /r/<token> opens it without an account. */
   token: string
   title: string
-  amount_cents: number
-  bill_total_cents: number
+  amount: string
+  bill_total: string
   payee_email: string
   payee_name: string | null
   from_name: string
@@ -100,11 +100,11 @@ export type ChargeRequest = {
 }
 
 export type Totals = {
-  owed: number
-  claimed: number
-  settled: number
+  owed: string
+  claimed: string
+  settled: string
   /** owed + claimed: money asked for that hasn't been confirmed as arrived. */
-  outstanding: number
+  outstanding: string
 }
 
 export type Inbox = {

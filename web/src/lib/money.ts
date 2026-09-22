@@ -13,6 +13,21 @@ export function toCents(amount: string): number {
   return sign * (Math.abs(Number(whole)) * 100 + Number(`${fraction}00`.slice(0, 2)))
 }
 
+/** Cents in an amount someone typed: "45", "$45.20", "1,234.5". Null if it isn't one. */
+export function parseCents(typed: string): number | null {
+  const cleaned = typed.replace(/[$,\s]/g, '')
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null
+  const cents = toCents(cleaned)
+  return cents > 0 ? cents : null
+}
+
+/** Whole-cent shares that add back to the total, the odd cents on the first. */
+export function splitCents(total: number, shares: number): number[] {
+  const base = Math.trunc(total / shares)
+  const over = total - base * shares
+  return Array.from({ length: shares }, (_, index) => base + (index < over ? 1 : 0))
+}
+
 export function sumCents(amounts: string[]): number {
   return amounts.reduce((total, amount) => total + toCents(amount), 0)
 }
