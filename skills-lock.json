@@ -1,6 +1,13 @@
 {
   "version": 1,
   "skills": {
+    "gh-stack": {
+      "source": "github/gh-stack",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/gh-stack/SKILL.md",
+      "computedHash": "28d42250d52f33424b807add6fbdec75736e835f98752311db321ab51733fea6"
+    },
     "neon": {
       "source": "neondatabase/agent-skills",
       "sourceType": "github",
