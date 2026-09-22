@@ -38,13 +38,19 @@ Markdown is not scratch space. Don't create, expand or restructure `CLAUDE.md`,
 missing and let me decide. Two descriptions of one thing drift apart, and the
 code is the one that can't.
 
-Never use em dashes: not in code, comments, markdown or commit messages.
-
 ## Comments
 
 Keep them short. Comment what the code can't say, and never restate the line
 beneath it: a named function, constant or type is already its own description.
 Prefer deleting a stale comment to updating it.
+
+## Communication style
+
+Use lists and bullet points when asked to, or when the content is multifaceted enough that they help with clarity. In all exchanges with the user, remove all mannered prose and speak plainly.
+
+Never use em dashes: not in code, comments, markdown or commit messages.
+
+If the user hasn't heard from you in a while, say in a few words what you're doing, then continue.
 
 ## Tech stack
 
