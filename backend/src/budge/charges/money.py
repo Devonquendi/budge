@@ -57,13 +57,6 @@ def parse_amount(value: object) -> int | None:
     return cents if 0 < cents <= MAX_SAFE_CENTS else None
 
 
-def format_cents(cents: int) -> str:
-    """Cents to the string a New Zealander expects to read."""
-    sign = "-" if cents < 0 else ""
-    magnitude = abs(cents)
-    return f"{sign}${magnitude // 100:,}.{magnitude % 100:02d}"
-
-
 def normalise_account(value: object) -> str | None:
     """Normalise an NZ account number, or return None.
 

@@ -16,18 +16,6 @@ export function look(state: RequestState): Look {
   return LOOKS[state]
 }
 
-/**
- * Confirming is the only thing worth offering before someone claims to have
- * paid, and money that arrived can't be un-arrived, so a settled request is
- * done. Reopening exists for the case where it wasn't.
- */
-export function creatorActions(state: RequestState): ('confirm' | 'cancel' | 'reopen')[] {
-  if (state === 'confirmed') return ['reopen']
-  if (state === 'cancelled') return ['reopen']
-  if (state === 'marked_paid') return ['confirm', 'cancel']
-  return ['confirm', 'cancel']
-}
-
 export function payeeCanAct(state: RequestState): boolean {
   return state === 'open' || state === 'marked_paid'
 }
