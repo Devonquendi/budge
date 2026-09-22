@@ -5,9 +5,7 @@
   import { format } from '../lib/money'
   import { look, payeeCanAct, payeeCanDecline, payeeCanPay } from '../lib/requests'
 
-  // The one page in the app that works with no account at all. Whoever holds
-  // the link is the payer: that is the whole authentication story here, and it
-  // is deliberate. A request is not a secret, it is an ask.
+  // Works with no account: whoever holds the link is the payer.
   let { token }: { token: string } = $props()
 
   let charge = $state.raw<ChargeRequest | null>(null)

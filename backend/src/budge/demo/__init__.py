@@ -1,8 +1,6 @@
 """The demo: invented people, invented bills, and an invented bank feed.
 
-Nothing here reaches Akahu. A persona has no credentials to reach it with, and
-previews cannot use credentials at all, which is the whole reason the demo
-exists: something to look at on a deployment that is walled off from real banks.
+Nothing here reaches Akahu.
 """
 
 from budge.demo.feed import FixtureClient, accounts_for, transactions_for

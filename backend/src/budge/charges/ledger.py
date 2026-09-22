@@ -4,12 +4,9 @@ import secrets
 from collections.abc import Iterable, Mapping
 from typing import Any, NamedTuple
 
-# Rows as they come back from the database: known keys, values we read by name.
-# Mirrors `Txn` in feed.py rather than inventing a second convention.
 Row = Mapping[str, Any]
 
-# Creator actions are authoritative and apply in order. The person owed always
-# has the final say on whether money actually arrived.
+# The person owed has the final say, so their actions always apply.
 CREATOR_ACTIONS = {
     "confirmed": "confirmed",
     "cancelled": "cancelled",
@@ -22,13 +19,7 @@ DECLINED = "declined"
 CONFIRMED = "confirmed"
 CANCELLED = "cancelled"
 
-# Unguessable, URL-safe, and short enough to read down a phone. Crockford-style:
-# no i, l or o, so nothing is mistaken for 1 or 0 when somebody types it in.
-#
-# Exactly 32 characters, which matters. The JavaScript original listed 33 and
-# indexed them with `byte % 32`, so its last character could never be produced.
-# Dropping it here loses nothing and makes the mapping honest. 256 divides by 32
-# evenly, so there is no modulo bias either way.
+# No i, l or o, so nothing is misread as 1 or 0 when somebody types it in.
 TOKEN_ALPHABET = "0123456789abcdefghjkmnpqrstuvwxy"
 
 
@@ -42,11 +33,7 @@ class Tally(NamedTuple):
 
 
 def derive_state(events: Iterable[Row]) -> str:
-    """Fold an append-only event log into the request's current state.
-
-    State is derived, never stored, so a balance can always be re-explained from
-    what actually happened rather than trusted from a column somebody wrote.
-    """
+    """Fold a request's event log into its current state."""
     state = OPEN
     for event in events:
         kind = event["type"]
@@ -54,9 +41,7 @@ def derive_state(events: Iterable[Row]) -> str:
             state = CREATOR_ACTIONS[kind]
         elif kind == MARKED_PAID and state in (OPEN, DECLINED):
             state = MARKED_PAID
-        # Declining is the payer pushing back, so it can override their own
-        # earlier claim, but never a confirmation, because money that arrived,
-        # arrived.
+        # The payer can take back their own claim, but not a confirmation.
         elif kind == "declined" and state in (OPEN, MARKED_PAID):
             state = DECLINED
     return state

@@ -1,8 +1,6 @@
 """Charge requests: asking someone for their share, and following it through.
 
-Nothing here stores a request's state. Every route that needs one folds the
-event log with `charges.ledger.derive_state`, so what the app shows and what
-actually happened cannot drift apart.
+A request's state is never stored: it is folded from its event log on read.
 """
 
 from datetime import datetime
@@ -30,9 +28,7 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 NOT_FOUND = 404
 MAX_PAYEES = 20
 
-# What a payer may do to their own request, and what its creator may do. Split
-# rather than checked inline so an unauthorised action is a lookup failure
-# rather than a forgotten branch.
+# Split by side, so an action the caller can't take is simply not found.
 PAYEE_ACTIONS = {"mark-paid": "marked_paid", "decline": "declined"}
 CREATOR_ACTIONS = {"confirm": "confirmed", "cancel": "cancelled", "reopen": "reopened"}
 
@@ -48,8 +44,7 @@ class NewBill(BaseModel):
     title: str = Field(max_length=TITLE_MAX)
     amount: str
     payees: list[Payee] = Field(min_length=1, max_length=MAX_PAYEES)
-    # Splitting a $60 dinner three ways means three shares of $20, one of which
-    # is the payer's own and is never requested.
+    # Whether the creator's own share counts in the split. It is never requested.
     include_me: bool = True
     source_transaction_id: str | None = None
 
@@ -129,7 +124,6 @@ def _view(
         payee_name=request.payee_name,
         from_name=creator.name or creator.email,
         from_email=creator.email,
-        # The whole reason the event log exists: state is a function of it.
         state=derive_state([e.model_dump() for e in events]),
         created_at=request.created_at,
         events=events,
@@ -157,8 +151,7 @@ async def create_bill(
         raise HTTPException(status_code=401)
 
     shares = split_evenly(total, len(body.payees) + (1 if body.include_me else 0))
-    # The creator takes the first share, so any leftover cent lands on the
-    # person doing the asking rather than on someone being asked.
+    # The creator's share is first, so it takes any odd cent.
     if body.include_me:
         shares = shares[1:]
 

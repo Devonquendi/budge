@@ -1,10 +1,7 @@
-"""Invented people with invented bills, so the request loop can be played with.
+"""Invented people with invented bills, on a deployment with BUDGE_DEMO=1.
 
-On only where BUDGE_DEMO=1 says so, and off by default. The personas
-are a fixed roster on @example.com, which RFC 2606 reserves and no one can ever
-receive mail at, and seeding is idempotent: signing in as the same persona twice
-adds nothing. None of them has Akahu credentials or a password anyone knows, so
-no demo session can reach a real bank and no demo row is a way into the app.
+The roster is on @example.com, which RFC 2606 reserves, so none of it can
+receive mail. Seeding is idempotent.
 """
 
 import os
@@ -21,13 +18,9 @@ from budge.db.models import Bill, ChargeRequest, RequestEvent, User
 
 
 def _unusable_password() -> str:
-    """A hash of something nobody knows, including us.
+    """A hash of something nobody knows, so /auth/login can't sign in as one.
 
-    Demo rows can end up in the same database as real ones, where /auth/login
-    still serves them. A password they can be signed in with would be a way
-    into those accounts that outlives this endpoint being switched off, so
-    there isn't one: the only door is /demo/session, and that is shut in
-    production.
+    /demo/session is the only way in, and it closes when the demo is off.
     """
     return password_hash.hash(secrets.token_urlsafe(32))
 

@@ -1,4 +1,4 @@
-"""Signing in as one of the invented people. Absent in production."""
+"""Signing in as one of the invented people, where BUDGE_DEMO=1."""
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ class Me(BaseModel):
 
 @router.get("/personas")
 async def get_personas() -> list[demo.Persona]:
-    """Who you can sign in as. Empty in production, where demo is off."""
+    """Who you can sign in as. Empty unless the demo is on."""
     return demo.ROSTER if demo.enabled() else []
 
 
@@ -36,6 +36,5 @@ async def start_session(body: SignIn, request: Request, session: SessionDep) -> 
     users = await demo.seed(session)
     user = users[body.email.lower()]
     request.session["user_id"] = user.id
-    # Onboarded, because the fixture feed stands in for a bank connection: the
-    # dashboard and the transactions page both have something to show.
+    # The fixture feed stands in for a bank connection.
     return Me(email=user.email, name=user.name, onboarded=True)

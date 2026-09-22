@@ -116,7 +116,7 @@ export type Inbox = {
 
 export type NewPayee = { email: string; name?: string }
 
-/** An invented person to sign in as. Empty in production, where demo is off. */
+/** An invented person to sign in as. The list is empty unless the demo is on. */
 export type Persona = { email: string; name: string; blurb: string }
 
 export type Selection = {

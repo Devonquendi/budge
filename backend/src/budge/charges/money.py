@@ -1,12 +1,9 @@
-"""Amounts, splitting, account numbers and bank references.
-
-Money is handled as whole cents in `int` throughout. Floats never appear: a
-split that is a cent out is a bug somebody will notice and never trust again.
-"""
+"""Amounts in whole cents, splitting, account numbers and bank references."""
 
 import re
 from decimal import Decimal
 
+# The most cents the browser can still add up exactly.
 MAX_SAFE_CENTS = 2**53 - 1
 
 _AMOUNT = re.compile(r"^\d+(\.\d{1,2})?$")
@@ -15,8 +12,7 @@ _NOT_REFERENCE = re.compile(r"[^A-Za-z0-9 ]")
 _RUNS_OF_SPACE = re.compile(r"\s+")
 _NOT_DIGIT = re.compile(r"\D")
 
-# Bank reference fields are twelve characters and truncate silently, so the
-# fallback has to be shorter than that too.
+# Bank reference fields are twelve characters and truncate silently.
 REFERENCE_LENGTH = 12
 REFERENCE_FALLBACK = "Budge"
 
@@ -31,15 +27,11 @@ def to_cents(amount: Decimal) -> int:
 
 
 def split_evenly(total_cents: int, n: int) -> list[int]:
-    """Split a total into `n` whole-cent shares that sum back to exactly it.
+    """`n` whole-cent shares that add back to the total, odd cents on the first.
 
-    The remainder goes one cent at a time to the earliest shares, so four people
-    splitting $10.00 get 250/250/250/250 and three get 334/333/333. Dividing
-    money and rounding is what produces totals that do not add up.
+    $10.00 three ways is 334/333/333.
     """
-    # A float total is the bug this whole module exists to prevent, so it fails
-    # loudly rather than silently producing shares that do not add up. bool is
-    # an int subclass in Python and is never a sensible amount.
+    # bool is an int subclass, and never an amount.
     if not isinstance(total_cents, int) or isinstance(total_cents, bool):
         raise TypeError("total must be whole cents")
     if not isinstance(n, int) or isinstance(n, bool):
@@ -47,9 +39,7 @@ def split_evenly(total_cents: int, n: int) -> list[int]:
     if n < 1:
         raise ValueError("need at least one share")
 
-    # Truncate toward zero, not toward negative infinity: a refund split three
-    # ways should mirror the positive case rather than drift a cent the other
-    # way. Python's // floors, so it cannot be used here.
+    # Toward zero, so a negative total mirrors the positive one. // would floor.
     base = int(total_cents / n)
     remainder = total_cents - base * n
     step = -1 if remainder < 0 else 1
@@ -68,11 +58,9 @@ def parse_amount(value: object) -> int | None:
 
 
 def normalise_account(value: object) -> str | None:
-    """Normalise an NZ account number, or return None.
+    """An NZ account number as bank-branch-account-suffix, or None.
 
-    The format is bank-branch-account-suffix: 2-4-7 digits then a 2 or 3 digit
-    suffix. No checksum is attempted: the bank does that, and Confirmation of
-    Payee has checked the name as well since November 2024.
+    No checksum: the bank does that, and Confirmation of Payee checks the name.
     """
     digits = _NOT_DIGIT.sub("", "" if value is None else str(value))
     if len(digits) not in (15, 16):

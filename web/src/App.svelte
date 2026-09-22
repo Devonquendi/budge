@@ -21,8 +21,7 @@
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
   const SIGNED_IN = ['/', '/transactions', '/requests', '/profile', '/settings']
 
-  // Asking someone for money needs no bank connection, so this page sits
-  // outside the onboarding gate that every other signed-in page is behind.
+  // Asking for money needs no bank, so these sit outside the onboarding gate.
   const WITHOUT_A_BANK = ['/requests', '/profile']
 
   /** The payer's page. Public, and the only route with a variable in it. */
@@ -78,8 +77,7 @@
 
   function signedIn(user: Me) {
     me = user
-    // Nothing to connect and nothing to load: a demo session is the request
-    // half only, so go straight to it.
+    // Without a bank, requests are all there is to show.
     if (!user.onboarded) navigate('/requests', { replace: true })
     else {
       land()

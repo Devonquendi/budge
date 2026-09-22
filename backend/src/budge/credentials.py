@@ -93,9 +93,7 @@ async def client_for(
 ) -> AkahuClient | demo.FixtureClient | None:
     """A bank for this user, or None if they haven't connected one.
 
-    A demo persona gets the fixture feed and never reaches this far, which is
-    why the return type is widened rather than the fixture pretending to be an
-    AkahuClient. Callers only ever use get_accounts and get_transactions.
+    A demo persona gets the fixture feed. See demo.FixtureClient.
     """
     user = await session.get(User, user_id)
     if user is not None:

@@ -74,8 +74,7 @@ class ChargeRequest(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     bill_id: int = Field(foreign_key="bills.id", index=True)
-    # The whole address of a request: anyone holding it can open the page and
-    # pay, which is the point. Unguessable rather than secret.
+    # Anyone holding it can open the request and pay. Unguessable, not secret.
     token: str = Field(unique=True, index=True)
     payee_email: str = Field(index=True)
     payee_name: str | None = Field(default=None, max_length=NAME_MAX)
@@ -84,12 +83,7 @@ class ChargeRequest(SQLModel, table=True):
 
 
 class RequestEvent(SQLModel, table=True):
-    """Append-only: every state a request has ever been in is still here.
-
-    Nothing updates a row in this table and nothing stores the current state.
-    `charges.ledger.derive_state` folds these into it on read, so a balance can
-    always be re-explained from what happened rather than trusted from a column.
-    """
+    """Append-only. `charges.ledger.derive_state` folds these into the state."""
 
     __tablename__ = "request_events"
 

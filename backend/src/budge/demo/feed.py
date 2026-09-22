@@ -1,12 +1,8 @@
 """An invented bank feed for the invented people.
 
-Every account, merchant and bank here is made up. Nothing in this module talks
-to Akahu, and it is the only way a demo persona ever has transactions.
-
-The feed is generated rather than listed so it stays current: it is always the
-last few months up to today, so the dashboard's "this month" is never empty.
-Seeded off the persona's email, so the same person has the same history every
-time rather than a new past on every page load.
+Every account, merchant and bank here is made up. The feed runs up to today, so
+"this month" is never empty, and is seeded off the email, so each person keeps
+the same history between loads.
 """
 
 import hashlib
@@ -216,10 +212,7 @@ def transactions_for(
             "Housing",
         )
 
-    # The same money leaving one account and landing in the other on the same
-    # day: what charges.feed.find_internal_transfers exists to spot. The
-    # dashboard counts the outgoing leg as spending today, which is the gap
-    # that function closes, and leaving it visible here is the point.
+    # Between the persona's own two accounts, at different banks.
     for day in range(rng.randrange(28), DAYS, 28):
         when = today - timedelta(days=day, hours=1)
         amount = rng.randrange(15_000, 60_000)

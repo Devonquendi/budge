@@ -1,9 +1,7 @@
 <script lang="ts">
   import { api, errorMessage, type Me, type Persona } from '../api'
 
-  // Only rendered where the backend says demo is on, which is anywhere but
-  // production. In production /demo/personas answers with an empty list and
-  // this draws nothing.
+  // Draws nothing unless the backend has the demo on.
   let { onsignin }: { onsignin: (me: Me) => void } = $props()
 
   let personas = $state.raw<Persona[]>([])

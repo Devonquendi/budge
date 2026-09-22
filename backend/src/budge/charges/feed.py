@@ -1,8 +1,6 @@
 """Matching credits to requests, and spotting transfers between your own accounts.
 
-Pure functions over transaction mappings, so both are testable without a bank, a
-network or a database. Transactions are dicts here rather than models on purpose:
-this layer should not care where the rows came from.
+Transactions are plain mappings here, so this doesn't care where they came from.
 """
 
 from collections.abc import Mapping, Sequence
@@ -13,16 +11,10 @@ Txn = Mapping[str, Any]
 
 
 def match_credit(credit: Txn, open_requests: Sequence[Txn]) -> Txn | None:
-    """Match an incoming credit to exactly one open request, or nothing.
+    """The one open request this credit pays, or None if it could be several.
 
-    Amount is the strong signal. The reference deliberately is NOT required:
-    paying banks truncate it to twelve characters, drop it, or put it in a
-    different field, so a matcher that depends on it fails quietly and often.
-    Where the amount is ambiguous the payer's name breaks the tie; where it is
-    still ambiguous this returns None and a human decides.
-
-    Guessing wrong here means telling somebody they have paid when they have not,
-    which is the worst thing this application could do.
+    Matched on amount, with the payer's first name breaking a tie. Not on the
+    reference: banks truncate it, drop it, or move it to another field.
     """
     if credit["amount_cents"] <= 0:
         return None
@@ -35,8 +27,7 @@ def match_credit(credit: Txn, open_requests: Sequence[Txn]) -> Txn | None:
     if len(same_amount) == 1:
         return same_amount[0]
 
-    # Deliberately excludes the counterparty account number: a digit string can
-    # only ever produce a false match against a person's name.
+    # Not the counterparty's account number: digits can only false-match a name.
     haystack = " ".join(
         str(credit.get(field) or "")
         for field in ("description", "particulars", "reference", "counterparty")
@@ -62,15 +53,10 @@ def _day_number(value: object) -> int:
 def find_internal_transfers(
     transactions: Sequence[Txn], window_days: int = 3
 ) -> set[Any]:
-    """Ids of transactions that are you moving your own money about.
+    """Ids of both legs of each transfer between the user's own accounts.
 
-    With a joint and a personal account connected these can dominate a report,
-    the same mistake as counting a flatmate's repayment as income, just bigger. A
-    transfer shows up twice: a debit on one account and a matching credit on
-    another, within a day or two.
-
-    The pair must sit on DIFFERENT connections, so a genuine payment to somebody
-    else can never be mistaken for one.
+    A debit and a credit of the same amount within a few days, on different
+    connections so a payment to somebody else is never mistaken for one.
     """
     credits = [t for t in transactions if t["amount_cents"] > 0]
     claimed: set[Any] = set()
