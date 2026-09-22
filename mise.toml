@@ -4,12 +4,12 @@
 experimental = true
 
 [tools]
-node = "26.8.2"
-pnpm = "12.4.1"
-prek = "0.5.2"
+node = "26.10.0"
+pnpm = "12.5.1"
+prek = "0.5.3"
 python = "3.14.7"
-uv = "0.12.13"
-vercel = { version = "59.15.1", allow_builds = ["esbuild"], trust_policy_excludes = ["undici"] }
+uv = "0.12.17"
+vercel = { version = "59.23.2", allow_builds = ["esbuild"], trust_policy_excludes = ["undici"] }
 
 [deps.uv]
 dir = "backend"
