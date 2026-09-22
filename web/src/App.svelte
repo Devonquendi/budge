@@ -10,6 +10,8 @@
   import Dashboard from './routes/Dashboard.svelte'
   import Login from './routes/Login.svelte'
   import Profile from './routes/Profile.svelte'
+  import PublicRequest from './routes/PublicRequest.svelte'
+  import Requests from './routes/Requests.svelte'
   import Settings from './routes/Settings.svelte'
   import Signup from './routes/Signup.svelte'
   import Transactions from './routes/Transactions.svelte'
@@ -17,7 +19,13 @@
   const SIGNED_OUT = ['/login', '/signup']
   const ONBOARDING = '/onboarding'
   const CHOOSE_ACCOUNTS = '/onboarding/accounts'
-  const SIGNED_IN = ['/', '/transactions', '/profile', '/settings']
+  const SIGNED_IN = ['/', '/transactions', '/requests', '/profile', '/settings']
+
+  // Asking for money needs no bank, so these sit outside the onboarding gate.
+  const WITHOUT_A_BANK = ['/requests', '/profile']
+
+  /** The payer's page. Public, and the only route with a variable in it. */
+  const SHARED_REQUEST = /^\/r\/([0-9a-z]+)$/
 
   let me = $state.raw<Me | null>(null)
   let ready = $state(false)
@@ -41,9 +49,10 @@
    * business, not ours.
    */
   function land() {
+    if (SHARED_REQUEST.test(path())) return
     if (!me) {
       if (!SIGNED_OUT.includes(path())) navigate('/login', { replace: true })
-    } else if (!me.onboarded) {
+    } else if (!me.onboarded && !WITHOUT_A_BANK.includes(path())) {
       navigate(ONBOARDING, { replace: true })
     } else if (SIGNED_OUT.includes(path()) || path() === ONBOARDING) {
       // Step two stays reachable once connected, so reloading it mid-setup
@@ -68,8 +77,12 @@
 
   function signedIn(user: Me) {
     me = user
-    land()
-    if (user.onboarded) workspace.load()
+    // Without a bank, requests are all there is to show.
+    if (!user.onboarded) navigate('/requests', { replace: true })
+    else {
+      land()
+      workspace.load()
+    }
   }
 
   async function signedOut() {
@@ -103,6 +116,8 @@
     <p class="error">{unreachable}</p>
     <button type="button" onclick={() => location.reload()}>Try again</button>
   </AuthCard>
+{:else if SHARED_REQUEST.test(path())}
+  <PublicRequest token={SHARED_REQUEST.exec(path())?.[1] ?? ''} />
 {:else if !me}
   {#if path() === '/signup'}
     <Signup onsignin={signedIn} />
@@ -120,15 +135,24 @@
     not another copy of the wrapper. It also keeps one AppShell alive across
     navigation instead of tearing the sidebar down and rebuilding it per page.
   -->
-  <AppShell email={me.email} name={me.name} onsignout={signedOut}>
-    {#if path() === '/transactions'}
+  <AppShell
+    email={me.email}
+    name={me.name}
+    onboarded={me.onboarded}
+    onsignout={signedOut}
+  >
+    {#if path() === '/requests'}
+      <Requests />
+    {:else if path() === '/transactions'}
       <Transactions />
     {:else if path() === '/profile'}
       <Profile {me} onupdate={(next) => (me = next)} ondisconnect={disconnected} />
     {:else if path() === '/settings'}
       <Settings />
-    {:else}
+    {:else if me.onboarded}
       <Dashboard />
+    {:else}
+      <Requests />
     {/if}
   </AppShell>
 {:else}

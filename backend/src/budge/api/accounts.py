@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from budge import credentials
+from budge import credentials, demo
 from budge.akahu import AkahuClient
 from budge.akahu.models import Account
 from budge.auth import CurrentUserId, SessionDep
@@ -32,7 +32,9 @@ class NicknameUpdate(BaseModel):
     nickname: str = Field(default="", max_length=NICKNAME_MAX)
 
 
-async def _client(session: SessionDep, user_id: int) -> AkahuClient:
+async def _client(
+    session: SessionDep, user_id: int
+) -> AkahuClient | demo.FixtureClient:
     client = await credentials.client_for(session, user_id)
     if client is None:
         raise HTTPException(status_code=NOT_ONBOARDED, detail="Akahu not connected")

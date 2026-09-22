@@ -1,0 +1,319 @@
+"""Charge requests: asking someone for their share, and following it through.
+
+A request's state is never stored: it is folded from its event log on read.
+"""
+
+from datetime import datetime
+from decimal import Decimal
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr, Field
+from sqlmodel import col, select
+
+from budge.auth import CurrentUserId, SessionDep
+from budge.charges.ledger import (
+    CANCELLED,
+    CONFIRMED,
+    DECLINED,
+    MARKED_PAID,
+    REOPENED,
+    derive_state,
+    make_token,
+    tally_bill,
+)
+from budge.charges.money import from_cents, parse_amount, split_evenly, to_cents
+from budge.db.models import (
+    NAME_MAX,
+    NOTE_MAX,
+    TITLE_MAX,
+    Bill,
+    ChargeRequest,
+    RequestEvent,
+    User,
+)
+
+router = APIRouter(prefix="/requests", tags=["requests"])
+
+NOT_FOUND = 404
+MAX_PAYEES = 20
+
+# Split by side, so an action the caller can't take is simply not found.
+PAYEE_ACTIONS = {"mark-paid": MARKED_PAID, "decline": DECLINED}
+CREATOR_ACTIONS = {"confirm": CONFIRMED, "cancel": CANCELLED, "reopen": REOPENED}
+
+
+class Payee(BaseModel):
+    email: EmailStr
+    name: str = Field(default="", max_length=NAME_MAX)
+
+
+class NewBill(BaseModel):
+    """One bill, split into a request each. Amount as typed: "42", "$42.50"."""
+
+    title: str = Field(max_length=TITLE_MAX)
+    amount: str
+    payees: list[Payee] = Field(min_length=1, max_length=MAX_PAYEES)
+    # Whether the creator's own share counts in the split. It is never requested.
+    include_me: bool = True
+    source_transaction_id: str | None = None
+
+
+class Note(BaseModel):
+    note: str = Field(default="", max_length=NOTE_MAX)
+
+
+class Event(BaseModel):
+    type: str
+    actor: str
+    note: str | None
+    created_at: datetime
+
+
+class RequestView(BaseModel):
+    """One request, from either end of it."""
+
+    id: int
+    token: str
+    title: str
+    amount: Decimal
+    bill_total: Decimal
+    payee_email: str
+    payee_name: str | None
+    from_name: str
+    from_email: str
+    state: str
+    created_at: datetime
+    events: list[Event]
+
+
+class Totals(BaseModel):
+    owed: Decimal
+    claimed: Decimal
+    settled: Decimal
+    outstanding: Decimal
+
+
+class Inbox(BaseModel):
+    """Both directions at once: the app shows them side by side."""
+
+    sent: list[RequestView]
+    received: list[RequestView]
+    to_collect: Totals
+    to_pay: Totals
+
+
+async def _events(
+    session: SessionDep, request_ids: list[int]
+) -> dict[int, list[Event]]:
+    if not request_ids:
+        return {}
+    rows = await session.exec(
+        select(RequestEvent)
+        .where(col(RequestEvent.request_id).in_(request_ids))
+        .order_by(col(RequestEvent.id))
+    )
+    by_request: dict[int, list[Event]] = {id: [] for id in request_ids}
+    for row in rows:
+        by_request[row.request_id].append(
+            Event.model_validate(row, from_attributes=True)
+        )
+    return by_request
+
+
+def _view(
+    request: ChargeRequest, bill: Bill, creator: User, events: list[Event]
+) -> RequestView:
+    return RequestView(
+        id=request.id or 0,
+        token=request.token,
+        title=bill.title,
+        amount=from_cents(request.amount_cents),
+        bill_total=from_cents(bill.total_cents),
+        payee_email=request.payee_email,
+        payee_name=request.payee_name,
+        from_name=creator.name or creator.email,
+        from_email=creator.email,
+        state=derive_state([e.model_dump() for e in events]),
+        created_at=request.created_at,
+        events=events,
+    )
+
+
+def _totals(views: list[RequestView]) -> Totals:
+    tally = tally_bill(
+        [{"state": v.state, "amount_cents": to_cents(v.amount)} for v in views]
+    )
+    return Totals(**{k: from_cents(v) for k, v in tally._asdict().items()})
+
+
+@router.post("", status_code=201)
+async def create_bill(
+    body: NewBill, user_id: CurrentUserId, session: SessionDep
+) -> list[RequestView]:
+    """Splits one amount into a request per payee and returns them all."""
+    total = parse_amount(body.amount)
+    if total is None:
+        raise HTTPException(status_code=400, detail="That isn't an amount")
+
+    creator = await session.get(User, user_id)
+    if creator is None:
+        raise HTTPException(status_code=401)
+
+    shares = split_evenly(total, len(body.payees) + (1 if body.include_me else 0))
+    # The creator's share is first, so it takes any odd cent.
+    if body.include_me:
+        shares = shares[1:]
+
+    bill = Bill(
+        creator_id=user_id,
+        title=body.title.strip() or "Shared cost",
+        total_cents=total,
+        source_transaction_id=body.source_transaction_id,
+    )
+    session.add(bill)
+    await session.commit()
+    await session.refresh(bill)
+
+    requests = [
+        ChargeRequest(
+            bill_id=bill.id or 0,
+            token=make_token(),
+            payee_email=str(payee.email).lower(),
+            payee_name=payee.name.strip() or None,
+            amount_cents=share,
+        )
+        for payee, share in zip(body.payees, shares, strict=True)
+    ]
+    session.add_all(requests)
+    await session.commit()
+
+    return [_view(r, bill, creator, []) for r in requests]
+
+
+@router.get("")
+async def get_inbox(user_id: CurrentUserId, session: SessionDep) -> Inbox:
+    """Everything this user is owed, and everything they have been asked for."""
+    user = await session.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=401)
+
+    bills = list(await session.exec(select(Bill).where(Bill.creator_id == user_id)))
+    by_bill = {bill.id: bill for bill in bills}
+    sent_rows = (
+        list(
+            await session.exec(
+                select(ChargeRequest).where(
+                    col(ChargeRequest.bill_id).in_(list(by_bill))
+                )
+            )
+        )
+        if by_bill
+        else []
+    )
+
+    # Matched on email so a request can be sent to someone before they sign up,
+    # and be waiting for them when they do.
+    received_rows = list(
+        await session.exec(
+            select(ChargeRequest, Bill, User)
+            .join(Bill, col(ChargeRequest.bill_id) == col(Bill.id))
+            .join(User, col(Bill.creator_id) == col(User.id))
+            .where(ChargeRequest.payee_email == user.email.lower())
+        )
+    )
+
+    events = await _events(
+        session,
+        [r.id or 0 for r in sent_rows] + [r.id or 0 for r, _, _ in received_rows],
+    )
+
+    sent = [
+        _view(r, by_bill[r.bill_id], user, events.get(r.id or 0, [])) for r in sent_rows
+    ]
+    received = [
+        _view(r, bill, creator, events.get(r.id or 0, []))
+        for r, bill, creator in received_rows
+    ]
+    sent.sort(key=lambda v: v.created_at, reverse=True)
+    received.sort(key=lambda v: v.created_at, reverse=True)
+
+    return Inbox(
+        sent=sent,
+        received=received,
+        to_collect=_totals(sent),
+        to_pay=_totals(received),
+    )
+
+
+async def _by_token(session: SessionDep, token: str) -> RequestView:
+    row = (
+        await session.exec(
+            select(ChargeRequest, Bill, User)
+            .join(Bill, col(ChargeRequest.bill_id) == col(Bill.id))
+            .join(User, col(Bill.creator_id) == col(User.id))
+            .where(ChargeRequest.token == token)
+        )
+    ).first()
+    if row is None:
+        raise HTTPException(status_code=NOT_FOUND, detail="No such request")
+    request, bill, creator = row
+    events = (await _events(session, [request.id or 0])).get(request.id or 0, [])
+    return _view(request, bill, creator, events)
+
+
+async def _record(
+    session: SessionDep, request_id: int, type: str, actor: str, note: str
+) -> None:
+    session.add(
+        RequestEvent(
+            request_id=request_id, type=type, actor=actor, note=note.strip() or None
+        )
+    )
+    await session.commit()
+
+
+@router.get("/r/{token}")
+async def get_by_token(token: str, session: SessionDep) -> RequestView:
+    """The page a payer opens. No account needed: the link is the authority."""
+    return await _by_token(session, token)
+
+
+@router.post("/r/{token}/{action}")
+async def act_as_payee(
+    token: str, action: str, body: Note, session: SessionDep
+) -> RequestView:
+    """What the person being asked can do, without signing in."""
+    type = PAYEE_ACTIONS.get(action)
+    if type is None:
+        raise HTTPException(status_code=NOT_FOUND, detail="No such action")
+    view = await _by_token(session, token)
+    await _record(session, view.id, type, "payee", body.note)
+    return await _by_token(session, token)
+
+
+@router.post("/{request_id}/{action}")
+async def act_as_creator(
+    request_id: int,
+    action: str,
+    body: Note,
+    user_id: CurrentUserId,
+    session: SessionDep,
+) -> RequestView:
+    """What the person owed can do. Their word is final: see CREATOR_STATES."""
+    type = CREATOR_ACTIONS.get(action)
+    if type is None:
+        raise HTTPException(status_code=NOT_FOUND, detail="No such action")
+
+    row = (
+        await session.exec(
+            select(ChargeRequest, Bill)
+            .join(Bill, col(ChargeRequest.bill_id) == col(Bill.id))
+            .where(ChargeRequest.id == request_id, Bill.creator_id == user_id)
+        )
+    ).first()
+    # Someone else's request is indistinguishable from one that doesn't exist.
+    if row is None:
+        raise HTTPException(status_code=NOT_FOUND, detail="No such request")
+
+    await _record(session, request_id, type, "creator", body.note)
+    return await _by_token(session, row[0].token)
