@@ -91,7 +91,7 @@ class RequestEvent(SQLModel, table=True):
     request_id: int = Field(foreign_key="charge_requests.id", index=True)
     type: str
     # "creator" or "payee". Who acted decides whose claim this is, and the
-    # creator's word wins: see CREATOR_ACTIONS.
+    # creator's word wins: see charges.ledger.CREATOR_STATES.
     actor: str
     note: str | None = Field(default=None, max_length=NOTE_MAX)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

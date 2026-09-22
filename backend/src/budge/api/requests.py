@@ -11,7 +11,16 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import col, select
 
 from budge.auth import CurrentUserId, SessionDep
-from budge.charges.ledger import derive_state, make_token, tally_bill
+from budge.charges.ledger import (
+    CANCELLED,
+    CONFIRMED,
+    DECLINED,
+    MARKED_PAID,
+    REOPENED,
+    derive_state,
+    make_token,
+    tally_bill,
+)
 from budge.charges.money import from_cents, parse_amount, split_evenly, to_cents
 from budge.db.models import (
     NAME_MAX,
@@ -29,8 +38,8 @@ NOT_FOUND = 404
 MAX_PAYEES = 20
 
 # Split by side, so an action the caller can't take is simply not found.
-PAYEE_ACTIONS = {"mark-paid": "marked_paid", "decline": "declined"}
-CREATOR_ACTIONS = {"confirm": "confirmed", "cancel": "cancelled", "reopen": "reopened"}
+PAYEE_ACTIONS = {"mark-paid": MARKED_PAID, "decline": DECLINED}
+CREATOR_ACTIONS = {"confirm": CONFIRMED, "cancel": CANCELLED, "reopen": REOPENED}
 
 
 class Payee(BaseModel):
@@ -290,7 +299,7 @@ async def act_as_creator(
     user_id: CurrentUserId,
     session: SessionDep,
 ) -> RequestView:
-    """What the person owed can do. Their word is final: see CREATOR_ACTIONS."""
+    """What the person owed can do. Their word is final: see CREATOR_STATES."""
     type = CREATOR_ACTIONS.get(action)
     if type is None:
         raise HTTPException(status_code=NOT_FOUND, detail="No such action")

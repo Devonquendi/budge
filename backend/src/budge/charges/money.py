@@ -39,8 +39,8 @@ def split_evenly(total_cents: int, n: int) -> list[int]:
     if n < 1:
         raise ValueError("need at least one share")
 
-    # Toward zero, so a negative total mirrors the positive one. // would floor.
-    base = int(total_cents / n)
+    # Toward zero, so a negative total mirrors the positive one. // alone floors.
+    base = abs(total_cents) // n * (-1 if total_cents < 0 else 1)
     remainder = total_cents - base * n
     step = -1 if remainder < 0 else 1
     remainder = abs(remainder)

@@ -6,18 +6,16 @@ from typing import Any, NamedTuple
 
 Row = Mapping[str, Any]
 
-# The person owed has the final say, so their actions always apply.
-CREATOR_ACTIONS = {
-    "confirmed": "confirmed",
-    "cancelled": "cancelled",
-    "reopened": "open",
-}
-
 OPEN = "open"
 MARKED_PAID = "marked_paid"
 DECLINED = "declined"
 CONFIRMED = "confirmed"
 CANCELLED = "cancelled"
+# An event, not a state: it puts the request back to open.
+REOPENED = "reopened"
+
+# The person owed has the final say, so their events always apply.
+CREATOR_STATES = {CONFIRMED: CONFIRMED, CANCELLED: CANCELLED, REOPENED: OPEN}
 
 # No i, l or o, so nothing is misread as 1 or 0 when somebody types it in.
 TOKEN_ALPHABET = "0123456789abcdefghjkmnpqrstuvwxy"
@@ -37,12 +35,12 @@ def derive_state(events: Iterable[Row]) -> str:
     state = OPEN
     for event in events:
         kind = event["type"]
-        if kind in CREATOR_ACTIONS:
-            state = CREATOR_ACTIONS[kind]
+        if kind in CREATOR_STATES:
+            state = CREATOR_STATES[kind]
         elif kind == MARKED_PAID and state in (OPEN, DECLINED):
             state = MARKED_PAID
         # The payer can take back their own claim, but not a confirmation.
-        elif kind == "declined" and state in (OPEN, MARKED_PAID):
+        elif kind == DECLINED and state in (OPEN, MARKED_PAID):
             state = DECLINED
     return state
 

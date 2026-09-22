@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from budge import demo
+from budge.api.auth import Me
 from budge.auth import SessionDep
 
 router = APIRouter(prefix="/demo", tags=["demo"])
@@ -13,12 +14,6 @@ NOT_FOUND = 404
 
 class SignIn(BaseModel):
     email: str
-
-
-class Me(BaseModel):
-    email: str
-    name: str | None
-    onboarded: bool
 
 
 @router.get("/personas")

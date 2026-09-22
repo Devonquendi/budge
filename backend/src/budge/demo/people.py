@@ -12,7 +12,7 @@ from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from budge.auth import password_hash
-from budge.charges.ledger import make_token
+from budge.charges.ledger import CONFIRMED, DECLINED, MARKED_PAID, make_token
 from budge.charges.money import split_evenly
 from budge.db.models import Bill, ChargeRequest, RequestEvent, User
 
@@ -69,10 +69,10 @@ SCRIPT = [
         "ara@example.com",
         18_640,
         [
-            ("neve@example.com", "marked_paid"),
+            ("neve@example.com", MARKED_PAID),
             ("tipene@example.com", ""),
             ("marguerite@example.com", ""),
-            ("dev@example.com", "confirmed"),
+            ("dev@example.com", CONFIRMED),
         ],
     ),
     (
@@ -80,9 +80,9 @@ SCRIPT = [
         "ara@example.com",
         8_999,
         [
-            ("neve@example.com", "confirmed"),
-            ("tipene@example.com", "confirmed"),
-            ("dev@example.com", "confirmed"),
+            ("neve@example.com", CONFIRMED),
+            ("tipene@example.com", CONFIRMED),
+            ("dev@example.com", CONFIRMED),
         ],
     ),
     (
@@ -91,7 +91,7 @@ SCRIPT = [
         34_500,
         [
             ("neve@example.com", ""),
-            ("ara@example.com", "declined"),
+            ("ara@example.com", DECLINED),
         ],
     ),
     (
@@ -99,7 +99,7 @@ SCRIPT = [
         "tipene@example.com",
         12_730,
         [
-            ("ara@example.com", "marked_paid"),
+            ("ara@example.com", MARKED_PAID),
             ("neve@example.com", ""),
         ],
     ),
@@ -118,9 +118,9 @@ SCRIPT = [
 
 # Getting to a state takes the events that would really have produced it.
 PATHS = {
-    "marked_paid": [("marked_paid", "payee")],
-    "confirmed": [("marked_paid", "payee"), ("confirmed", "creator")],
-    "declined": [("declined", "payee")],
+    MARKED_PAID: [(MARKED_PAID, "payee")],
+    CONFIRMED: [(MARKED_PAID, "payee"), (CONFIRMED, "creator")],
+    DECLINED: [(DECLINED, "payee")],
 }
 
 
