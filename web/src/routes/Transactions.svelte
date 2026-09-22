@@ -419,7 +419,7 @@
 
     /*
      * Tighter horizontally so the range and the Filters button share a line
-     * even once the badge appears — four pixels over and the button drops to
+     * even once the badge appears: four pixels over and the button drops to
      * its own row the moment you apply a filter. Taller vertically: a plain
      * 26px-tall pill is a small target for a thumb.
      */

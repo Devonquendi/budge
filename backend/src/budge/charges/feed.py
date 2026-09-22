@@ -15,7 +15,7 @@ Txn = Mapping[str, Any]
 def match_credit(credit: Txn, open_requests: Sequence[Txn]) -> Txn | None:
     """Match an incoming credit to exactly one open request, or nothing.
 
-    Amount is the strong signal. The reference deliberately is NOT required —
+    Amount is the strong signal. The reference deliberately is NOT required:
     paying banks truncate it to twelve characters, drop it, or put it in a
     different field, so a matcher that depends on it fails quietly and often.
     Where the amount is ambiguous the payer's name breaks the tie; where it is
@@ -64,7 +64,7 @@ def find_internal_transfers(
 ) -> set[Any]:
     """Ids of transactions that are you moving your own money about.
 
-    With a joint and a personal account connected these can dominate a report —
+    With a joint and a personal account connected these can dominate a report,
     the same mistake as counting a flatmate's repayment as income, just bigger. A
     transfer shows up twice: a debit on one account and a matching credit on
     another, within a day or two.

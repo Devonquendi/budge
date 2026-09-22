@@ -26,8 +26,8 @@ CANCELLED = "cancelled"
 # no i, l or o, so nothing is mistaken for 1 or 0 when somebody types it in.
 #
 # Exactly 32 characters, which matters. The JavaScript original listed 33 and
-# indexed them with `byte % 32`, so its last character could never be produced —
-# dropping it here loses nothing and makes the mapping honest. 256 divides by 32
+# indexed them with `byte % 32`, so its last character could never be produced.
+# Dropping it here loses nothing and makes the mapping honest. 256 divides by 32
 # evenly, so there is no modulo bias either way.
 TOKEN_ALPHABET = "0123456789abcdefghjkmnpqrstuvwxy"
 
@@ -55,7 +55,7 @@ def derive_state(events: Iterable[Row]) -> str:
         elif kind == MARKED_PAID and state in (OPEN, DECLINED):
             state = MARKED_PAID
         # Declining is the payer pushing back, so it can override their own
-        # earlier claim — but never a confirmation, because money that arrived,
+        # earlier claim, but never a confirmation, because money that arrived,
         # arrived.
         elif kind == "declined" and state in (OPEN, MARKED_PAID):
             state = DECLINED

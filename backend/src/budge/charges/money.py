@@ -71,7 +71,7 @@ def normalise_account(value: object) -> str | None:
     """Normalise an NZ account number, or return None.
 
     The format is bank-branch-account-suffix: 2-4-7 digits then a 2 or 3 digit
-    suffix. No checksum is attempted — the bank does that, and Confirmation of
+    suffix. No checksum is attempted: the bank does that, and Confirmation of
     Payee has checked the name as well since November 2024.
     """
     digits = _NOT_DIGIT.sub("", "" if value is None else str(value))
