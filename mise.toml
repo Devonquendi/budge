@@ -73,8 +73,3 @@ run = "pnpm build"
 description = "Screenshot every page at phone, tablet and desktop sizes"
 dir = "web"
 run = "pnpm screens"
-
-[tasks.test]
-description = "Run the backend test suite"
-dir = "backend"
-run = "uv run pytest"

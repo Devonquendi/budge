@@ -9,9 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-# A local SQLite database, for running the app without reaching Neon.
-*.db
-
 # Secrets
 .env
 
