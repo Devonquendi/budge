@@ -1,9 +1,7 @@
 """An invented bank feed for the invented people.
 
 Every account, merchant and bank here is made up. Nothing in this module talks
-to Akahu, and it is the only way a demo persona ever has transactions: previews
-cannot reach a real bank at all (see environment.akahu_enabled), and a persona
-has no Akahu tokens to reach one with.
+to Akahu, and it is the only way a demo persona ever has transactions.
 
 The feed is generated rather than listed so it stays current: it is always the
 last few months up to today, so the dashboard's "this month" is never empty.

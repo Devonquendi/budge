@@ -7,13 +7,13 @@ adds nothing. None of them has Akahu credentials or a password anyone knows, so
 no demo session can reach a real bank and no demo row is a way into the app.
 """
 
+import os
 import secrets
 
 from pydantic import BaseModel
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from budge import environment
 from budge.auth import password_hash
 from budge.charges.ledger import make_token
 from budge.charges.money import split_evenly
@@ -132,8 +132,9 @@ PATHS = {
 
 
 def enabled() -> bool:
-    """Whether this deployment has the invented people on it."""
-    return environment.demo_enabled()
+    """Whether this deployment has the invented people on it. It never also
+    reaches Akahu: see credentials.get."""
+    return os.environ.get("BUDGE_DEMO") == "1"
 
 
 def is_persona(email: str) -> bool:

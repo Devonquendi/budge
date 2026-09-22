@@ -4,7 +4,7 @@ import httpx2
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from budge import demo, environment
+from budge import demo
 from budge.akahu import AkahuClient
 from budge.akahu.models import Account
 from budge.db import crypto
@@ -17,12 +17,9 @@ async def _row(session: AsyncSession, user_id: int) -> AkahuCredential | None:
 
 
 async def get(session: AsyncSession, user_id: int) -> AkahuCredential | None:
-    """The user's stored tokens, or None if this deployment may not have them.
-
-    A preview gets None whether or not a row exists, which reads all the way up
-    as "not connected yet". See environment.akahu_enabled.
-    """
-    if not environment.akahu_enabled():
+    """The user's stored tokens. None on a demo deployment, whether or not a
+    row exists: invented people and live tokens don't share a database."""
+    if demo.enabled():
         return None
     return await _row(session, user_id)
 
@@ -43,8 +40,8 @@ async def save(
     session: AsyncSession, user_id: int, app_token: str, user_token: str
 ) -> None:
     """Stores the tokens encrypted, replacing any the user already had."""
-    if not environment.akahu_enabled():
-        raise PermissionError("Akahu is disabled on this deployment")
+    if demo.enabled():
+        raise PermissionError("Akahu is disabled on a demo deployment")
     app_encrypted = crypto.encrypt(app_token)
     user_encrypted = crypto.encrypt(user_token)
 
